@@ -1,0 +1,16 @@
+[90m= [39m[34;4mApp\Models\Admin\Login[39;24m {#7952
+    [34mid[39m: [35m1[39m,
+    [34mname[39m: [32m"[39m[32mAdmin[39m[32m"[39m,
+    [34memail[39m: [32m"[39m[32madmin@gmail.com[39m[32m"[39m,
+    [34mpassword[39m: [32m"[39m\$[32m2y[39m\$[32m12[39m\$[32mVtbtalewCwgH5dbNo89o2.9DLrBzleE1fLNbkl.Sp5x.TFPbhUP0u[39m[32m"[39m,
+    [34mcreated_at[39m: [32m"[39m[32m2026-05-17 20:24:23[39m[32m"[39m,
+    [34mupdated_at[39m: [32m"[39m[32m2026-05-17 16:16:48[39m[32m"[39m,
+  }
+[90m= [39m[34;4mApp\Models\Admin\Login[39;24m {#7952
+    [34mid[39m: [35m1[39m,
+    [34mname[39m: [32m"[39m[32mAdmin[39m[32m"[39m,
+    [34memail[39m: [32m"[39m[32madmin@gmail.com[39m[32m"[39m,
+    #[33mpassword[39m: [32m"[39m[32madmin@gmail.com[39m[32m"[39m,
+    [34mcreated_at[39m: [32m"[39m[32m2026-05-17 20:24:23[39m[32m"[39m,
+    [34mupdated_at[39m: [32m"[39m[32m2026-05-17 22:23:50[39m[32m"[39m,
+  }
