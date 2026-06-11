@@ -9,9 +9,9 @@ use App\Http\Controllers\Admin\ClassesController;
 use App\Http\Controllers\Admin\SubjectsController;
 use App\Http\Controllers\Admin\AssignclassController;
 use App\Http\Controllers\Admin\AttendanceController;
+use App\Http\Controllers\Admin\ProfileController;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
-use App\Http\Controllers\Admin\ProfileController;
 
 Route::prefix('/admin')->group(function () {
 
@@ -29,7 +29,7 @@ Route::prefix('/admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])
         ->name('admin.dashboard');
 
-        
+
 
     // Teachers
     Route::get('/teachers', [TeachersController::class, 'teachers'])
@@ -43,6 +43,8 @@ Route::prefix('/admin')->group(function () {
 
     Route::delete('/teachers/{id}', [TeachersController::class, 'delete'])
         ->name('teachers.delete');
+
+    Route::get('/teacher/send-email/{id}', [TeachersController::class, 'sendEmail']);
 
 
 
@@ -67,6 +69,7 @@ Route::prefix('/admin')->group(function () {
         )->header('Content-Type', 'image/svg+xml');
     });
 
+    Route::get('/student/send-email/{id}', [StudentsController::class, 'sendEmail']);
 
 
     Route::get('/classes', [ClassesController::class, 'classes'])
@@ -83,11 +86,7 @@ Route::prefix('/admin')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'profile'])
         ->name('admin.profile');
+        
+    Route::put('/profile/update/{id}', [ProfileController::class, 'update'])
+        ->name('sadmin.update');
 });
-
-
-
-// // Protected routes
-//     Route::middleware('auth')->group(function () {
-//         Route::get('/dashboard', [DashboardController::class, 'dashboard']);
-//     });

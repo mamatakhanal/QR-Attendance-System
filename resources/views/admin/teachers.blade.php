@@ -61,6 +61,12 @@
                                         class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn" style="font-size:10px;" data-bs-toggle="modal"
                                         data-bs-target="#deleteModal" data-id="{{ $teacher->id }}" data-name="{{ $teacher->name }}" data-url="{{ route('teachers.delete', $teacher->id) }}">
                                         <i class="bi bi-trash"></i> Delete
+                                    </button> &nbsp;
+                                    <button
+                                        class="btn btn-outline-primary fw-semibold btn-sm rounded-3 send-mail"
+                                        style="font-size:10px;"
+                                        data-id="{{ $teacher->id }}">
+                                        <i class="bi bi-envelope"></i> Send
                                     </button>
                                 </td>
                             </tr>
@@ -72,6 +78,41 @@
             </div>
         </div>
     </div>
+    <script>
+        $(document).on('click', '.send-mail', function() {
+
+            let id = $(this).data('id');
+
+            $.ajax({
+                url: "/admin/teacher/send-email/" + id,
+                type: "GET",
+
+                success: function(response) {
+
+                    // Mail Sent Toast Msg
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: response.message,
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true,
+                        customClass: {
+                            popup: 'small-toast'
+                        },
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInRight'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutRight'
+                        }
+                    });
+
+                },
+            });
+        });
+    </script>
 </body>
 
 <script>

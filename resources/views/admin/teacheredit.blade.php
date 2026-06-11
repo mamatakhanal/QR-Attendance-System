@@ -139,25 +139,3 @@
 </body>
 
 
-
-<!-- JS-Password-Eye -->
-<script>
-    document.querySelectorAll(".toggle-password").forEach(function(toggle) {
-
-        toggle.addEventListener("click", function() {
-
-            let input = this.parentElement.querySelector(".edit-password");
-            let icon = this.querySelector("i");
-
-            if (input.type === "password") {
-                input.type = "text";
-                icon.classList.remove("ri-eye-off-line");
-                icon.classList.add("ri-eye-line");
-            } else {
-                input.type = "password";
-                icon.classList.remove("ri-eye-line");
-                icon.classList.add("ri-eye-off-line");
-            }
-        });
-    });
-</script>

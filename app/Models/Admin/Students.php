@@ -29,7 +29,7 @@ class Students extends Model
         return $this->hasOne(StudentAcademic::class, 'student_id');
     }
 
-    
+
     // Student Attendance Records
     // public function attendance()
     // {

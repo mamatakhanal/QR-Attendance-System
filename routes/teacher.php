@@ -27,6 +27,9 @@ Route::prefix('/teacher')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'profile'])
         ->name('teacher.profile');
+    
+      Route::put('/profile/update/{id}', [ProfileController::class, 'update'])
+        ->name('profile.update');
 
     // Logout
     Route::post('/logout', [LoginController::class, 'logout'])

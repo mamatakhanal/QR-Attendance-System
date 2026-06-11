@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+
+use App\Mail\StudentMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -52,7 +57,6 @@ class StudentsController extends Controller
                     ),
             ],
             'email' => 'required|email|unique:students,email',
-            'password' => 'required|min:8',
             'admission_year' => [
                 'required',
                 'integer',
@@ -70,7 +74,6 @@ class StudentsController extends Controller
             'name.regex' => 'Name must contain only letters.',
             'roll_no.unique' => 'This roll number already exists in the selected batch.',
             'email.unique' => 'Email already exists.',
-            'password.min' => 'Password must be at least 8 characters.',
         ]);
 
         // Student Code Calculate
@@ -81,7 +84,8 @@ class StudentsController extends Controller
         $currentYear = now()->year;
         $semester = ($currentYear - $request->admission_year) + 1;
 
-        Students::create([
+        // Student Create
+        $student =  Students::create([
             'name' => $request->name,
             'roll_no' => $request->roll_no,
             'email' => $request->email,
@@ -201,4 +205,47 @@ class StudentsController extends Controller
         Students::findOrFail($id)->delete();
         return redirect()->back()->with('success', 'Student deleted successfully');
     }
+
+    // public function sendEmail($id)
+    // {
+    //     $student = Students::findOrFail($id);
+
+    //     Mail::to($student->email)
+    //         ->send(new StudentMail($student, 'Password'));
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Email sent successfully'
+    //     ]);
+    // }
+
+    public function sendEmail($id)
+{
+    try {
+
+        $student = Students::findOrFail($id);
+
+        if (!$student->email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Student email missing'
+            ]);
+        }
+
+        Mail::to($student->email)
+            ->send(new StudentMail($student, 'Password'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Email sent successfully'
+        ]);
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+}
 }

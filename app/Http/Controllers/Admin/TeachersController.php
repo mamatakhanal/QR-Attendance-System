@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Mail\TeacherMail;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Teachers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use App\Models\Admin\Teachers;
 
 class TeachersController extends Controller
 {
@@ -37,17 +39,16 @@ class TeachersController extends Controller
         $request->validate([
             'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
             'email' => 'required|email|unique:teachers,email',
-            'password' => 'required|min:8',
             'phone' => 'required|numeric|digits_between:7,15',
         ], [
             'name.regex' => 'Name must contain only letters.',
             'email.unique' => 'Email already exists.',
-            'password.min' => 'Password must be at least 8 characters.',
             'phone.numeric' => 'Phone number must contain numbers only.',
             'phone.digits_between' => 'Phone number must be between 7 and 15 digits.',
         ]);
 
-        Teachers::create([
+        // Create teacher
+        $teacher = Teachers::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -109,5 +110,18 @@ class TeachersController extends Controller
     {
         Teachers::findOrFail($id)->delete();
         return redirect()->back()->with('success', 'Teacher deleted successfully');
+    }
+
+    public function sendEmail($id)
+    {
+        $teacher = Teachers::findOrFail($id);
+
+        Mail::to($teacher->email)
+            ->send(new TeacherMail($teacher, 'Password'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Email sent successfully'
+        ]);
     }
 }
