@@ -72,6 +72,8 @@ Route::prefix('/admin')->group(function () {
     Route::get('/student/send-email/{id}', [StudentsController::class, 'sendEmail']);
 
 
+
+
     Route::get('/classes', [ClassesController::class, 'classes'])
         ->name('admin.classes');
 
@@ -88,5 +90,5 @@ Route::prefix('/admin')->group(function () {
         ->name('admin.profile');
         
     Route::put('/profile/update/{id}', [ProfileController::class, 'update'])
-        ->name('sadmin.update');
+        ->name('admin.profile');
 });

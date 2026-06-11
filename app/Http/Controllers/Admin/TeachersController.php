@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Mail\TeacherMail;
-use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Teachers;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class TeachersController extends Controller
 {
@@ -40,11 +41,13 @@ class TeachersController extends Controller
             'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
             'email' => 'required|email|unique:teachers,email',
             'phone' => 'required|numeric|digits_between:7,15',
+            'password' => 'required|min:8',
         ], [
             'name.regex' => 'Name must contain only letters.',
             'email.unique' => 'Email already exists.',
             'phone.numeric' => 'Phone number must contain numbers only.',
             'phone.digits_between' => 'Phone number must be between 7 and 15 digits.',
+            'password.min' => 'Password must be at least 8 characters.',
         ]);
 
         // Create teacher
@@ -114,14 +117,27 @@ class TeachersController extends Controller
 
     public function sendEmail($id)
     {
-        $teacher = Teachers::findOrFail($id);
+        try {
+            $teacher = Teachers::findOrFail($id);
 
-        Mail::to($teacher->email)
-            ->send(new TeacherMail($teacher, 'Password'));
+            $plainPassword = Str::random(8);
+            $teacher->update([
+                'password' => Hash::make($plainPassword)
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Email sent successfully'
-        ]);
+            Mail::to($teacher->email)
+                ->queue(new TeacherMail($teacher, $plainPassword));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully'
+            ]);
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

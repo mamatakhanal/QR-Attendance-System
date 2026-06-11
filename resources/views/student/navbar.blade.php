@@ -1,6 +1,6 @@
 <body>
   <!-- NAVBAR -->
-  <nav class="navbar navbar-expand-lg shadow-lg rounded-4 m-2 pe-2">
+  <nav class="navbar navbar-expand-lg shadow-sm rounded-4 m-2 pe-2">
     <div class="container-fluid">
 
       <!-- LEFT -->
@@ -9,7 +9,7 @@
         <button class="btn" id="toggleSidebar">
           <i class="bi bi-list fs-4"></i>
         </button>
-        <span class="fw-bold fs-4"> {{ $pageTitle ?? '' }} </span>
+        <h5 class="fw-bold mb-0"> {{ $pageTitle ?? '' }} </h5>
       </div>
 
       <!-- RIGHT -->

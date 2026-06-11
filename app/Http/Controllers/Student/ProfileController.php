@@ -1,6 +1,13 @@
 <?php
 namespace App\Http\Controllers\Student;
+
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Models\Admin\Students;
 
 class ProfileController extends Controller
 {
@@ -8,6 +15,94 @@ class ProfileController extends Controller
     {
         return view('student.profile', [
             'pageTitle' => 'Profile'
+        ]);
+    }
+
+    // Edit Student Profile
+    public function update(Request $request, $id)
+    {
+
+        $student = Students::findOrFail($id);
+
+        // Validation
+        $request->validate([
+            'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
+            'roll_no' => [
+                'required',
+                'integer',
+                Rule::unique('students')
+                    ->where(
+                        fn($query) =>
+                        $query->where('admission_year', $request->admission_year)
+                    )
+                    ->ignore($id),
+            ],
+            'phone' => 'nullable|numeric|digits_between:7,15',
+            'dob' => 'nullable|date|before:-15 years',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('students')->ignore($id)
+            ],
+            'password' => 'nullable|min:8',
+            'admission_year' => [
+                'required',
+                'integer',
+                'min:2000',
+                'max:' . now()->year,
+                function ($attribute, $value, $fail) {
+                    $semester = (now()->year - $value) + 1;
+
+                    if ($semester > 8) {
+                        $fail('This batch has already graduated.');
+                    }
+                }
+            ],
+        ], [
+            'name.regex' => 'Name must contain only letters.',
+            'roll_no.unique' => 'This roll number already exists in the selected batch.',
+            'phone.numeric' => 'Phone number must contain numbers only.',
+            'phone.digits_between' => 'Phone number must be between 7 and 15 digits.',
+            'dob.before' => 'Student must be at least 15 years old.',
+            'email.unique' => 'Email already exists.',
+            'password.min' => 'Password must be at least 8 characters.',
+        ]);
+
+        // Student Code Calculate
+        $year = substr($request->admission_year, -2);
+        $studentCode = 'STU-' . $year . '-' . str_pad($request->roll_no, 3, '0', STR_PAD_LEFT);
+
+        // Semester Calculate
+        $currentYear = now()->year;
+        $semester = ($currentYear - $request->admission_year) + 1;
+
+        $student->update([
+            'name' => $request->name,
+            'roll_no' => $request->roll_no,
+            'phone' => $request->phone,
+            'gender' => $request->gender,
+            'dob' => $request->dob,
+            'address' => $request->address,
+            'email' => $request->email,
+            'current_semester' => $semester,
+            'admission_year' => $request->admission_year,
+            'student_code' => $studentCode,
+        ]);
+
+        if ($request->filled('password')) {
+            $student->update([
+                'password' => Hash::make($request->password)
+            ]);
+        }
+
+        Storage::disk('public')->put(
+            "qr/{$studentCode}.png",
+            QrCode::format('png')->size(300)->generate($studentCode)
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully'
         ]);
     }
 }

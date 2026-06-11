@@ -63,8 +63,7 @@
                                         <i class="bi bi-trash"></i> Delete
                                     </button> &nbsp;
                                     <button
-                                        class="btn btn-outline-primary fw-semibold btn-sm rounded-3 send-mail"
-                                        style="font-size:10px;"
+                                        class="btn btn-outline-primary fw-semibold btn-sm rounded-3 send-mail" style="font-size:10px;" data-bs-toggle="modal"
                                         data-id="{{ $teacher->id }}">
                                         <i class="bi bi-envelope"></i> Send
                                     </button>
@@ -82,6 +81,20 @@
         $(document).on('click', '.send-mail', function() {
 
             let id = $(this).data('id');
+
+            // Loading toast
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'info',
+                title: 'Sending mail...',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                customClass: {
+                    popup: 'small-toast'
+                }
+            });
 
             $.ajax({
                 url: "/admin/teacher/send-email/" + id,
@@ -108,8 +121,20 @@
                             popup: 'animate__animated animate__fadeOutRight'
                         }
                     });
-
                 },
+                error: function() {
+
+                    //  Error toast
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: 'Mail failed',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+
+                }
             });
         });
     </script>

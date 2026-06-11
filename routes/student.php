@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Student\LoginController;
 use App\Http\Controllers\Student\DashboardController;
@@ -26,6 +27,9 @@ Route::prefix('/student')->group(function () {
         ->name('student.attendance');
 
     Route::get('/profile', [ProfileController::class, 'profile'])
+        ->name('student.profile');
+
+    Route::put('/profile/update/{id}', [ProfileController::class, 'update'])
         ->name('student.profile');
 
     // Logout

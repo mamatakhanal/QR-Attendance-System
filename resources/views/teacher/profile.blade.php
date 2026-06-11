@@ -22,7 +22,6 @@
 
                     <div class="modal-header mb-3">
                         <h3 class="modal-title fw-bold"> Profile </h3>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
                     <div class="moal-body row g-3">
@@ -73,12 +72,76 @@
                         </div>
                     </div>
 
-                    <div class="modal-footer mb-0">
+                    <div class="modal-footer mt-3">
                         <button type="submit" class="btn btn-primary">Save Profile</button>
                     </div>
                 </form>
             </div>
         </div>
+        <script>
+            $('#editTeacherProfile').submit(function(e) {
+
+                e.preventDefault();
+
+                let id = $('#edit_id').val();
+                // Clear old validation errors
+                $('.text-danger').text('');
+
+                // Send Teacher Profile Update Data to Server Without Reloading Page
+                $.ajax({
+                    url: '/teacher/profile/update/' + id,
+                    type: 'POST',
+                    data: $(this).serialize() + '&_method=PUT',
+
+                    success: function(response) {
+
+                        // Show Success Toast Message
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: response.message,
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true,
+                            customClass: {
+                                popup: 'small-toast'
+                            },
+                            showClass: {
+                                popup: 'animate__animated animate__fadeInRight'
+                            },
+
+                            hideClass: {
+                                popup: 'animate__animated animate__fadeOutRight'
+                            }
+                        });
+
+                        // Close modal only after successful update
+                        bootstrap.Modal.getInstance(
+                            document.getElementById('editTeacherModal')
+                        ).hide();
+
+                        // Reload page after 3 seconds
+                        setTimeout(function() {
+                            location.reload();
+                        }, 3000);
+                    },
+
+                    // Validation Error Response
+                    error: function(xhr) {
+                        if (xhr.status == 422) {
+
+                            // Get validation errors
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function(key, value) {
+                                $('#edit_' + key + '_error').text(value[0]);
+                            });
+                        }
+                    }
+                });
+
+            });
+        </script>
 </body>
 
 <!-- JS-Password-Eye -->

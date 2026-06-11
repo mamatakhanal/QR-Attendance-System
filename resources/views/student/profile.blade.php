@@ -1,19 +1,20 @@
 <head>
-    <title>Profile - Admin</title>
+    <title>Profile - Student</title>
     @include('layouts.link')
     @include('layouts.style')
 </head>
 
 <body>
+
     <!-- MAIN LAYOUT -->
     <div class="main-wrapper">
-        @include('admin.sidebar')
+        @include('student.sidebar')
         <div class="main-area">
-            @include('admin.navbar')
+            @include('student.navbar')
 
             <!-- CONTENT -->
             <div class="card shadow-sm border-0 m-3 px-4 rounded-4">
-                <form id="editAdminProfile" class=" p-4">
+                <form id="editStudentProfile" class=" p-4">
                     @csrf
                     @method('PUT')
 
@@ -29,6 +30,39 @@
                             <label class="form-label">Name</label>
                             <input type="text" name="name" id="edit_name" class="form-control">
                             <small class="text-danger" id="edit_name_error"></small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Roll No</label>
+                            <input type="number" name="roll_no" id="edit_roll_no" class="form-control" min="1">
+                            <small class="text-danger" id="edit_roll_no_error"></small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" id="edit_phone" class="form-control">
+                            <small class="text-danger" id="edit_phone_error"></small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Gender</label>
+                            <select name="gender" id="edit_gender" class="form-select">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" name="dob" id="edit_dob" class="form-control">
+                            <small class="text-danger" id="edit_dob_error"></small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Address</label>
+                            <textarea name="address" id="edit_address" class="form-control" rows="1"></textarea>
                         </div>
 
                         <div class="col-md-6">
@@ -48,6 +82,45 @@
                             <small class="text-muted"> Leave blank to keep current password </small> <br>
                             <small class="text-danger" id="edit_password_error"></small>
                         </div>
+
+                        <div class="col-md-6">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Batch</label>
+                                <input type="number" id="edit_admission_year" name="admission_year" class="form-control" min="2010" max="{{ date('Y') }}" readonly>
+                                <small class="text-danger" id="edit_admission_year_error"></small>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Semester</label>
+                                <select id="edit_current_semester" class="form-select" disabled>
+                                    <option value="">Select Semester</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6">Semester 6</option>
+                                    <option value="7">Semester 7</option>
+                                    <option value="8">Semester 8</option>
+                                </select>
+                                <input type="hidden" name="current_semester" id="current_semester_hidden">
+                                <small class="text-danger" id="edit_current_semester_error"></small>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Student Code</label>
+                                <input type="text" name="student_code" id="edit_student_code" class="form-control" readonly>
+                            </div>
+                        </div>
+
+                        <!-- QR Code -->
+                        <div class="col-md-6 d-flex flex-column align-items-center">
+                            <label class="form-label fw-semibold">QR Code</label>
+                            <img id="edit_qr_image"
+                                src=""
+                                class="img-thumbnail shadow-sm p-2"
+                                style="width:210px;height:210px;object-fit:contain;">
+                        </div>
                     </div>
 
                     <div class="modal-footer mt-3">
@@ -57,7 +130,7 @@
             </div>
         </div>
         <script>
-            $('#editAdminProfile').submit(function(e) {
+            $('#editStudentProfile').submit(function(e) {
 
                 e.preventDefault();
 
@@ -65,9 +138,9 @@
                 // Clear old validation errors
                 $('.text-danger').text('');
 
-                // Send Admin Profile Update Data to Server Without Reloading Page
+                // Send Student Profile Update Data to Server Without Reloading Page
                 $.ajax({
-                    url: '/admin/profile/update/' + id,
+                    url: '/student/profile/update/' + id,
                     type: 'POST',
                     data: $(this).serialize() + '&_method=PUT',
 

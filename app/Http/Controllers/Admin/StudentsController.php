@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
-
 use App\Mail\StudentMail;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
-
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Students;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use App\Models\Admin\Students;
+
 
 class StudentsController extends Controller
 {
@@ -57,6 +56,7 @@ class StudentsController extends Controller
                     ),
             ],
             'email' => 'required|email|unique:students,email',
+            'password' => 'required|min:8',
             'admission_year' => [
                 'required',
                 'integer',
@@ -74,6 +74,7 @@ class StudentsController extends Controller
             'name.regex' => 'Name must contain only letters.',
             'roll_no.unique' => 'This roll number already exists in the selected batch.',
             'email.unique' => 'Email already exists.',
+            'password.min' => 'Password must be at least 8 characters.'
         ]);
 
         // Student Code Calculate
@@ -206,46 +207,30 @@ class StudentsController extends Controller
         return redirect()->back()->with('success', 'Student deleted successfully');
     }
 
-    // public function sendEmail($id)
-    // {
-    //     $student = Students::findOrFail($id);
-
-    //     Mail::to($student->email)
-    //         ->send(new StudentMail($student, 'Password'));
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Email sent successfully'
-    //     ]);
-    // }
 
     public function sendEmail($id)
-{
-    try {
+    {
+        try {
+            $student = Students::findOrFail($id);
 
-        $student = Students::findOrFail($id);
+            $plainPassword = Str::random(8);
+            $student->update([
+                'password' => Hash::make($plainPassword)
+            ]);
 
-        if (!$student->email) {
+             Mail::to($student->email)
+                ->queue(new StudentMail($student, $plainPassword));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully'
+            ]);
+        } catch (\Exception $e) {
+
             return response()->json([
                 'success' => false,
-                'message' => 'Student email missing'
+                'message' => $e->getMessage()
             ]);
         }
-
-        Mail::to($student->email)
-            ->send(new StudentMail($student, 'Password'));
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Email sent successfully'
-        ]);
-
-    } catch (\Exception $e) {
-
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
     }
-}
 }

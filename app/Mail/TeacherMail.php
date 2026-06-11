@@ -5,9 +5,8 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class TeacherMail extends Mailable implements ShouldQueue
+class TeacherMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -22,7 +21,7 @@ class TeacherMail extends Mailable implements ShouldQueue
 
     public function build()
     {
-        return $this->subject('Your Account Login Details')
+        return $this->subject('Teacher Login Details')
             ->view('emails.teachercreate');
     }
     
