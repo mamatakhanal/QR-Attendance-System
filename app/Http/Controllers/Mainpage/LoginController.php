@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Mainpage;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -10,40 +11,52 @@ use App\Models\Admin\Students;
 class LoginController extends Controller
 {
 
-    public function login(Request $request)
+    public function teacherLogin(Request $request)
     {
-        if ($request->role == 'teacher') {
 
-            $teacher = Teachers::where('email', $request->email)->first();
+        $request->validate([
+            'teacher_email' => 'required|email',
+            'teacher_password' => 'required'
+        ]);
 
-            if (!$teacher || !Hash::check($request->password, $teacher->password)) {
-                return back()->with('error', 'Invalid email or password');
-            }
+        $teacher = Teachers::where('email', $request->teacher_email)->first();
 
-            session([
-                'teacher_id' => $teacher->id,
-                'teacher_name' => $teacher->name
-            ]);
-
-            return redirect('/teacher/dashboard');
+        if (!$teacher || !Hash::check($request->teacher_password, $teacher->password)) {
+            return back()
+                ->with('error', 'Invalid credentials')
+                ->with('login_type', 'teacher')
+                ->withInput();
         }
 
-        if ($request->role == 'student') {
+        session([
+            'teacher_id' => $teacher->id,
+            'teacher_name' => $teacher->name
+        ]);
 
-            $student = Students::where('email', $request->email)->first();
+        return redirect('/teacher/dashboard');
+    }
 
-            if (!$student || !Hash::check($request->password, $student->password)) {
-                return back()->with('error', 'Invalid email or password');
-            }
+    public function studentLogin(Request $request)
+    {
 
-            session([
-                'student_id' => $student->id,
-                'student_name' => $student->name
-            ]);
+        $request->validate([
+            'student_email' => 'required|email',
+            'student_password' => 'required'
+        ]);
 
-            return redirect('/student/dashboard');
+        $student = Students::where('email', $request->student_email)->first();
+
+        if (!$student || !Hash::check($request->student_password, $student->password)) {
+            return back()
+                ->with('error', 'Invalid credentials')
+                ->with('login_type', 'student')
+                ->withInput();
         }
+        session([
+            'student_id' => $student->id,
+            'student_name' => $student->name
 
-        return back()->with('error', 'Invalid login type');
+        ]);
+        return redirect('/student/dashboard');
     }
 }

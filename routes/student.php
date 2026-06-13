@@ -30,7 +30,7 @@ Route::prefix('/student')->group(function () {
         ->name('student.profile');
 
     Route::put('/profile/update/{id}', [ProfileController::class, 'update'])
-        ->name('student.profile');
+        ->name('student.profile.update');
 
     // Logout
     Route::post('/logout', [LoginController::class, 'logout'])

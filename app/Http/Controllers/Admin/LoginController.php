@@ -16,15 +16,26 @@ class LoginController extends Controller
     public function loginCheck(Request $request)
     {
 
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
         $admin = Login::where('email', $request->email)->first();
 
         if (!$admin) {
-            return back()->with('error', 'Invalid Email');
+            return back()->with('error', 'Invalid email or password');
         }
 
         if (!Hash::check($request->password, $admin->password)) {
-            return back()->with('error', 'Invalid Password');
+            return back()->with('error', 'Invalid email or password');
         }
+        // LOGIN SUCCESS - store session
+        session([
+            'admin_id' => $admin->id,
+            'admin_email' => $admin->email
+        ]);
+
         return redirect()->route('admin.dashboard');
     }
 

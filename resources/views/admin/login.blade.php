@@ -43,6 +43,11 @@
             <div class="mb-4">
                 <h2 class="text-center fs-3 fw-semibold"> Sign in </h2>
             </div>
+            @if(session('error'))
+            <div class="alert alert-danger text-center py-2">
+                {{ session('error') }}
+            </div>
+            @endif
             <div class="mb-4">
                 <label class="form-label">Email <span class="text-danger">*</span></label>
                 <input type="email" class="form-control" name="email" required>

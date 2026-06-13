@@ -90,5 +90,5 @@ Route::prefix('/admin')->group(function () {
         ->name('admin.profile');
         
     Route::put('/profile/update/{id}', [ProfileController::class, 'update'])
-        ->name('admin.profile');
+        ->name('admin.profile.update');
 });
