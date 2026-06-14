@@ -1,23 +1,32 @@
 <?php
+
 namespace App\Http\Controllers\Teacher;
+
 use App\Http\Controllers\Controller;
 
-use App\Models\Admin\Teachers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Models\Admin\Teachers;
 
 class ProfileController extends Controller
 {
     public function profile()
     {
+        $teacher = Teachers::find(session('teacher_id'));
+
+        if (!$teacher) {
+            return redirect('/home');
+        }
+
         return view('teacher.profile', [
-            'pageTitle' => 'Profile'
+            'pageTitle' => 'Profile',
+            'teacher' => $teacher
         ]);
     }
 
-    // Edit Profile
-     public function update(Request $request, $id)
+    // EditTeacher Profile
+    public function update(Request $request, $id)
     {
 
         $teacher = Teachers::findOrFail($id);

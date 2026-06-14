@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Student;
-
 use App\Http\Controllers\Controller;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -11,10 +11,18 @@ use App\Models\Admin\Students;
 
 class ProfileController extends Controller
 {
+   
     public function profile()
     {
+        $student = Students::find(session('student_id'));
+
+        if (!$student) {
+            return redirect('/home');
+        }
+
         return view('student.profile', [
-            'pageTitle' => 'Profile'
+            'pageTitle' => 'Profile',
+            'student' => $student
         ]);
     }
 

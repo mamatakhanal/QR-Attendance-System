@@ -5,7 +5,6 @@
 </head>
 
 <body>
-
     <!-- MAIN LAYOUT -->
     <div class="main-wrapper">
         @include('teacher.sidebar')
@@ -18,7 +17,7 @@
                     @csrf
                     @method('PUT')
 
-                    <input type="hidden" name="id" id="edit_id">
+                    <input type="hidden" name="id" id="profile_id" value="{{ $teacher->id }}">
 
                     <div class="modal-header mb-3">
                         <h3 class="modal-title fw-bold"> Profile </h3>
@@ -28,34 +27,37 @@
 
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
-                            <input type="text" name="name" id="edit_name" class="form-control">
+                            <input type="text" name="name" id="edit_name" class="form-control"
+                                value="{{ $teacher->name }}">
                             <small class="text-danger" id="edit_name_error"></small>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Phone</label>
-                            <input type="text" name="phone" id="edit_phone" class="form-control">
+                            <input type="text" name="phone" id="edit_phone" class="form-control"
+                                value="{{ $teacher->phone }}">
                             <small class="text-danger" id="edit_phone_error"></small>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Address</label>
-                            <textarea name="address" id="edit_address" class="form-control" rows="1"></textarea>
+                            <textarea name="address" id="edit_address" class="form-control" rows="1"> {{ $teacher->address }} </textarea>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Gender</label>
                             <select name="gender" id="edit_gender" class="form-select">
                                 <option value="">Select Gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
+                                <option value="Male" @if ($teacher->gender == 'Male') selected @endif>Male</option>
+                                <option value="Female" @if ($teacher->gender == 'Female') selected @endif>Female</option>
+                                <option value="Other" @if ($teacher->gender == 'Other') selected @endif>Other</option>
                             </select>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" id="edit_email" class="form-control">
+                            <input type="email" name="email" id="edit_email" class="form-control"
+                                value="{{ $teacher->email }}">
                             <small class="text-danger" id="edit_email_error"></small>
                         </div>
 
@@ -79,67 +81,57 @@
             </div>
         </div>
         <script>
-            $('#editTeacherProfile').submit(function(e) {
+            $(document).ready(function() {
 
-                e.preventDefault();
+                $('#editTeacherProfile').on('submit', function(e) {
+                    e.preventDefault();
 
-                let id = $('#edit_id').val();
-                // Clear old validation errors
-                $('.text-danger').text('');
+                    let id = $('#profile_id').val();
+                    $('.text-danger').text('');
 
-                // Send Teacher Profile Update Data to Server Without Reloading Page
-                $.ajax({
-                    url: '/teacher/profile/update/' + id,
-                    type: 'POST',
-                    data: $(this).serialize() + '&_method=PUT',
+                    // Send Teacher Profile Update Data to Server Without Reloading Page
+                    $.ajax({
+                        url: '/teacher/profile/update/' + id,
+                        type: 'POST',
+                        data: $(this).serialize() + '&_method=PUT',
 
-                    success: function(response) {
+                        success: function(response) {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: response.message,
+                                showConfirmButton: false,
+                                timer: 1000,
+                                timerProgressBar: true,
+                                customClass: {
+                                    popup: 'small-toast'
+                                },
+                                showClass: {
+                                    popup: 'animate__animated animate__fadeInRight'
+                                },
 
-                        // Show Success Toast Message
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: response.message,
-                            showConfirmButton: false,
-                            timer: 2000,
-                            timerProgressBar: true,
-                            customClass: {
-                                popup: 'small-toast'
-                            },
-                            showClass: {
-                                popup: 'animate__animated animate__fadeInRight'
-                            },
-
-                            hideClass: {
-                                popup: 'animate__animated animate__fadeOutRight'
-                            }
-                        });
-
-                        // Close modal only after successful update
-                        bootstrap.Modal.getInstance(
-                            document.getElementById('editTeacherModal')
-                        ).hide();
-
-                        // Reload page after 3 seconds
-                        setTimeout(function() {
-                            location.reload();
-                        }, 3000);
-                    },
-
-                    // Validation Error Response
-                    error: function(xhr) {
-                        if (xhr.status == 422) {
-
-                            // Get validation errors
-                            let errors = xhr.responseJSON.errors;
-                            $.each(errors, function(key, value) {
-                                $('#edit_' + key + '_error').text(value[0]);
+                                hideClass: {
+                                    popup: 'animate__animated animate__fadeOutRight'
+                                }
                             });
-                        }
-                    }
-                });
 
+                            setTimeout(function() {
+                                location.reload();
+                            }, 2000);
+                        },
+
+                        // Validation Error Response
+                        error: function(xhr) {
+                            if (xhr.status == 422) {
+                                let errors = xhr.responseJSON.errors;
+                                $.each(errors, function(key, value) {
+                                    $('#edit_' + key + '_error').text(value[0]);
+                                });
+                            }
+                        }
+                    });
+                });
             });
         </script>
 </body>

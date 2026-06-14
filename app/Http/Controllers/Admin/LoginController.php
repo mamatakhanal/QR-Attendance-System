@@ -1,10 +1,9 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Admin\Login;
+use App\Models\Admin\Admin;
 use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
@@ -13,6 +12,7 @@ class LoginController extends Controller
     {
         return view('admin.login');
     }
+
     public function loginCheck(Request $request)
     {
 
@@ -21,7 +21,7 @@ class LoginController extends Controller
             'password' => 'required'
         ]);
 
-        $admin = Login::where('email', $request->email)->first();
+        $admin = Admin::where('email', $request->email)->first();
 
         if (!$admin) {
             return back()->with('error', 'Invalid email or password');

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Mail\StudentMail;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Students;
+use App\Models\Admin\Admin;
+
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -33,9 +35,15 @@ class StudentsController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $admin = Admin::find(session('admin_id'));
+
+        if (!$admin) {
+            return redirect('/admin/login');
+        }
         return view('admin.students', [
             'pageTitle' => 'Students',
-            'students' => $students
+            'students' => $students,
+            'admin' => $admin
         ]);
     }
 
@@ -218,7 +226,7 @@ class StudentsController extends Controller
                 'password' => Hash::make($plainPassword)
             ]);
 
-             Mail::to($student->email)
+            Mail::to($student->email)
                 ->queue(new StudentMail($student, $plainPassword));
 
             return response()->json([

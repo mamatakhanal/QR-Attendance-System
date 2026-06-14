@@ -148,4 +148,11 @@
     .dashboard-card .card-body {
         padding: 22px;
     }
+
+    .small-toast {
+        width: 280px !important;
+        min-height: 50px !important;
+        padding: 10px !important;
+        font-size: 13px !important;
+    }
 </style>

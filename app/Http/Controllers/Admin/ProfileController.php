@@ -1,18 +1,25 @@
 <?php
 namespace App\Http\Controllers\Admin;
-use App\Http\Controllers\Controller;
 
-use App\Models\Admin\Admin;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Models\Admin\Admin;
 
 class ProfileController extends Controller
 {
     public function profile()
     {
+        $admin = Admin::find(session('admin_id'));
+
+        if (!$admin) {
+            return redirect('/admin/login');
+        }
+
         return view('admin.profile', [
-            'pageTitle' => 'Profile'
+            'pageTitle' => 'Profile',
+            'admin' => $admin
         ]);
     }
 
@@ -25,11 +32,7 @@ class ProfileController extends Controller
         // Validation
         $request->validate([
             'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('admins')->ignore($id)
-            ],
+            'email' => ['required', 'email', Rule::unique('admin')->ignore($admin->id),],
             'password' => 'nullable|min:8',
         ], [
             'name.regex' => 'Name must contain only letters.',
@@ -47,6 +50,7 @@ class ProfileController extends Controller
                 'password' => Hash::make($request->password)
             ]);
         }
+
         return response()->json([
             'success' => true,
             'message' => 'Profile updated successfully'

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Mail\TeacherMail;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Teachers;
+use App\Models\Admin\Admin;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -27,9 +28,16 @@ class TeachersController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $admin = Admin::find(session('admin_id'));
+
+        if (!$admin) {
+            return redirect('/admin/login');
+        }
+
         return view('admin.teachers', [
             'pageTitle' => 'Teachers',
-            'teachers' => $teachers
+            'teachers' => $teachers,
+            'admin' => $admin
         ]);
     }
 

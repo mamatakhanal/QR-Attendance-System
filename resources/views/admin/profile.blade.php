@@ -17,7 +17,7 @@
                     @csrf
                     @method('PUT')
 
-                    <input type="hidden" name="id" id="edit_id">
+                    <input type="hidden" name="id" id="profile_id" value="{{ $admin->id }}">
 
                     <div class="modal-header mb-3">
                         <h3 class="modal-title fw-bold"> Profile </h3>
@@ -27,13 +27,15 @@
 
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
-                            <input type="text" name="name" id="edit_name" class="form-control">
+                            <input type="text" name="name" id="edit_name" class="form-control"
+                                value="{{ $admin->name }}">
                             <small class="text-danger" id="edit_name_error"></small>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" id="edit_email" class="form-control">
+                            <input type="email" name="email" id="edit_email" class="form-control"
+                                value="{{ $admin->email }}">
                             <small class="text-danger" id="edit_email_error"></small>
                         </div>
 
@@ -56,85 +58,84 @@
                 </form>
             </div>
         </div>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
         <script>
-            $('#editAdminProfile').submit(function(e) {
+            $(document).ready(function() {
 
-                e.preventDefault();
+                $('#editAdminProfile').on('submit', function(e) {
 
-                let id = $('#edit_id').val();
-                // Clear old validation errors
-                $('.text-danger').text('');
+                    e.preventDefault();
 
-                // Send Admin Profile Update Data to Server Without Reloading Page
-                $.ajax({
-                    url: '/admin/profile/update/' + id,
-                    type: 'POST',
-                    data: $(this).serialize() + '&_method=PUT',
+                    let id = $('#profile_id').val();
+                    $('.text-danger').text('');
 
-                    success: function(response) {
+                    $.ajax({
+                        url: '/admin/profile/update/' + id,
+                        type: 'POST',
+                        data: $(this).serialize() + '&_method=PUT',
+                        success: function(response) {
 
-                        // Show Success Toast Message
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: response.message,
-                            showConfirmButton: false,
-                            timer: 2000,
-                            timerProgressBar: true,
-                            customClass: {
-                                popup: 'small-toast'
-                            },
-                            showClass: {
-                                popup: 'animate__animated animate__fadeInRight'
-                            },
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: response.message,
+                                showConfirmButton: false,
+                                timer: 1000,
+                                timerProgressBar: true,
 
-                            hideClass: {
-                                popup: 'animate__animated animate__fadeOutRight'
-                            }
-                        });
-
-                        // Reload page after 3 seconds
-                        setTimeout(function() {
-                            location.reload();
-                        }, 3000);
-                    },
-
-                    // Validation Error Response
-                    error: function(xhr) {
-                        if (xhr.status == 422) {
-
-                            // Get validation errors
-                            let errors = xhr.responseJSON.errors;
-                            $.each(errors, function(key, value) {
-                                $('#edit_' + key + '_error').text(value[0]);
+                                customClass: {
+                                    popup: 'small-toast'
+                                },
+                                showClass: {
+                                    popup: 'animate__animated animate__fadeInRight'
+                                },
+                                hideClass: {
+                                    popup: 'animate__animated animate__fadeOutRight'
+                                }
                             });
-                        }
-                    }
-                });
 
+                            setTimeout(function() {
+                                location.reload();
+                            }, 2000);
+
+                        },
+
+                        error: function(xhr) {
+                            if (xhr.status == 422) {
+                                let errors = xhr.responseJSON.errors;
+                                $.each(errors, function(key, value) {
+                                    $('#edit_' + key + '_error')
+                                        .text(value[0]);
+                                });
+                            }
+                        }
+                    });
+                });
             });
         </script>
-</body>
 
-<!-- JS-Password-Eye -->
-<script>
-    document.querySelectorAll(".toggle-password").forEach(function(toggle) {
 
-        toggle.addEventListener("click", function() {
+        {{-- JS-Password-Eye --}}
+        <script>
+            document.querySelectorAll(".toggle-password").forEach(function(toggle) {
 
-            let input = this.parentElement.querySelector(".edit-password");
-            let icon = this.querySelector("i");
+                toggle.addEventListener("click", function() {
 
-            if (input.type === "password") {
-                input.type = "text";
-                icon.classList.remove("ri-eye-off-line");
-                icon.classList.add("ri-eye-line");
-            } else {
-                input.type = "password";
-                icon.classList.remove("ri-eye-line");
-                icon.classList.add("ri-eye-off-line");
-            }
-        });
-    });
-</script>
+                    let input = this.parentElement.querySelector(".edit-password");
+                    let icon = this.querySelector("i");
+
+                    if (input.type === "password") {
+                        input.type = "text";
+                        icon.classList.remove("ri-eye-off-line");
+                        icon.classList.add("ri-eye-line");
+                    } else {
+                        input.type = "password";
+                        icon.classList.remove("ri-eye-line");
+                        icon.classList.add("ri-eye-off-line");
+                    }
+                });
+            });
+        </script>
