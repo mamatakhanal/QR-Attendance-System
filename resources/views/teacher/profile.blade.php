@@ -12,7 +12,7 @@
             @include('teacher.navbar')
 
             <!-- CONTENT -->
-            <div class="card shadow-sm border-0 m-3 px-4 rounded-4">
+            <div class="card shadow-sm border-0 mx-3 my-2 px-4 rounded-4">
                 <form id="editTeacherProfile" class=" p-4">
                     @csrf
                     @method('PUT')

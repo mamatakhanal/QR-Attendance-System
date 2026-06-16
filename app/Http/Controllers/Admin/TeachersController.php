@@ -48,13 +48,13 @@ class TeachersController extends Controller
         $request->validate([
             'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
             'email' => 'required|email|unique:teachers,email',
-            'phone' => 'required|numeric|digits_between:7,15',
+            'phone' => 'required|numeric|regex:/^[9][0-9]{9}$/',
             'password' => 'required|min:8',
         ], [
             'name.regex' => 'Name must contain only letters.',
             'email.unique' => 'Email already exists.',
             'phone.numeric' => 'Phone number must contain numbers only.',
-            'phone.digits_between' => 'Phone number must be between 7 and 15 digits.',
+            'phone.regex' => 'Phone number must start with 9 and be exactly 10 digits.',
             'password.min' => 'Password must be at least 8 characters.',
         ]);
 
@@ -80,7 +80,7 @@ class TeachersController extends Controller
         // Validation
         $request->validate([
             'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
-            'phone' => 'required|numeric|digits_between:7,15',
+            'phone' => 'required|numeric|regex:/^[9][0-9]{9}$/',
             'email' => [
                 'required',
                 'email',
@@ -90,7 +90,7 @@ class TeachersController extends Controller
         ], [
             'name.regex' => 'Name must contain only letters.',
             'phone.numeric' => 'Phone number must contain numbers only.',
-            'phone.digits_between' => 'Phone number must be between 7 and 15 digits.',
+            'phone.regex' => 'Phone number must start with 9 and be exactly 10 digits.',
             'email.unique' => 'Email already exists.',
             'password.min' => 'Password must be at least 8 characters.',
         ]);

@@ -139,7 +139,7 @@ class StudentsController extends Controller
                     )
                     ->ignore($id),
             ],
-            'phone' => 'nullable|numeric|digits_between:7,15',
+            'phone' => 'nullable|numeric|regex:/^[9][0-9]{9}$/',
             'dob' => 'nullable|date|before:-15 years',
             'email' => [
                 'required',
@@ -164,7 +164,7 @@ class StudentsController extends Controller
             'name.regex' => 'Name must contain only letters.',
             'roll_no.unique' => 'This roll number already exists in the selected batch.',
             'phone.numeric' => 'Phone number must contain numbers only.',
-            'phone.digits_between' => 'Phone number must be between 7 and 15 digits.',
+            'phone.regex' => 'Phone number must start with 9 and be exactly 10 digits.',
             'dob.before' => 'Student must be at least 15 years old.',
             'email.unique' => 'Email already exists.',
             'password.min' => 'Password must be at least 8 characters.',
