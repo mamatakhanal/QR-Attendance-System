@@ -116,7 +116,7 @@
                         </div>
                     </div>
 
-                    <div class="modal-footer mb-0">
+                    <div class="modal-footer mt-1 mb-0">
                         <button type="submit" class="btn btn-primary">Update Student</button>
                     </div>
                 </form>

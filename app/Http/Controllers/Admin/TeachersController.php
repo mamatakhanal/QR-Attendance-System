@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Mail\TeacherMail;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Teachers;
 use App\Models\Admin\Admin;
+use App\Models\Admin\Teachers;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -58,7 +58,6 @@ class TeachersController extends Controller
             'password.min' => 'Password must be at least 8 characters.',
         ]);
 
-        // Create teacher
         $teacher = Teachers::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -123,6 +122,7 @@ class TeachersController extends Controller
         return redirect()->back()->with('success', 'Teacher deleted successfully');
     }
 
+    // Send Mail
     public function sendEmail($id)
     {
         try {

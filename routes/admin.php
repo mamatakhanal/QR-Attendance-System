@@ -26,6 +26,9 @@ Route::prefix('/admin')->group(function () {
         Route::post('/logout', 'logout')->name('admin.logout');
     });
 
+
+
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])
         ->name('admin.dashboard');
 
@@ -77,8 +80,22 @@ Route::prefix('/admin')->group(function () {
     Route::get('/classes', [ClassesController::class, 'classes'])
         ->name('admin.classes');
 
+
+    // Subjects    
     Route::get('/subjects', [SubjectsController::class, 'subjects'])
         ->name('admin.subjects');
+
+    Route::post('/subjects/create', [SubjectsController::class, 'create'])
+        ->name('subjects.create');
+
+    Route::put('/subjects/update/{id}', [SubjectsController::class, 'update'])
+        ->name('subjects.update');
+
+    Route::delete('/subjects/{id}', [SubjectsController::class, 'delete'])
+        ->name('subjects.delete');
+
+
+
 
     Route::get('/assignclass', [AssignclassController::class, 'assignclass'])
         ->name('admin.assignclass');
@@ -88,7 +105,7 @@ Route::prefix('/admin')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'profile'])
         ->name('admin.profile');
-        
+
     Route::put('/profile/update/{id}', [ProfileController::class, 'update'])
         ->name('admin.profile.update');
 });

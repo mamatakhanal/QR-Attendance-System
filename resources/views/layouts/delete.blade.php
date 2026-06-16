@@ -16,7 +16,7 @@
                                 Cancel
                             </button>
                             <button class="btn btn-danger px-4" type="submit">
-                                delete
+                                Delete
                             </button>
                         </div>
                     </form>
