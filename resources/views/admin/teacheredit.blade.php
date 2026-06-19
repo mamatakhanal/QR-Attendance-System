@@ -96,7 +96,7 @@
                         icon: 'success',
                         title: response.message,
                         showConfirmButton: false,
-                        timer: 2000,
+                        timer: 1000,
                         timerProgressBar: true,
                         customClass: {
                             popup: 'small-toast'
@@ -118,7 +118,7 @@
                     // Reload page after 3 seconds
                     setTimeout(function() {
                         location.reload();
-                    }, 3000);
+                    }, 2000);
                 },
 
                 // Validation Error Response

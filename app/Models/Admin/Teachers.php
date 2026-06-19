@@ -20,21 +20,17 @@ class Teachers extends Model
         'address',
     ];
 
-//    public function subjects()
-//     {
-//         return $this->belongsToMany(
-//             Subjects::class,
-//             'subject_teacher',
-//             'teacher_id',
-//             'subject_id'
-//         );
-//     }
-
+    public function subjects()
+    {
+        return $this->belongsToMany(
+            Subjects::class,
+            'subject_teacher',
+            'teacher_id',
+            'subject_id'
+        )->withPivot('semester');
+    }
     public function attendance()
     {
         return $this->hasMany(Attendance::class, 'teacher_id');
     }
 }
-
-
-

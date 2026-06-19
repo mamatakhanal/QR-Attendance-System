@@ -8,6 +8,7 @@
 </head>
 
 <body>
+    @include('layouts.toast')
     <!-- MAIN LAYOUT -->
     <div class="main-wrapper">
         @include('admin.sidebar')

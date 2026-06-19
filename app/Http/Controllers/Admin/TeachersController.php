@@ -138,7 +138,7 @@ class TeachersController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Email sent successfully'
+                'message' => 'Mail sent successfully'
             ]);
         } catch (\Exception $e) {
 

@@ -14,15 +14,16 @@ class Subjects extends Model
         'semester',
     ];
 
-    // public function teachers()
-    // {
-    //     return $this->belongsToMany(
-    //         Teachers::class,
-    //         'subject_teacher',
-    //         'subject_id',
-    //         'teacher_id'
-    //     );
-    // }
+
+    public function teachers()
+    {
+        return $this->belongsToMany(
+            Teachers::class,
+            'subject_teacher',
+            'subject_id',
+            'teacher_id'
+        );
+    }
 
     public function attendance()
     {

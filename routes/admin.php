@@ -76,11 +76,6 @@ Route::prefix('/admin')->group(function () {
 
 
 
-
-    Route::get('/classes', [ClassesController::class, 'classes'])
-        ->name('admin.classes');
-
-
     // Subjects    
     Route::get('/subjects', [SubjectsController::class, 'subjects'])
         ->name('admin.subjects');
@@ -96,9 +91,27 @@ Route::prefix('/admin')->group(function () {
 
 
 
-
+    // Assign Classes
     Route::get('/assignclass', [AssignclassController::class, 'assignclass'])
         ->name('admin.assignclass');
+
+    Route::post('/assignclass/create', [AssignclassController::class, 'create'])
+        ->name('assignclass.create');
+
+    Route::put('/assignclass/update/{id}', [AssignclassController::class, 'update'])
+        ->name('assignclass.update');
+
+    Route::delete('/assignclass/{teacher_id}/{subject_id}', [AssignclassController::class, 'delete'])
+        ->name('assignclass.delete');
+
+    Route::get('/assignclass/{semester}', [AssignclassController::class, 'getSubjects'])
+        ->name('assignclass.getsubjects');
+
+
+
+    Route::get('/classes', [ClassesController::class, 'classes'])
+        ->name('admin.classes');
+
 
     Route::get('/attendance', [AttendanceController::class, 'attendance'])
         ->name('admin.attendance');
