@@ -25,6 +25,11 @@ class Subjects extends Model
         );
     }
 
+    public function assignClasses()
+    {
+        return $this->hasMany(AssignClass::class, 'subject_id');
+    }
+
     public function attendance()
     {
         return $this->hasMany(Attendance::class, 'subject_id');

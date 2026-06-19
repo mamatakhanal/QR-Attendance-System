@@ -29,6 +29,11 @@ class Teachers extends Model
             'subject_id'
         )->withPivot('semester');
     }
+
+    public function assignClasses()
+    {
+        return $this->hasMany(AssignClass::class, 'teacher_id');
+    }
     public function attendance()
     {
         return $this->hasMany(Attendance::class, 'teacher_id');
