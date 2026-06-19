@@ -134,11 +134,11 @@ class TeachersController extends Controller
             ]);
 
             Mail::to($teacher->email)
-                ->queue(new TeacherMail($teacher, $plainPassword));
+                ->send(new TeacherMail($teacher, $plainPassword));
 
             return response()->json([
                 'success' => true,
-                'message' => 'Mail sent successfully'
+                'message' => 'Email sent successfully'
             ]);
         } catch (\Exception $e) {
 

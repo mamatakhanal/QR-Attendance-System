@@ -89,7 +89,7 @@
                 icon: 'info',
                 title: 'Sending mail...',
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 3000,
                 timerProgressBar: true,
                 customClass: {
                     popup: 'small-toast'
@@ -131,7 +131,7 @@
                         icon: 'error',
                         title: 'Mail failed',
                         showConfirmButton: false,
-                        timer: 2000
+                        timer: 1000
                     });
 
                 }

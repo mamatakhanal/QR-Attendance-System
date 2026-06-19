@@ -227,7 +227,7 @@ class StudentsController extends Controller
             ]);
 
             Mail::to($student->email)
-                ->queue(new StudentMail($student, $plainPassword));
+                ->send(new StudentMail($student, $plainPassword));
 
             return response()->json([
                 'success' => true,
