@@ -5,7 +5,7 @@
 
             <div class="modal-content px-4 pt-4 rounded-4">
 
-                <form id="assignclassForm">
+                <form id="assignclassForm" action="javascript:void(0);">
                     @csrf
 
                     <div class="modal-header">
@@ -17,7 +17,7 @@
 
                         <div class="col-md-12">
                             <label class="form-label">Teacher</label>
-                            <select name="teacher_id" id="teacher" class="form-select" required>
+                            <select name="teacher_id" id="teacher" class="form-select">
                                 <option value="">Select Teacher</option>
                                 @foreach ($teachers as $teacher)
                                     <option value="{{ $teacher->id }}">
@@ -29,7 +29,7 @@
 
                         <div class="col-md-12">
                             <label class="form-label">Semester</label>
-                            <select id="semester" class="form-select">
+                            <select name="semester" id="semester" class="form-select">
                                 <option value="">Select Semester</option>
                                 @for ($i = 1; $i <= 8; $i++)
                                     <option value="{{ $i }}">
@@ -41,23 +41,20 @@
 
                         <div class="col-md-12">
                             <label class="form-label">Subjects</label>
-
                             <div class="dropdown">
-                                <button id="subjectBtn" class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button"
+                                <button id="subjectBtnCreate"
+                                    class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button"
                                     data-bs-toggle="dropdown"> Select Subjects </button>
-
                                 <ul class="dropdown-menu w-100 p-3" id="subjectDropdown"
                                     style="max-height:250px; overflow-y:auto;">
                                     <li>Select semester first</li>
                                 </ul>
                             </div>
-                            <div id="selectedSubjects"></div>
-
                         </div>
 
                     </div>
                     <div class="modal-footer mt-3 mb-0">
-                        <button class="btn btn-primary">Assign Subject</button>
+                        <button class="btn btn-success">Save </button>
                     </div>
                 </form>
             </div>
@@ -74,6 +71,9 @@
                 url: "{{ route('assignclass.create') }}",
                 type: "POST",
                 data: $(this).serialize(),
+                beforeSend: function() {
+                    console.log($(this).serialize());
+                },
 
                 success: function(response) {
 
@@ -81,7 +81,7 @@
                     Swal.fire({
                         toast: true,
                         position: 'top-end',
-                        icon: 'success',
+                        icon: response.success ? 'success' : 'error',
                         title: response.message,
                         showConfirmButton: false,
                         timer: 2000,
@@ -100,9 +100,11 @@
 
                     $('#assignclassForm')[0].reset();
 
-                    $('#subjects').html(
-                        '<option>Select semester first</option>'
+                    $('#subjectDropdown').html(
+                        '<li>Select semester first</li>'
                     );
+                    $('#selectedSubjects').empty();
+                    $('#subjectBtn').text('Select Subjects');
 
                     const modal = bootstrap.Modal.getInstance(
                         document.getElementById('addAssignclassModal')
@@ -133,11 +135,13 @@
     <script>
         $('#addAssignclassModal').on('hidden.bs.modal', function() {
 
-            // Reset form
             $('#assignclassForm')[0].reset();
-            $('#subjects').html('<option>Select semester first</option>');
+            $('#subjectDropdown').html(
+                '<li>Select semester first</li>'
+            );
 
-            // Clear validation messages
+            $('#selectedSubjects').empty();
+            $('#subjectBtn').text('Select Subjects');
             $('.text-danger').text('');
         });
     </script>
@@ -146,35 +150,26 @@
 <script>
     $(document).on('change', '.subject-check', function() {
 
-        $('#selectedSubjects').empty();
-
         let selectedNames = [];
-
         $('.subject-check:checked').each(function() {
-
-            let id = $(this).val();
-            let label = $("label[for='subject_" + id + "']").text().trim();
-
-            selectedNames.push(label);
-
-            $('#selectedSubjects').append(`
-            <input type="hidden" name="subject_ids[]" value="${id}">
-        `);
+            let name = $(this).next('label').text();
+            selectedNames.push(name);
         });
 
-        // 👉 UPDATE BUTTON TEXT
         if (selectedNames.length > 0) {
-            $('#subjectBtn').text(selectedNames.length + ' Subjects Selected');
+            $('#subjectBtnCreate').text(
+                selectedNames.length + ' Subjects Selected'
+            );
         } else {
-            $('#subjectBtn').text('Select Subjects');
+            $('#subjectBtnCreate').text(
+                'Select Subjects'
+            );
         }
-
     });
 </script>
 
 <script>
     $('#semester').on('change', function() {
-
         let semester = $(this).val();
         let dropdown = $('#subjectDropdown');
         dropdown.html('<li>Loading...</li>');
@@ -191,7 +186,10 @@
                                 <div class="form-check">
                                     <input 
                                     class="form-check-input subject-check"
-                                    type="checkbox" value="${subject.id}" id="subject_${subject.id}">
+                                    type="checkbox" 
+                                    name="subject_ids[]" 
+                                    value="${subject.id}" 
+                                    id="subject_${subject.id}">
                                     <label class="form-check-label" for="subject_${subject.id}">
                                         ${subject.subject_name}
                                     </label>

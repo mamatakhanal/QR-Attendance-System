@@ -78,7 +78,8 @@
                         <div class="col-md-6">
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Batch</label>
-                                <input type="number" id="edit_admission_year" name="admission_year" class="form-control" min="2010" max="{{ date('Y') }}" required>
+                                <input type="number" id="edit_admission_year" name="admission_year"
+                                    class="form-control" min="2010" max="{{ date('Y') }}" required>
                                 <small class="text-danger" id="edit_admission_year_error"></small>
                             </div>
 
@@ -101,7 +102,8 @@
 
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Student Code</label>
-                                <input type="text" name="student_code" id="edit_student_code" class="form-control" readonly>
+                                <input type="text" name="student_code" id="edit_student_code"
+                                    class="form-control" readonly>
                             </div>
 
                         </div>
@@ -109,9 +111,7 @@
                         <!-- QR Code -->
                         <div class="col-md-6 d-flex flex-column align-items-center">
                             <label class="form-label fw-semibold">QR Code</label>
-                            <img id="edit_qr_image"
-                                src=""
-                                class="img-thumbnail shadow-sm p-2"
+                            <img id="edit_qr_image" src="" class="img-thumbnail shadow-sm p-2"
                                 style="width:210px;height:210px;object-fit:contain;">
                         </div>
                     </div>
@@ -231,5 +231,55 @@
         } else {
             semesterSelect.value = semester;
         }
+    });
+</script>
+
+<!--
+    Edit Student Modal Script
+
+    This script handles the "Edit Student" modal behavior.
+    It runs when the modal is opened and automatically:
+    
+    1. Retrieves data from the clicked edit button (data-* attributes)
+    2. Clears previous validation error messages
+    3. Fills the modal form fields with selected student data
+    4. Updates the modal title with student name
+    5. Loads the student QR code dynamically based on student code
+
+    Note:
+    - Requires jQuery and Bootstrap Modal event support
+    - Triggered using 'show.bs.modal' event
+-->
+
+<script>
+    $('#editStudentModal').on('show.bs.modal', function(event) {
+
+        let button = $(event.relatedTarget);
+
+        // Clear old validation errors
+        $('.text-danger').text('');
+
+        // Title
+        $('#student_name_title').text(button.data('name'));
+
+        // Form Fields
+        $('#edit_id').val(button.data('id'));
+        $('#edit_name').val(button.data('name'));
+        $('#edit_roll_no').val(button.data('roll_no'));
+        $('#edit_email').val(button.data('email'));
+        $('#edit_phone').val(button.data('phone'));
+        $('#edit_gender').val(button.data('gender'));
+        $('#edit_dob').val(button.data('dob'));
+        $('#edit_address').val(button.data('address'));
+        $('#edit_current_semester').val(button.data('current_semester'));
+        $('#edit_admission_year').val(button.data('admission_year'));
+        $('#edit_student_code').val(button.data('student_code'));
+
+        // QR Code
+        let studentCode = button.data('student_code');
+        $('#edit_qr_image').attr(
+            'src',
+            '/admin/student-qr/' + encodeURIComponent(studentCode)
+        );
     });
 </script>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Admin\Teachers;
 use App\Models\Admin\Subjects;
+use App\Models\Admin\Assignclass;
 use Illuminate\Http\Request;
 
 class AssignclassController extends Controller
@@ -18,9 +19,11 @@ class AssignclassController extends Controller
             return redirect('/admin/login');
         }
 
-        $assignclasses = Teachers::with('subjects')->paginate();
-
-        $teachers = Teachers::all();
+        $assignclasses = Assignclass::with(['teacher', 'subject'])
+            ->orderBy('semester', 'asc')
+            ->paginate(10);
+            
+        $teachers = Teachers::orderBy('name', 'asc')->get();
         $subjects = Subjects::all();
 
         return view('admin.assignclass', [
@@ -32,7 +35,7 @@ class AssignclassController extends Controller
         ]);
     }
 
-
+    // Create
     public function create(Request $request)
     {
         $request->validate([
@@ -41,33 +44,65 @@ class AssignclassController extends Controller
             'subject_ids' => 'required|array'
         ]);
 
-        $teacher = Teachers::findOrFail($request->teacher_id);
+        $duplicate = false;
+        $inserted = false;
         foreach ($request->subject_ids as $subjectId) {
-            // duplicate data
-            $exists = $teacher->subjects()
-                ->wherePivot('subject_id', $subjectId)
-                ->wherePivot('semester', $request->semester)
-                ->exists();
 
-            if (!$exists) {
-                $teacher->subjects()->attach($subjectId, [
+            $exists = Assignclass::where('teacher_id', $request->teacher_id)
+                ->where('subject_id', $subjectId)
+                ->where('semester', $request->semester)
+                ->exists();
+            if ($exists) {
+                $duplicate = true;
+            } else {
+                Assignclass::create([
+                    'teacher_id' => $request->teacher_id,
+                    'subject_id' => $subjectId,
                     'semester' => $request->semester
                 ]);
+                $inserted = true;
             }
         }
-
+        if ($duplicate && !$inserted) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This teacher already has this subject assigned'
+            ]);
+        }
         return response()->json([
             'success' => true,
             'message' => 'Subject assigned successfully'
         ]);
     }
 
-    // Delete 
-    public function delete($teacher_id, $subject_id)
+    // Update 
+    public function update(Request $request, $id)
     {
-        $teacher = Teachers::findOrFail($teacher_id);
-        $teacher->subjects()->detach($subject_id);
-        return redirect()->back()->with('success', 'Deleted sucessfully');
+        $request->validate([
+            'teacher_id' => 'required',
+            'semester' => 'required',
+            'subject_ids' => 'required|array'
+        ]);
+
+        $assignclass = Assignclass::findOrFail($id);
+        $assignclass->update([
+            'teacher_id' => $request->teacher_id,
+            'subject_id' => $request->subject_ids[0],
+            'semester' => $request->semester
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Subject assigned updated successfully'
+        ]);
+    }
+
+    // Delete 
+    public function delete($id)
+    {
+        AssignClass::findOrFail($id)->delete();
+        return redirect()->back()
+            ->with('success', 'Deleted successfully');
     }
 
 

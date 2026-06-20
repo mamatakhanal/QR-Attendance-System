@@ -129,3 +129,24 @@
         });
     </script>
 </body>
+
+
+<script>
+    $('#editSubjectModal').on('show.bs.modal', function(event) {
+
+        let button = $(event.relatedTarget);
+
+        // Clear old validation errors
+        $('#edit_subject_name_error').text('');
+        $('#edit_subject_code_error').text('');
+        $('#edit_semester_error').text('');
+
+        $('#subject_name_title').text(button.data('subject_name'));
+        // Form Fields
+        $('#edit_id').val(button.data('id'));
+        $('#edit_subject_name').val(button.data('subject_name'));
+        $('#edit_subject_code').val(button.data('subject_code'));
+        $('#edit_semester').val(button.data('semester'));
+        $('#subject_name_title').text(button.data('subject_name'));
+    });
+</script>

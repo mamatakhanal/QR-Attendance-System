@@ -26,45 +26,39 @@
                             <tr>
                                 <th class="py-3">S.N</th>
                                 <th class="py-3">Teacher</th>
+                                <th class="py-3">Semester</th>
                                 <th class="py-3">Subject</th>
                                 <th class="py-3">Code</th>
-                                <th class="py-3">Semester</th>
                                 <th class="py-3">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @php $i = 1; @endphp
-                            @foreach ($assignclasses as $teacher)
-                                @foreach ($teacher->subjects as $subject)
-                                    <tr class="assignclass-row">
-                                        <td>{{ $i++ }}</td>
-                                        <td>{{ $teacher->name }}</td>
-                                        <td>{{ $subject->subject_name }}</td>
-                                        <td>{{ $subject->subject_code }}</td>
-                                        <td>{{ $subject->pivot->semester }}</td>
-                                        <td>
-                                            {{-- <button class="btn btn-outline-warning fw-semibold btn-sm rounded-3 action-btn"
+                            @foreach ($assignclasses as $assignclass)
+                                <tr class="assignclass-row">
+                                    <td>{{ $i++ }}</td>
+                                    <td>{{ $assignclass->teacher->name ?? 'No Teacher' }}</td>
+                                    <td>Semester {{ $assignclass->semester }}</td>
+                                    <td>{{ $assignclass->subject->subject_name ?? 'No Subject' }}</td>
+                                    <td>{{ $assignclass->subject->subject_code }}</td>
+                                    <td>
+                                        <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 edit-btn"
                                             style="font-size:10px;" data-bs-toggle="modal"
-                                            data-bs-target="#editStudentModal" data-id="{{ $student->id }}"
-                                            data-name="{{ $student->name }}" data-roll_no="{{ $student->roll_no }}"
-                                            data-email="{{ $student->email }}" data-phone="{{ $student->phone }}"
-                                            data-gender="{{ $student->gender }}" data-dob="{{ $student->dob }}"
-                                            data-address="{{ $student->address }}"
-                                            data-current_semester="{{ $student->current_semester }}"
-                                            data-admission_year="{{ $student->admission_year }}"
-                                            data-student_code="{{ $student->student_code }}">
+                                            data-bs-target="#editAssignclassModal" data-id="{{ $assignclass->id }}"
+                                            data-teacher="{{ $assignclass->teacher_id }}"
+                                            data-teacher-name="{{ $assignclass->teacher->name }}"
+                                            data-semester="{{ $assignclass->semester }}"
+                                            data-subject="{{ $assignclass->subject_id }}">
                                             <i class="bi bi-pencil-square"></i> Edit
-                                        </button> &nbsp; --}}
-                                            <button
-                                                class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn"
-                                                style="font-size:10px;" data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal"
-                                                data-url="{{ route('assignclass.delete', ['teacher_id' => $teacher->id, 'subject_id' => $subject->id]) }}">
-                                                <i class="bi bi-trash"></i> Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
+                                        </button> &nbsp;
+                                        <button class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn"
+                                            style="font-size:10px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                            data-id="{{ $assignclass->id }}"
+                                            data-url="{{ route('assignclass.delete', $assignclass->id) }}">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>

@@ -43,7 +43,7 @@
                                     <td>{{ $subject->subject_name }}</td>
                                     <td>{{ $subject->semester }}</td>
                                     <td>
-                                        <button class="btn btn-outline-warning fw-semibold btn-sm rounded-3 action-btn"
+                                        <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 action-btn"
                                             style="font-size:10px;" data-bs-toggle="modal"
                                             data-bs-target="#editSubjectModal" data-id="{{ $subject->id }}"
                                             data-subject_name="{{ $subject->subject_name }}"
@@ -69,23 +69,3 @@
         </div>
     </div>
 </body>
-
-<script>
-    $('#editSubjectModal').on('show.bs.modal', function(event) {
-
-        let button = $(event.relatedTarget);
-
-        // Clear old validation errors
-        $('#edit_subject_name_error').text('');
-        $('#edit_subject_code_error').text('');
-        $('#edit_semester_error').text('');
-        
-        $('#subject_name_title').text(button.data('subject_name'));
-        // Form Fields
-        $('#edit_id').val(button.data('id'));
-        $('#edit_subject_name').val(button.data('subject_name'));
-        $('#edit_subject_code').val(button.data('subject_code'));
-        $('#edit_semester').val(button.data('semester'));
-        $('#subject_name_title').text(button.data('subject_name'));
-    });
-</script>

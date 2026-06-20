@@ -49,7 +49,7 @@
                                     <td>{{ $student->admission_year }}</td>
                                     <td>{{ $student->email }}</td>
                                     <td>
-                                        <button class="btn btn-outline-warning fw-semibold btn-sm rounded-3 action-btn"
+                                        <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 action-btn"
                                             style="font-size:10px;" data-bs-toggle="modal"
                                             data-bs-target="#editStudentModal" data-id="{{ $student->id }}"
                                             data-name="{{ $student->name }}" data-roll_no="{{ $student->roll_no }}"
@@ -67,7 +67,7 @@
                                             data-url="{{ route('students.delete', $student->id) }}">
                                             <i class="bi bi-trash"></i> Delete
                                         </button> &nbsp;
-                                        <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 send-mail"
+                                        <button class="btn btn-outline-secondary fw-semibold btn-sm rounded-3 send-mail"
                                             style="font-size:10px;" data-bs-toggle="modal"
                                             data-id="{{ $student->id }}">
                                             <i class="bi bi-envelope"></i> Send
@@ -142,36 +142,3 @@
         });
     </script>
 </body>
-
-<script>
-    $('#editStudentModal').on('show.bs.modal', function(event) {
-
-        let button = $(event.relatedTarget);
-
-        // Clear old validation errors
-        $('.text-danger').text('');
-
-        // Title
-        $('#student_name_title').text(button.data('name'));
-
-        // Form Fields
-        $('#edit_id').val(button.data('id'));
-        $('#edit_name').val(button.data('name'));
-        $('#edit_roll_no').val(button.data('roll_no'));
-        $('#edit_email').val(button.data('email'));
-        $('#edit_phone').val(button.data('phone'));
-        $('#edit_gender').val(button.data('gender'));
-        $('#edit_dob').val(button.data('dob'));
-        $('#edit_address').val(button.data('address'));
-        $('#edit_current_semester').val(button.data('current_semester'));
-        $('#edit_admission_year').val(button.data('admission_year'));
-        $('#edit_student_code').val(button.data('student_code'));
-
-        // QR Code
-        let studentCode = button.data('student_code');
-        $('#edit_qr_image').attr(
-            'src',
-            '/admin/student-qr/' + encodeURIComponent(studentCode)
-        );
-    });
-</script>

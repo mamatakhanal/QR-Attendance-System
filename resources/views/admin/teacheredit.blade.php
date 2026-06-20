@@ -139,3 +139,28 @@
 </body>
 
 
+<script>
+    $('#editTeacherModal').on('show.bs.modal', function(event) {
+
+        let button = $(event.relatedTarget);
+
+        // Clear old validation errors
+        $('#edit_name_error').text('');
+        $('#edit_phone_error').text('');
+        $('#edit_email_error').text('');
+        $('#edit_password_error').text('');
+        $('.edit-password').val('');
+
+        // Title
+        $('#teacher_name_title').text(button.data('name'));
+
+        // Form Fields
+        $('#edit_id').val(button.data('id'));
+        $('#edit_name').val(button.data('name'));
+        $('#edit_email').val(button.data('email'));
+        $('#edit_phone').val(button.data('phone'));
+        $('#edit_gender').val(button.data('gender'));
+        $('#edit_address').val(button.data('address'));
+
+    });
+</script>

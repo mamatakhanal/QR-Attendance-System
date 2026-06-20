@@ -41,6 +41,9 @@ Route::prefix('/admin')->group(function () {
     Route::post('/teachers/create', [TeachersController::class, 'create'])
         ->name('teachers.create');
 
+    Route::post('/teacher/assign', [TeachersController::class, 'store'])
+        ->name('teacher.assign');
+
     Route::put('/teachers/update/{id}', [TeachersController::class, 'update'])
         ->name('teachers.update');
 
@@ -101,7 +104,7 @@ Route::prefix('/admin')->group(function () {
     Route::put('/assignclass/update/{id}', [AssignclassController::class, 'update'])
         ->name('assignclass.update');
 
-    Route::delete('/assignclass/{teacher_id}/{subject_id}', [AssignclassController::class, 'delete'])
+    Route::delete('/assignclass/{id}', [AssignclassController::class, 'delete'])
         ->name('assignclass.delete');
 
     Route::get('/assignclass/{semester}', [AssignclassController::class, 'getSubjects'])
