@@ -15,12 +15,14 @@
       <!-- RIGHT -->
       <div class="d-flex align-items-center gap-4">
         <!-- SEARCH -->
-        <form method="GET" action="{{ url()->current() }}">
+        <form method="GET" action="{{ request()->url() }}">
+        {{-- <form method="GET" action="{{ url()->i() }}"> --}}
           <div class="search-box position-relative mt-3" style="max-width:300px;">
             <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2 small text-muted"></i>
             <input type="text" id="searchInput" name="search" value="{{ request('search') }}" class="form-control form-control-sm rounded-3 ps-4 py-2" placeholder="Search {{ $pageTitle ?? '' }}">
           </div>
         </form>
+        
 
         <!-- PROFILE -->
         <div class="dropdown">
@@ -86,15 +88,16 @@
 <script>
   let searchTimer;
 
-  document.getElementById('searchInput').addEventListener('keyup', function() {
+  document.getElementById('searchInput').addEventListener('input', function () {
 
     clearTimeout(searchTimer);
 
     let form = this.form;
 
-    searchTimer = setTimeout(function() {
+    searchTimer = setTimeout(function () {
       form.submit();
-    }, 1000); // wait 1 seconds after typing stops
+    }, 1000); 
 
   });
 </script>
+

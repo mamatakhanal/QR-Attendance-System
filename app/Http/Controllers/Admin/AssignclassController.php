@@ -11,20 +11,56 @@ use Illuminate\Http\Request;
 
 class AssignclassController extends Controller
 {
-    public function assignclass()
+    public function assignclass(Request $request)
     {
+        $search = $request->search;
+        $assignclasses = Assignclass::with('teacher')
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $lower = strtolower($search);
+                    // 🔹 teacher search
+                    $q->orWhereHas('teacher', function ($t) use ($search) {
+                        $t->where('name', 'like', "%{$search}%");
+                    });
+
+                    if (is_numeric($search)) {
+                        $q->orWhere('semester', (int)$search);
+                    }
+
+                    preg_match('/\d+/', $search, $matches);
+                    $number = $matches[0] ?? null;
+
+                    if (str_contains($lower, 'sem') || str_contains($lower, 'semester')) {
+                        if ($number) {
+                            $q->orWhere('semester', (int)$number);
+                        }
+                    }
+
+                    $subjectIds = \App\Models\Admin\Subjects::where('subject_name', 'like', "%{$search}%")
+                        ->pluck('id');
+
+                    if ($subjectIds->isNotEmpty()) {
+                        $q->orWhere(function ($sq) use ($subjectIds) {
+                            foreach ($subjectIds as $id) {
+                                $sq->orWhere('subject_ids', 'like', "%{$id}%");
+                            }
+                        });
+                    }
+                });
+            })
+            ->orderBy('semester', 'asc')
+            ->paginate(10)
+            ->withQueryString();
+
+
         $admin = Admin::find(session('admin_id'));
 
         if (!$admin) {
             return redirect('/admin/login');
         }
 
-        $assignclasses = Assignclass::with(['teacher', 'subject'])
-            ->orderBy('semester', 'asc')
-            ->paginate(10);
-            
         $teachers = Teachers::orderBy('name', 'asc')->get();
-        $subjects = Subjects::all();
+        $subjects = Subjects::pluck('subject_name', 'id');
 
         return view('admin.assignclass', [
             'pageTitle' => 'Assign Class',
@@ -42,38 +78,58 @@ class AssignclassController extends Controller
             'teacher_id' => 'required',
             'semester' => 'required',
             'subject_ids' => 'required|array'
+
         ]);
 
-        $duplicate = false;
-        $inserted = false;
-        foreach ($request->subject_ids as $subjectId) {
+        $teacherId = (int) $request->teacher_id;
+        $semester  = (int) $request->semester;
+        $newSubjects = array_map('intval', $request->subject_ids);
 
-            $exists = Assignclass::where('teacher_id', $request->teacher_id)
-                ->where('subject_id', $subjectId)
-                ->where('semester', $request->semester)
-                ->exists();
-            if ($exists) {
-                $duplicate = true;
-            } else {
-                Assignclass::create([
-                    'teacher_id' => $request->teacher_id,
-                    'subject_id' => $subjectId,
-                    'semester' => $request->semester
+        $assign = Assignclass::where('teacher_id', $teacherId)
+            ->where('semester', $semester)
+            ->first();
+
+        //  Same teacher & same semester already exists
+        if ($assign) {
+            $oldSubjects = json_decode($assign->subject_ids, true) ?? [];
+            $oldSubjects = array_map('intval', $oldSubjects);
+
+            $duplicate = array_intersect($oldSubjects, $newSubjects);
+
+            if (!empty($duplicate)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected subjects are already assigned'
                 ]);
-                $inserted = true;
             }
-        }
-        if ($duplicate && !$inserted) {
+
+            $merged = array_values(array_unique(array_merge($oldSubjects, $newSubjects)));
+
+            $assign->update([
+                'subject_ids' => json_encode($merged)
+            ]);
+
             return response()->json([
-                'success' => false,
-                'message' => 'This teacher already has this subject assigned'
+                'success' => true,
+                'message' => 'New subjects added successfully'
+
             ]);
         }
+
+        // Create New Assignment
+        $created = Assignclass::create([
+            'teacher_id'   => $teacherId,
+            'semester'     => $semester,
+            'subject_ids'  => json_encode($newSubjects)
+        ]);
+
         return response()->json([
             'success' => true,
-            'message' => 'Subject assigned successfully'
+            'message' => 'Subject assigned successfully',
+            'data'    => $created
         ]);
     }
+
 
     // Update 
     public function update(Request $request, $id)
@@ -85,15 +141,17 @@ class AssignclassController extends Controller
         ]);
 
         $assignclass = Assignclass::findOrFail($id);
+
+        // JUST UPDATE SAME ROW (NO DELETE, NO LOOP)
         $assignclass->update([
             'teacher_id' => $request->teacher_id,
-            'subject_id' => $request->subject_ids[0],
-            'semester' => $request->semester
+            'semester' => $request->semester,
+            'subject_ids' => json_encode($request->subject_ids)
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Subject assigned updated successfully'
+            'message' => 'Updated successfully'
         ]);
     }
 

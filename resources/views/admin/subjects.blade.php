@@ -41,7 +41,7 @@
                                     <td>{{ $subjects->firstItem() + $loop->index }}</td>
                                     <td>{{ $subject->subject_code }}</td>
                                     <td>{{ $subject->subject_name }}</td>
-                                    <td>{{ $subject->semester }}</td>
+                                    <td>Semester {{ $subject->semester }}</td>
                                     <td>
                                         <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 action-btn"
                                             style="font-size:10px;" data-bs-toggle="modal"

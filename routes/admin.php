@@ -107,7 +107,7 @@ Route::prefix('/admin')->group(function () {
     Route::delete('/assignclass/{id}', [AssignclassController::class, 'delete'])
         ->name('assignclass.delete');
 
-    Route::get('/assignclass/{semester}', [AssignclassController::class, 'getSubjects'])
+    Route::get('/assignclass/subjects/{semester}', [AssignclassController::class, 'getSubjects'])
         ->name('assignclass.getsubjects');
 
 

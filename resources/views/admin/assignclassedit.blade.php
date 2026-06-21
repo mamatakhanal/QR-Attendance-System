@@ -66,133 +66,146 @@
             </div>
         </div>
     </div>
+</body>
 
-    <script>
-        $(document).on('click', '.edit-btn', function() {
+<script>
+    let selectedSubjects = [];
+    // Open Edit Modal
+    $(document).on('click', '.edit-btn', function() {
 
-            let id = $(this).data('id');
-            let teacher = $(this).data('teacher');
-            let teacherName = $(this).data('teacher-name');
-            let semester = $(this).data('semester');
-            let subject = $(this).data('subject');
+        let id = $(this).data('id');
+        let teacher = $(this).data('teacher');
+        let semester = $(this).data('semester');
+        let teacherName = $(this).data('teacher-name');
+        let subjects = $(this).data('subjects');
 
-            $('#edit_id').val(id);
-            $('#edit_teacher').val(teacher);
-            $('#edit_semester').val(semester);
-            $('#teacher_name_title').text(teacherName);
+        if (typeof subjects === 'string') {
+            subjects = JSON.parse(subjects);
+        }
 
-            $('#editsubjectDropdown').html('<li>Loading...</li>');
+        selectedSubjects = subjects.map(Number);
 
-            $.ajax({
-                url: "/admin/assignclass/" + semester,
-                type: "GET",
+        $('#edit_id').val(id);
+        $('#edit_teacher').val(teacher);
+        $('#edit_semester').val(semester);
+        $('#teacher_name_title').text(teacherName);
 
-                success: function(data) {
+        loadSubjects(semester);
+    });
 
-                    $('#editsubjectDropdown').empty();
+    // Load Subjects Function
+    function loadSubjects(semester) {
 
-                    data.forEach(function(sub) {
+        $('#editsubjectDropdown').html('<li>Loading...</li>');
 
-                        let checked = sub.id == subject ? 'checked' : '';
+        $.ajax({
+            url: "/admin/assignclass/subjects/" + semester,
+            type: "GET",
+            success: function(data) {
 
-                        $('#editsubjectDropdown').append(`
+                $('#editsubjectDropdown').empty();
 
-                                <li>
-                                <div class="form-check">
+                data.forEach(function(sub) {
 
-                                    <input 
-                                    class="form-check-input subject-check"
-                                    type="checkbox" name="subject_ids[]"
-                                    value="${sub.id}" ${checked} id="sub_${sub.id}">
+                    let checked = selectedSubjects.includes(Number(sub.id)) ? 'checked' : '';
 
-                                    <label class="form-check-label">
-                                    ${sub.subject_name}
-                                    </label>
+                    $('#editsubjectDropdown').append(`
+                    <li>
+                        <div class="form-check">
+                            <input class="form-check-input edit-subject-check"
+                                type="checkbox"
+                                name="subject_ids[]"
+                                value="${sub.id}"
+                                ${checked}
+                                id="sub_${sub.id}">
+                            <label class="form-check-label">
+                                ${sub.subject_name}
+                            </label>
+                        </div>
+                    </li>
+                `);
+                });
 
-                                </div>
-                                </li>
-                            `);
-                    });
-                }
-            });
-        });
-    </script>
-
-    {{-- Get Subject List --}}
-    <script>
-        $(document).on('change', '.subject-check', function() {
-
-            let count = $('.subject-check:checked').length;
-            if (count > 0) {
-                $('#subjectBtnEdit').text(count + ' Subjects Selected');
-            } else {
-                $('#subjectBtnEdit').text('Select Subjects');
+                updateSelectedCount();
             }
         });
-    </script>
+    }
 
-    <script>
-        $('#editAssignclassForm').submit(function(e) {
+    // Semester Change
+    $(document).on('change', '#edit_semester', function() {
+        let semester = $(this).val();
+        selectedSubjects = []; 
+        loadSubjects(semester);
+    });
 
-            e.preventDefault();
+    // Count Selected Subjects
 
-            let id = $('#edit_id').val();
-            // Clear old validation errors
-            $('.text-danger').text('');
-            $('#teacher_name_title').text($(this).data('teacher_name'));
+    $(document).on('change', '.edit-subject-check', function() {
+        updateSelectedCount();
+    });
 
-            $.ajax({
-                url: '/admin/assignclass/update/' + id,
-                type: 'POST',
-                data: $(this).serialize() + '&_method=PUT',
+    function updateSelectedCount() {
+        let count = $('.edit-subject-check:checked').length;
 
-                success: function(response) {
+        $('#subjectBtnEdit').text(
+            count > 0 ? count + ' Subjects Selected' : 'Select Subjects'
+        );
+    }
 
-                    // Show Success Toast Message
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'success',
-                        title: response.message,
-                        showConfirmButton: false,
-                        timer: 1000,
-                        timerProgressBar: true,
-                        customClass: {
-                            popup: 'small-toast'
-                        },
-                        showClass: {
-                            popup: 'animate__animated animate__fadeInRight'
-                        },
+    // Reset Modal
+    $('#editAssignclassModal').on('hidden.bs.modal', function() {
 
-                        hideClass: {
-                            popup: 'animate__animated animate__fadeOutRight'
-                        }
-                    });
+        $('#editAssignclassForm')[0].reset();
+        $('#editsubjectDropdown').html('<li>Select semester first</li>');
+        $('#subjectBtnEdit').text('Select Subjects');
+        selectedSubjects = [];
+    });
 
-                    // Close modal only after successful update
-                    bootstrap.Modal.getInstance(
-                        document.getElementById('editAssignclassModal')
-                    ).hide();
+    // Update AJAX
+    $('#editAssignclassForm').submit(function(e) {
+        e.preventDefault();
 
-                    // Reload page after 3 seconds
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                },
+        $.ajax({
+            url: '/admin/assignclass/update/' + $('#edit_id').val(),
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                _method: 'PUT',
+                teacher_id: $('#edit_teacher').val(),
+                semester: $('#edit_semester').val(),
+                subject_ids: $('.edit-subject-check:checked').map(function() {
+                    return $(this).val();
+                }).get()
+            },
 
-                // Validation Error Response
-                error: function(xhr) {
-                    if (xhr.status == 422) {
+            success: function(response) {
 
-                        // Get validation errors
-                        let errors = xhr.responseJSON.errors;
-                        $.each(errors, function(key, value) {
-                            $('#edit_' + key + '_error').text(value[0]);
-                        });
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: response.message,
+                    showConfirmButton: false,
+                    timer: 1000,
+                    timerProgressBar: true,
+                    customClass: {
+                        popup: 'small-toast'
+                    },
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInRight'
+                    },
+
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutRight'
                     }
-                }
-            });
+                });
 
+                bootstrap.Modal.getInstance(
+                    document.getElementById('editAssignclassModal')
+                ).hide();
+
+                setTimeout(() => location.reload(), 1500);
+            }
         });
-    </script>
-</body>
+    });
+</script>

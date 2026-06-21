@@ -28,7 +28,6 @@
                                 <th class="py-3">Teacher</th>
                                 <th class="py-3">Semester</th>
                                 <th class="py-3">Subject</th>
-                                <th class="py-3">Code</th>
                                 <th class="py-3">Actions</th>
                             </tr>
                         </thead>
@@ -39,8 +38,18 @@
                                     <td>{{ $i++ }}</td>
                                     <td>{{ $assignclass->teacher->name ?? 'No Teacher' }}</td>
                                     <td>Semester {{ $assignclass->semester }}</td>
-                                    <td>{{ $assignclass->subject->subject_name ?? 'No Subject' }}</td>
-                                    <td>{{ $assignclass->subject->subject_code }}</td>
+                                    <td>
+                                        @php
+                                            $subjectIds = json_decode($assignclass->subject_ids ?? '[]', true);
+                                        @endphp
+                                        @php
+                                            $subjectNames = [];
+                                            foreach ($subjectIds as $id) {
+                                                $subjectNames[] = $subjects[$id] ?? '';
+                                            }
+                                        @endphp
+                                        {{ implode(', ', array_filter($subjectNames)) }}
+                                    </td>
                                     <td>
                                         <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 edit-btn"
                                             style="font-size:10px;" data-bs-toggle="modal"
@@ -48,7 +57,7 @@
                                             data-teacher="{{ $assignclass->teacher_id }}"
                                             data-teacher-name="{{ $assignclass->teacher->name }}"
                                             data-semester="{{ $assignclass->semester }}"
-                                            data-subject="{{ $assignclass->subject_id }}">
+                                            data-subjects='@json(json_decode($assignclass->subject_ids ?? "[]"))'>
                                             <i class="bi bi-pencil-square"></i> Edit
                                         </button> &nbsp;
                                         <button class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn"
