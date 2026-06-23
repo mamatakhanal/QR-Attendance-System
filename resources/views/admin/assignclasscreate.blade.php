@@ -17,7 +17,7 @@
 
                         <div class="col-md-12">
                             <label class="form-label">Teacher</label>
-                            <select name="teacher_id" id="teacher" class="form-select">
+                            <select name="teacher_id" id="teacher" class="form-select" required>
                                 <option value="">Select Teacher</option>
                                 @foreach ($teachers as $teacher)
                                     <option value="{{ $teacher->id }}">
@@ -29,7 +29,7 @@
 
                         <div class="col-md-12">
                             <label class="form-label">Semester</label>
-                            <select name="semester" id="semester" class="form-select">
+                            <select name="semester" id="semester" class="form-select" required>
                                 <option value="">Select Semester</option>
                                 @for ($i = 1; $i <= 8; $i++)
                                     <option value="{{ $i }}">
@@ -69,10 +69,34 @@
             // Submit Assign Subject Form
             $('#assignclassForm').submit(function(e) {
                 e.preventDefault();
+                if ($('.subject-check:checked').length === 0) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: 'Please select at least one subject',
+                        showConfirmButton: false,
+                        timer: 1000,
+                        timerProgressBar: true,
+                        customClass: {
+                            popup: 'small-toast'
+                        },
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInRight'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutRight'
+                        }
+                    });
+                    return;
+                }
+                let formData = new FormData(this);
                 $.ajax({
                     url: "{{ route('assignclass.create') }}",
                     type: "POST",
-                    data: $(this).serialize(),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
 
                     success: function(response) {
                         Swal.fire({

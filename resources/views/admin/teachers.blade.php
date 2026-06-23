@@ -5,7 +5,6 @@
     @include('layouts.delete')
     @include('admin.teachercreate')
     @include('admin.teacheredit')
-    {{-- @include('admin.teacherassign') --}}
 </head>
 
 <body>
@@ -45,11 +44,11 @@
                                     <td>{{ $teacher->phone }}</td>
                                     <td>{{ $teacher->email }}</td>
                                     <td>
-                                        <button class="btn btn-outline-success fw-semibold btn-sm rounded-3"
+                                        <button
+                                            class="btn btn-outline-success fw-semibold btn-sm rounded-3 view-assignment"
                                             data-bs-toggle="modal" style="font-size:10px;"
                                             data-bs-target="#viewAssignmentModal" data-id="{{ $teacher->id }}">
-                                            <i class="bi bi-eye"></i> View 
-                                        </button>
+                                            <i class="bi bi-eye"></i> View
                                         </button>
                                     </td>
                                     <td>
@@ -84,9 +83,7 @@
     </div>
     <script>
         $(document).on('click', '.send-mail', function() {
-
             let id = $(this).data('id');
-
             // Loading toast
             Swal.fire({
                 toast: true,
@@ -104,9 +101,7 @@
             $.ajax({
                 url: "/admin/teacher/send-email/" + id,
                 type: "GET",
-
                 success: function(response) {
-
                     // Mail Sent Toast Msg
                     Swal.fire({
                         toast: true,
@@ -128,7 +123,6 @@
                     });
                 },
                 error: function() {
-
                     //  Error toast
                     Swal.fire({
                         toast: true,
@@ -145,17 +139,71 @@
     </script>
 </body>
 
-
 <div class="modal fade" id="viewAssignmentModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content p-4 rounded-4">
 
-            <h5 class="mb-3">Teacher Assignments</h5>
-
-            <div id="assignmentContent">
-                <!-- Dynamic data here -->
+            <div class="modal-header">
+                <h3 class="modal-title fw-bold">Subject Assign - <span id="view_teacher"></span> </h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
+            <div class="modal-body">
+                <div id="assignmentList">
+                    <!-- dynamic content -->
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    $(document).on('click', '.view-assignment', function() {
+        let id = $(this).data('id');
+        console.log("Teacher ID:", id);
+        $('#view_teacher').text('');
+        $('#assignmentList').html('Loading...');
+        $.ajax({
+            url: "/admin/teacher/assignment/" + id,
+            type: "GET",
+            success: function(res) {
+                console.log(res);
+                // Teacher name
+                $('#view_teacher').text(res.teacher.name);
+                let html = "";
+                if (res.assignments.length == 0) {
+                    html = `
+                    <h5 class="text-muted">
+                        No subjects are assigned to this teacher
+                    </h5>`;
+                } else {
+                    // Sort semester 1,2,3....8
+                    res.assignments.sort(function(a, b) {
+                        return a.semester - b.semester;
+                    });
+                    $.each(res.assignments, function(index, item) {
+                        let subjectList = "";
+                        $.each(item.subjects, function(i, subject) {
+                            subjectList += `
+                           <li>${subject.subject_name}</li>`;
+                        });
+                        html += `
+                    <div class="card mb-2 shadow-sm border-0">
+                        <div class="card-body">
+                            <h6 class="fw-bold"> Semester ${item.semester} </h6>
+                             <ol class="mb-0"> ${subjectList} </ol>
+                        </div>
+                    </div> `;
+                    });
+                }
+                $('#assignmentList').html(html);
+            },
+            error: function(xhr) {
+                console.log(xhr.responseText);
+                $('#assignmentList').html(
+                    '<p class="text-danger">Failed to load data</p>'
+                );
+            }
+        });
+    });
+</script>

@@ -25,13 +25,29 @@ class StudentsController extends Controller
 
         $students = Students::with(['academic'])
             ->when($search, function ($query) use ($search) {
-                $query->where('student_code', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%")
-                    ->orWhere('roll_no', 'like', "%{$search}%")
-                    ->orWhere('current_semester', 'like', "%{$search}%")
-                    ->orWhere('admission_year', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('student_code', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhere('roll_no', 'like', "%{$search}%")
+                        ->orWhere('admission_year', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+
+                    // Semester search
+                    if (preg_match('/\d+/', $search, $matches)) {
+                        $sem = $matches[0];
+
+                        $q->orWhere('current_semester', $sem)
+                            ->orWhere('current_semester', 'like', "%{$sem}%");
+                    }
+                    
+                    if (stripos($search, 'sem') !== false || stripos($search, 'semester') !== false) {
+                        $q->orWhere('current_semester', 'like', "%{$search}%");
+                    }
+                });
             })
+            //
+            ->orderByRaw('CAST(current_semester AS UNSIGNED) ASC')
+            ->orderByRaw('CAST(roll_no AS UNSIGNED) ASC')
             ->paginate(10)
             ->withQueryString();
 

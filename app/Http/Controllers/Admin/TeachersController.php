@@ -25,6 +25,7 @@ class TeachersController extends Controller
                 ->orWhere('address', 'like', "%{$search}%")
                 ->orWhere('email', 'like', "%{$search}%");
         })
+            ->orderBy('name', 'asc')
             ->paginate(10)
             ->withQueryString();
 
@@ -44,7 +45,6 @@ class TeachersController extends Controller
     // Create Teacher
     public function create(Request $request)
     {
-        // Validation
         $request->validate([
             'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
             'email' => 'required|email|unique:teachers,email',
@@ -58,7 +58,7 @@ class TeachersController extends Controller
             'password.min' => 'Password must be at least 8 characters.',
         ]);
 
-        $teacher = Teachers::create([
+        Teachers::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -76,7 +76,6 @@ class TeachersController extends Controller
     {
 
         $teacher = Teachers::findOrFail($id);
-
         // Validation
         $request->validate([
             'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
@@ -148,6 +147,4 @@ class TeachersController extends Controller
             ], 500);
         }
     }
-
-    
 }

@@ -6,23 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+
     public function up(): void
     {
-        Schema::create('assign_class', function (Blueprint $table) {
+        Schema::create('assign_class_subject', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('teacher_id')
-                ->constrained()
+            $table->foreignId('assign_class_id')
+                ->constrained('assign_class')
                 ->cascadeOnDelete();
 
-            $table->unsignedInteger('semester');
-            
+            $table->foreignId('subject_id')
+                ->constrained('subjects')
+                ->cascadeOnDelete();
+
             $table->timestamps();
         });
     }
-
     public function down(): void
     {
-        Schema::dropIfExists('assign_class');
+        Schema::dropIfExists('assign_class_subject');
     }
 };

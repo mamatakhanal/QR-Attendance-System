@@ -10,7 +10,6 @@ class Assignclass extends Model
 
     protected $fillable = [
         'teacher_id',
-        'subject_ids',
         'semester',
     ];
 
@@ -20,8 +19,8 @@ class Assignclass extends Model
     }
 
 
-    public function subject()
-    {
-        return $this->belongsTo(Subjects::class, 'subject_ids');
-    }
+    public function subjects()
+{
+    return $this->belongsToMany(Subjects::class, 'assign_class_subject', 'assign_class_id', 'subject_id');
+}
 }

@@ -18,6 +18,8 @@ class SubjectsController extends Controller
                 ->orWhere('subject_code', 'like', "%{$search}%")
                 ->orWhere('semester', 'like', "%{$search}%");
         })
+            ->orderBy('semester', 'asc')
+            ->orderByRaw('CAST(RIGHT(subject_code, 3) AS UNSIGNED) ASC')
             ->paginate(10)
             ->withQueryString();
 

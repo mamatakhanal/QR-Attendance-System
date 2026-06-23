@@ -52,6 +52,7 @@ Route::prefix('/admin')->group(function () {
 
     Route::get('/teacher/send-email/{id}', [TeachersController::class, 'sendEmail']);
 
+    Route::get('/teacher/assignment/{id}', [AssignclassController::class, 'viewTeacherAssignment']);
 
 
     // Students
@@ -109,6 +110,8 @@ Route::prefix('/admin')->group(function () {
 
     Route::get('/assignclass/subjects/{semester}', [AssignclassController::class, 'getSubjects'])
         ->name('assignclass.getsubjects');
+
+    Route::get('/assignclass/{id}', [AssignclassController::class, 'show']);
 
 
 

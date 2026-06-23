@@ -32,23 +32,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php $i = 1; @endphp
                             @foreach ($assignclasses as $assignclass)
                                 <tr class="assignclass-row">
-                                    <td>{{ $i++ }}</td>
+                                     <td>{{ $assignclasses->firstItem() + $loop->index }}</td>
                                     <td>{{ $assignclass->teacher->name ?? 'No Teacher' }}</td>
                                     <td>Semester {{ $assignclass->semester }}</td>
                                     <td>
                                         @php
-                                            $subjectIds = json_decode($assignclass->subject_ids ?? '[]', true);
+                                            $subjectNames = $assignclass->subjects->pluck('subject_name')->toArray();
                                         @endphp
-                                        @php
-                                            $subjectNames = [];
-                                            foreach ($subjectIds as $id) {
-                                                $subjectNames[] = $subjects[$id] ?? '';
-                                            }
-                                        @endphp
-                                        {{ implode(', ', array_filter($subjectNames)) }}
+                                        {{ implode(', ', $subjectNames) }}
                                     </td>
                                     <td>
                                         <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 edit-btn"
@@ -57,7 +50,7 @@
                                             data-teacher="{{ $assignclass->teacher_id }}"
                                             data-teacher-name="{{ $assignclass->teacher->name }}"
                                             data-semester="{{ $assignclass->semester }}"
-                                            data-subjects='@json(json_decode($assignclass->subject_ids ?? "[]"))'>
+                                            data-subjects='@json($assignclass->subjects->pluck('id'))'>
                                             <i class="bi bi-pencil-square"></i> Edit
                                         </button> &nbsp;
                                         <button class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn"
