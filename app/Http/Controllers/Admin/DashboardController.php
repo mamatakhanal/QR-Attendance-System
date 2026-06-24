@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
+use App\Models\Admin\Students;
+use App\Models\Admin\Teachers;
+use App\Models\Admin\Subjects;
 
 class DashboardController extends Controller
 {
@@ -17,7 +20,10 @@ class DashboardController extends Controller
 
         return view('admin.dashboard', [
             'pageTitle' => 'Dashboard',
-            'admin' => $admin
+            'admin' => $admin,
+            'studentsCount' => Students::count('id'),
+            'teachersCount' => Teachers::count('id'),
+            'subjectsCount' => Subjects::count('id')
         ]);
     }
 }

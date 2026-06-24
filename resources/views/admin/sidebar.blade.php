@@ -43,7 +43,8 @@
                     <li>
                         <a href="{{ route('admin.students') }}"
                             class="nav-link {{ request()->routeIs('admin.students') ? 'active-sidebar' : '' }}">
-                            <i class="bi bi-mortarboard-fill me-3"></i> Students
+                            <i class="bi bi-people-fill me-3"></i> Students  
+                            {{-- <i class="bi bi-mortarboard-fill me-3"></i>  --}}
                         </a>
                     </li>
                 </ul>
@@ -59,12 +60,6 @@
                 </div>
                 <ul class="collapse show list-unstyled" id="classMenu">
                     <li>
-                        <a href="{{ route('admin.classes') }}"
-                            class="nav-link {{ request()->routeIs('admin.classes') ? 'active-sidebar' : '' }}">
-                            <i class="bi bi-building me-3"></i> Classes
-                        </a>
-                    </li>
-                    <li>
                         <a href="{{ route('admin.subjects') }}"
                             class="nav-link {{ request()->routeIs('admin.subjects') ? 'active-sidebar' : '' }}">
                             <i class="bi bi-book me-3"></i> Subjects
@@ -73,7 +68,7 @@
                     <li>
                         <a href="{{ route('admin.assignclass') }}"
                             class="nav-link {{ request()->routeIs('admin.assignclass') ? 'active-sidebar' : '' }}">
-                            <i class="bi bi-people me-3"></i> Assign Class
+                            <i class="bi bi-building me-3"></i> Assign Class
                         </a>
                     </li>
                 </ul>

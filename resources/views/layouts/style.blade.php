@@ -133,6 +133,7 @@
         }
     }
 
+    /* Edit Delete */
     .action-btn {
         transition: 0.2s;
     }
@@ -141,18 +142,48 @@
         transform: scale(1.1);
     }
 
-    .dashboard-card {
-        border-radius: 18px;
-    }
 
-    .dashboard-card .card-body {
-        padding: 22px;
-    }
-
+    /* Success Msg Toast */
     .small-toast {
         width: 280px !important;
         min-height: 50px !important;
         padding: 10px !important;
         font-size: 13px !important;
+    }
+
+
+    /* Dashboard Card */
+    .dashboard-card {
+        border-radius: 15px;
+        transition: 0.3s ease;
+        cursor: pointer;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Semester-btn */
+    .semester-btn {
+        border: none !important;
+        border-radius: 10px;
+        padding: 6px 18px;
+        margin: 3px; 
+        background: #f1f3f5;
+        color: #333;
+        font-weight: 500;
+        transition: .3s;
+    }
+
+    .semester-btn:hover {
+        background: #4f46e5;
+        color: white;
+    }
+
+    .semester-btn.active {
+        background: #421dd5 !important;
+        color: white !important;
+        box-shadow: 0 2px 2px rgba(15, 9, 110, 0.25);
     }
 </style>
