@@ -13,7 +13,7 @@
             @include('admin.navbar')
 
             <!-- CONTENT -->
-            <div class="container-fluid px-4 py-3">
+            <div class="container-fluid px-4 py-1">
                 <div class="row g-4">
                     <!-- Teachers -->
                     <div class="col-md-4 col-sm-6">
@@ -61,6 +61,69 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Students By Semester -->
+            {{-- <div class="card shadow-sm border-0 rounded-4 mx-4 p-2 my-2 pb-0">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-4">
+                        <i class="bi bi-bar-chart-fill"></i>
+                        Students By Semester
+                    </h5>
+                    @foreach ($studentsBySemester as $semester)
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>
+                                    Semester {{ $semester->current_semester }}
+                                </span>
+                                <span class="fw-bold">
+                                    {{ $semester->total }}
+                                </span>
+                            </div>
+                            <div class="progress" style="height:6px;">
+                                <div class="progress-bar"
+                                    style="width: {{ ($semester->total / $studentsBySemester->max('total')) * 100 }}%">
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div> --}}
+
+            <!-- Attendance Overview -->
+            <div class="card shadow-sm border-0 rounded-4 mx-4 p-1 my-2 pb-0">
+                 <div class="card-body">
+                    <h5 class="fw-semibold mb-4">
+                        <i class="bi bi-calendar-check"></i>
+                        Attendance Overview
+                    </h5>
+
+                    @foreach ($attendanceBySemester as $attendance)
+                        @php
+                            $total = $attendance->present + $attendance->absent;
+                            $percentage = $total > 0 ? ($attendance->present / $total) * 100 : 0;
+                        @endphp
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>
+                                    Semester {{ $attendance->semester }}
+                                </span>
+
+                                <span class="fw-bold">
+                                    Present: {{ $attendance->present }}
+                                    &nbsp;
+                                    Absent: {{ $attendance->absent }}
+                                </span>
+                            </div>
+                            <div class="progress mt-1" style="height:4px;">
+                                <div class="progress-bar bg-success" style="width: {{ $percentage }}%">
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
         </div>
     </div>
 </body>
