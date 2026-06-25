@@ -5,6 +5,7 @@
     @include('layouts.delete')
     @include('admin.assignclasscreate')
     @include('admin.assignclassedit')
+    @include('admin.assignclasstable')
 </head>
 
 <body>
@@ -13,13 +14,28 @@
         @include('admin.sidebar')
         <div class="main-area">
             @include('admin.navbar')
+
             <!-- CONTENT -->
             <div class="card shadow-sm border-0 mx-2 my-2 p-4 rounded-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
                     <h5 class="fw-semibold mb-0">Assign Class List</h5>
                     <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
-                        data-bs-target="#addAssignclassModal"> Assign Class </button>
+                        data-bs-target="#addAssignclassModal"> Assign Class
+                    </button>
                 </div>
+
+                <!-- Semester Filter Buttons -->
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">        
+                        <i class="bi bi-people"></i> &nbsp; All Classes
+                    </button>
+                    @for ($i = 1; $i <= 8; $i++)
+                        <button class="btn btn-outline-primary btn-sm semester-btn" data-semester="{{ $i }}">
+                            Semester {{ $i }}
+                        </button>
+                    @endfor
+                </div>
+
                 <div class="table-responsive rounded-2">
                     <table class="table table-hover border-3 mb-0">
                         <thead class="table-secondary">
@@ -31,10 +47,12 @@
                                 <th class="py-3">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+
+
+                        <tbody id="assignclass-data">
                             @foreach ($assignclasses as $assignclass)
-                                <tr class="assignclass-row">
-                                     <td>{{ $assignclasses->firstItem() + $loop->index }}</td>
+                                <tr class="assignclass-row" data-semester="{{ $assignclass->semester }}">
+                                    <td>{{ $assignclasses->firstItem() + $loop->index }}</td>
                                     <td>{{ $assignclass->teacher->name ?? 'No Teacher' }}</td>
                                     <td>Semester {{ $assignclass->semester }}</td>
                                     <td>
@@ -65,8 +83,32 @@
                         </tbody>
                     </table>
                 </div>
-                @include('layouts.pagination', ['paginator' => $assignclasses])
+                <div id="pagination-data">
+                    @if ($assignclasses->hasPages())
+                        @include('layouts.pagination', ['paginator' => $assignclasses])
+                    @endif
+                </div>
             </div>
         </div>
     </div>
 </body>
+
+<script>
+$(document).on('click', '.semester-btn', function() {
+
+    let semester = $(this).data('semester');
+    $.ajax({
+        url: "{{ route('admin.assignclass') }}",
+        type: "GET",
+        data: {
+            semester: semester
+        },
+        success: function(response) {
+            let table = $(response).find('#assignclass-data').html();
+            let pagination = $(response).find('#pagination-data').html();
+            $('#assignclass-data').html(table);
+            $('#pagination-data').html(pagination);
+        }
+    });
+});
+</script>

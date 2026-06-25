@@ -22,40 +22,43 @@ class StudentsController extends Controller
     public function students(Request $request)
     {
         $search = $request->search;
+        $semester = $request->semester;
 
         $students = Students::with(['academic'])
+            // Semester filter
+            ->when($semester && $semester != 'all', function ($query) use ($semester) {
+                $query->where('current_semester', $semester);
+            })
+
+            // Search
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('student_code', 'like', "%{$search}%")
                         ->orWhere('name', 'like', "%{$search}%")
                         ->orWhere('roll_no', 'like', "%{$search}%")
                         ->orWhere('admission_year', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-
-                    // Semester search
-                    if (preg_match('/\d+/', $search, $matches)) {
-                        $sem = $matches[0];
-
-                        $q->orWhere('current_semester', $sem)
-                            ->orWhere('current_semester', 'like', "%{$sem}%");
-                    }
-
-                    if (stripos($search, 'sem') !== false || stripos($search, 'semester') !== false) {
-                        $q->orWhere('current_semester', 'like', "%{$search}%");
-                    }
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('current_semester', 'like', "%{$search}%");
                 });
             })
-            //
             ->orderByRaw('CAST(current_semester AS UNSIGNED) ASC')
             ->orderByRaw('CAST(roll_no AS UNSIGNED) ASC')
             ->paginate(10)
             ->withQueryString();
 
         $admin = Admin::find(session('admin_id'));
-
         if (!$admin) {
             return redirect('/admin/login');
         }
+
+        // AJAX semester button
+        if ($request->ajax()) {
+            return view('admin.students', [
+                'students' => $students,
+                'pageTitle' => 'Students'
+            ])->render();
+        }
+
         return view('admin.students', [
             'pageTitle' => 'Students',
             'students' => $students,
@@ -256,55 +259,5 @@ class StudentsController extends Controller
                 'message' => $e->getMessage()
             ]);
         }
-    }
-
-    // Semester 1-8 
-    public function index(Request $request)
-    {
-        $students = Students::query();
-
-
-        // Semester filter
-        if ($request->semester && $request->semester != 'all') {
-
-            $students->where(
-                'current_semester',
-                $request->semester
-            );
-        }
-
-
-        // Search filter
-        if ($request->search) {
-            $students->where(function ($q) use ($request) {
-
-                $q->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('student_code', 'like', '%' . $request->search . '%')
-                    ->orWhere('roll_no', 'like', '%' . $request->search . '%');
-            });
-        }
-
-        // Semester order + Roll no order
-        $students = $students
-            ->orderByRaw('CAST(current_semester AS UNSIGNED) ASC')
-            ->orderByRaw('CAST(roll_no AS UNSIGNED) ASC')
-            ->paginate(10)
-            ->withQueryString();
-        $pageTitle = "Students";
-
-        // AJAX semester filter
-        if ($request->ajax()) {
-
-            return view(
-                'admin.students',
-                compact('students', 'pageTitle')
-            )->render();
-        }
-
-
-        return view(
-            'admin.students',
-            compact('students', 'pageTitle')
-        );
     }
 }

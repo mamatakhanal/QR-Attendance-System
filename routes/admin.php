@@ -78,9 +78,7 @@ Route::prefix('/admin')->group(function () {
 
     Route::get('/student/send-email/{id}', [StudentsController::class, 'sendEmail']);
 
-    Route::get('/students', [StudentsController::class, 'index'])->name('admin.students');
-
-
+    
 
     // Subjects    
     Route::get('/subjects', [SubjectsController::class, 'subjects'])

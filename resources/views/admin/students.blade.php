@@ -28,7 +28,7 @@
                 <!-- Semester Filter Buttons -->
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
                     <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">
-                        <i class="bi bi-people"></i> All Students
+                        <i class="bi bi-people"></i> &nbsp; All Students
                     </button>
                     @for ($i = 1; $i <= 8; $i++)
                         <button class="btn btn-outline-primary btn-sm semester-btn" data-semester="{{ $i }}">
@@ -183,7 +183,6 @@
             data: {
                 semester: semester
             },
-
             success: function(response) {
                 let table = $(response).find('#student-data').html();
                 let pagination = $(response).find('#pagination-data').html();

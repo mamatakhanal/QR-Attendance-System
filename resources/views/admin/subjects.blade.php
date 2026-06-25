@@ -17,13 +17,25 @@
 
             <!-- CONTENT -->
             <div class="card shadow-sm border-0 mx-2 my-2 p-4 rounded-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
                     <h5 class="fw-semibold mb-0">Subject List</h5>
                     <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
-                        data-bs-target="#addSubjectModal">
-                        New Subject
+                        data-bs-target="#addSubjectModal"> New Subject
                     </button>
                 </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">
+                        <i class="bi bi-book"></i> &nbsp; All Subjects
+                    </button>
+
+                    @for ($i = 1; $i <= 8; $i++)
+                        <button class="btn btn-outline-primary btn-sm semester-btn" data-semester="{{ $i }}">
+                            Semester {{ $i }}
+                        </button>
+                    @endfor
+                </div>
+
                 <div class="table-responsive rounded-2">
                     <table class="table table-hover border-3 mb-0">
                         <thead class="table-secondary">
@@ -35,7 +47,7 @@
                                 <th class="py-3">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="subject-data">
                             @foreach ($subjects as $subject)
                                 <tr class="subject-row">
                                     <td>{{ $subjects->firstItem() + $loop->index }}</td>
@@ -64,8 +76,47 @@
                         </tbody>
                     </table>
                 </div>
-                @include('layouts.pagination', ['paginator' => $subjects])
+                <div id="pagination-data">
+                    @if ($subjects->hasPages())
+                        @include('layouts.pagination', ['paginator' => $subjects])
+                    @endif
+                </div>
             </div>
         </div>
     </div>
 </body>
+
+<script>
+
+$(document).on('click','.semester-btn',function(){
+    let semester = $(this).data('semester');
+
+    $('.semester-btn')
+        .removeClass('active btn-primary')
+        .addClass('btn-outline-primary');
+
+    $(this)
+        .removeClass('btn-outline-primary')
+        .addClass('btn-primary active');
+
+    $.ajax({
+        url:"{{ route('admin.subjects') }}",
+        type:"GET",
+        data:{
+            semester:semester
+        },
+
+        success:function(response){
+
+            let table = $(response)
+                .find('#subject-data')
+                .html();
+            let pagination = $(response)
+                .find('#pagination-data')
+                .html();
+            $('#subject-data').html(table);
+            $('#pagination-data').html(pagination);
+        }
+    });
+});
+</script>

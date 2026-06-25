@@ -14,51 +14,47 @@ class AssignclassController extends Controller
     public function assignclass(Request $request)
     {
         $search = $request->search;
+        $semester = $request->semester;
 
-        $assignclasses = Assignclass::with([
-            'teacher',
-            'subjects'
-        ])
+        $assignclasses = Assignclass::with(['teacher', 'subjects'])
+            // Semester filter
+            ->when($semester && $semester != 'all', function ($query) use ($semester) {
+                $query->where('semester', $semester);
+            })
+
+            // Search
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
-                    $lower = strtolower($search);
-                    // Teacher search
-                    $q->orWhereHas('teacher', function ($t) use ($search) {
+                    $q->whereHas('teacher', function ($t) use ($search) {
                         $t->where('name', 'like', "%{$search}%");
-                    });
-
-                    if (is_numeric($search)) {
-                        $q->orWhere('semester', (int)$search);
-                    }
-
-                    preg_match('/\d+/', $search, $matches);
-                    $number = $matches[0] ?? null;
-
-                    if (str_contains($lower, 'sem') || str_contains($lower, 'semester')) {
-                        if ($number) {
-                            $q->orWhere('semester', (int)$number);
-                        }
-                    }
-
-                    // Subject search (pivot table)
-                    $q->orWhereHas('subjects', function ($s) use ($search) {
-                        $s->where('subject_name', 'like', "%{$search}%");
-                    });
+                    })
+                        ->orWhereHas('subjects', function ($s) use ($search) {
+                            $s->where('subject_name', 'like', "%{$search}%");
+                        });
                 });
             })
             ->orderBy('semester', 'asc')
             ->paginate(10)
             ->withQueryString();
 
-
         $admin = Admin::find(session('admin_id'));
-
         if (!$admin) {
             return redirect('/admin/login');
         }
 
         $teachers = Teachers::orderBy('name', 'asc')->get();
         $subjects = Subjects::pluck('subject_name', 'id');
+
+       if ($request->ajax()) {
+
+    return view('admin.assignclass', [
+        'assignclasses' => $assignclasses,
+        'teachers' => $teachers,
+        'subjects' => $subjects,
+        'pageTitle' => 'Assign Class'
+    ])->render();
+
+}
 
         return view('admin.assignclass', [
             'pageTitle' => 'Assign Class',

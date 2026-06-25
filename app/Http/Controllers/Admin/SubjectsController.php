@@ -14,10 +14,23 @@ class SubjectsController extends Controller
     {
         $search = $request->search;
         $subjects = Subjects::when($search, function ($query) use ($search) {
-            $query->Where('subject_name', 'like', "%{$search}%")
-                ->orWhere('subject_code', 'like', "%{$search}%")
-                ->orWhere('semester', 'like', "%{$search}%");
-        })
+            $query->where(function ($q) use ($search) {
+                $q->where('subject_name', 'like', "%{$search}%")
+                    ->orWhere('subject_code', 'like', "%{$search}%")
+                    ->orWhere('semester', 'like', "%{$search}%");
+            });
+        });
+
+        // Semester filter
+        if ($request->semester && $request->semester != 'all') {
+            $subjects->where(
+                'semester',
+                $request->semester
+            );
+        }
+
+        // Semester wise + code number order
+        $subjects = $subjects
             ->orderBy('semester', 'asc')
             ->orderByRaw('CAST(RIGHT(subject_code, 3) AS UNSIGNED) ASC')
             ->paginate(10)
