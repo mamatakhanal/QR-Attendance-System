@@ -16,7 +16,7 @@ class ClassesController extends Controller
         }
 
         return view('teacher.classes', [
-            'pageTitle' => 'Classes',
+            'pageTitle' => 'Assign Classes',
             'teacher' => $teacher
         ]);
     }

@@ -57,7 +57,7 @@ class AssignclassController extends Controller
 }
 
         return view('admin.assignclass', [
-            'pageTitle' => 'Assign Class',
+            'pageTitle' => 'Assign Classes',
             'admin' => $admin,
             'assignclasses' => $assignclasses,
             'teachers' => $teachers,

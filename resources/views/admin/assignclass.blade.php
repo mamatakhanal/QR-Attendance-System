@@ -5,7 +5,6 @@
     @include('layouts.delete')
     @include('admin.assignclasscreate')
     @include('admin.assignclassedit')
-    @include('admin.assignclasstable')
 </head>
 
 <body>
@@ -18,7 +17,7 @@
             <!-- CONTENT -->
             <div class="card shadow-sm border-0 mx-2 my-2 p-4 rounded-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h5 class="fw-semibold mb-0">Assign Class List</h5>
+                    <h5 class="fw-semibold mb-0">Assign Classes List</h5>
                     <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
                         data-bs-target="#addAssignclassModal"> Assign Class
                     </button>

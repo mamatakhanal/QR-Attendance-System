@@ -19,7 +19,7 @@
         {{-- <form method="GET" action="{{ url()->i() }}"> --}}
           <div class="search-box position-relative mt-3" style="max-width:300px;">
             <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2 small text-muted"></i>
-            <input type="text" id="searchInput" name="search" value="{{ request('search') }}" class="form-control form-control-sm rounded-3 ps-4 py-2" placeholder="Search {{ $pageTitle ?? '' }}">
+            <input type="text" id="searchInput" name="search" value="{{ request('search') }}" class="form-control form-control-sm rounded-3 ps-4 py-2" placeholder="Search.....">  {{-- {{ $pageTitle ?? '' }} --}}
           </div>
         </form>
         

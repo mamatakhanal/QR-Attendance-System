@@ -44,7 +44,6 @@
                         <a href="{{ route('admin.students') }}"
                             class="nav-link {{ request()->routeIs('admin.students') ? 'active-sidebar' : '' }}">
                             <i class="bi bi-people-fill me-3"></i> Students  
-                            {{-- <i class="bi bi-mortarboard-fill me-3"></i>  --}}
                         </a>
                     </li>
                 </ul>
@@ -68,7 +67,7 @@
                     <li>
                         <a href="{{ route('admin.assignclass') }}"
                             class="nav-link {{ request()->routeIs('admin.assignclass') ? 'active-sidebar' : '' }}">
-                            <i class="bi bi-building me-3"></i> Assign Class
+                            <i class="bi bi-building me-3"></i> Assign Classes
                         </a>
                     </li>
                 </ul>

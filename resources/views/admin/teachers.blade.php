@@ -32,7 +32,7 @@
                                 <th class="py-3">Name</th>
                                 <th class="py-3">Phone</th>
                                 <th class="py-3">Email</th>
-                                <th class="py-3">Assignment</th>
+                                <th class="py-3">Subjects</th>
                                 <th class="py-3">Actions</th>
                             </tr>
                         </thead>

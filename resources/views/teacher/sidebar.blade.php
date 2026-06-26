@@ -25,6 +25,14 @@
                 </a>
             </li>
 
+            <!-- CLASSES -->
+            <li class="nav-item">
+                <a href="{{ route('teacher.classes') }}"
+                    class="nav-link {{ request()->routeIs('teacher.classes') ? 'active-sidebar' : '' }}">
+                    <i class="bi bi-building me-3"></i> Assign Classes
+                </a>
+            </li>
+
             <!-- Take ATTENDANCE -->
             <li class="nav-item">
                 <a href="{{ route('teacher.attendance') }}"
@@ -38,14 +46,6 @@
                 <a href="{{ route('teacher.students') }}"
                     class="nav-link {{ request()->routeIs('teacher.students') ? 'active-sidebar' : '' }}">
                     <i class="bi bi-people me-3"></i> Students List
-                </a>
-            </li>
-
-            <!-- CLASSES -->
-            <li class="nav-item">
-                <a href="{{ route('teacher.classes') }}"
-                    class="nav-link {{ request()->routeIs('teacher.classes') ? 'active-sidebar' : '' }}">
-                    <i class="bi bi-building me-3"></i> Classes
                 </a>
             </li>
 

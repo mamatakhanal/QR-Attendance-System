@@ -13,7 +13,7 @@
             @include('admin.navbar')
 
             <!-- CONTENT -->
-            <div class="container-fluid px-4 py-1">
+            <div class="container-fluid py-1">
                 <div class="row g-4">
                     <!-- Teachers -->
                     <div class="col-md-4 col-sm-6">
@@ -90,7 +90,7 @@
             </div> --}}
 
             <!-- Attendance Overview -->
-            <div class="card shadow-sm border-0 rounded-4 mx-4 p-1 my-2 pb-0">
+            <div class="card shadow-sm border-0 rounded-4 mx-3 p-1 my-2 pb-0">
                  <div class="card-body">
                     <h5 class="fw-semibold mb-4">
                         <i class="bi bi-calendar-check"></i>
