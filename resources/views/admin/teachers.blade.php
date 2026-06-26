@@ -141,7 +141,7 @@
 
 <div class="modal fade" id="viewAssignmentModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content p-4 rounded-4">
+        <div class="modal-content p-2 rounded-4">
 
             <div class="modal-header">
                 <h3 class="modal-title fw-bold">Subject Assign - <span id="view_teacher"></span> </h3>
@@ -188,7 +188,7 @@
                            <li>${subject.subject_name}</li>`;
                         });
                         html += `
-                    <div class="card mb-2 shadow-sm border-0">
+                    <div class="card mb-2 shadow-sm bg-light border-0">
                         <div class="card-body">
                             <h6 class="fw-bold"> Semester ${item.semester} </h6>
                              <ol class="mb-0"> ${subjectList} </ol>

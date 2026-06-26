@@ -29,7 +29,7 @@
             <li class="nav-item">
                 <a href="{{ route('teacher.assignclass') }}"
                     class="nav-link {{ request()->routeIs('teacher.assignclass') ? 'active-sidebar' : '' }}">
-                    <i class="bi bi-building me-3"></i> Assign Classes
+                    <i class="bi bi-building me-3"></i> Assigned Classes
                 </a>
             </li>
 

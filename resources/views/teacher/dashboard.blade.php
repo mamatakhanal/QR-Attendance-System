@@ -13,37 +13,51 @@
             @include('teacher.navbar')
 
             <!-- CONTENT -->
-            <div class="main-content">
-
-                <h1 class="fw-semibold mb-4">
-                    Dashboard
-                </h1>
-
+            <div class="container-fluid py-1">
                 <div class="row g-4">
-                    <div class="col-md-3">
-                        <div class="card dashboard-card border-0 shadow-sm">
-                            <div class="card-body">
-                                <h6 class="text-muted">
-                                    Total Classes
-                                </h6>
-                                <h1 class="fw-bold">
-                                    6
-                                </h1>
+                    <!-- Total Classes -->
+                    <div class="col-md-4 col-sm-6">
+                        <a href="{{ route('teacher.assignclass') }}" class="text-decoration-none">
+                            <div class="card text-white bg-primary shadow-sm dashboard-card py-2 px-3">
+                                <div class="card-body d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5>Total Semester</h5>
+                                        <h2 class="fw-bold mb-0">{{ $totalClasses }} </h2>
+                                    </div>
+                                    <i class="bi bi-building fs-1"></i>
+                                </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
 
-                    <div class="col-md-3">
-                        <div class="card dashboard-card border-0 shadow-sm">
-                            <div class="card-body">
-                                <h6 class="text-muted">
-                                    Total...
-                                </h6>
-                                <h1 class="fw-bold">
-                                    25
-                                </h1>
+                    <!-- Total Subjects -->
+                    <div class="col-md-4 col-sm-6 ">
+                        <a href="{{ route('teacher.assignclass') }}" class="text-decoration-none">
+                            <div class="card text-white bg-success shadow-sm dashboard-card py-2 px-3">
+                                <div class="card-body d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5>Total Subjects</h5>
+                                        <h2 class="fw-bold mb-0"> {{ $totalSubjects }} </h2>
+                                    </div>
+                                    <i class="bi bi-book fs-1"></i>
+                                </div>
                             </div>
-                        </div>
+                        </a>
+                    </div>
+
+                    <!-- Total Students -->
+                    <div class="col-md-4 col-sm-6">
+                        <a href="{{ route('teacher.students') }}" class="text-decoration-none">
+                            <div class="card text-white bg-warning shadow-sm dashboard-card py-2 px-3">
+                                <div class="card-body d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5>Total Students</h5>
+                                        <h2 class="fw-bold mb-0"> {{ $totalStudents }} </h2>
+                                    </div>
+                                    <i class="bi bi-people-fill fs-1"></i>
+                                </div>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>

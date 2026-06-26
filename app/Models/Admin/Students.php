@@ -30,6 +30,14 @@ class Students extends Model
     }
 
 
+    public function assignclasses()
+    {
+        return $this->belongsToMany(
+            Assignclass::class,
+            'assign_class_subject'
+        );
+    }
+
     // Student Attendance Records
     // public function attendance()
     // {

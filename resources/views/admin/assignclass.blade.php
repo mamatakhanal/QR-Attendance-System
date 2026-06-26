@@ -25,7 +25,7 @@
 
                 <!-- Semester Filter Buttons -->
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                    <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">        
+                    <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">
                         <i class="bi bi-people"></i> &nbsp; All Classes
                     </button>
                     @for ($i = 1; $i <= 8; $i++)
@@ -55,10 +55,13 @@
                                     <td>{{ $assignclass->teacher->name ?? 'No Teacher' }}</td>
                                     <td>Semester {{ $assignclass->semester }}</td>
                                     <td>
-                                        @php
-                                            $subjectNames = $assignclass->subjects->pluck('subject_name')->toArray();
-                                        @endphp
-                                        {{ implode(', ', $subjectNames) }}
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @foreach ($assignclass->subjects as $subject)
+                                                <div class="px-2 py-1 border rounded-3 shadow-sm bg-light">
+                                                    {{ $subject->subject_name }}
+                                                </div>
+                                            @endforeach
+                                        </div>
                                     </td>
                                     <td>
                                         <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 edit-btn"
@@ -93,21 +96,21 @@
 </body>
 
 <script>
-$(document).on('click', '.semester-btn', function() {
+    $(document).on('click', '.semester-btn', function() {
 
-    let semester = $(this).data('semester');
-    $.ajax({
-        url: "{{ route('admin.assignclass') }}",
-        type: "GET",
-        data: {
-            semester: semester
-        },
-        success: function(response) {
-            let table = $(response).find('#assignclass-data').html();
-            let pagination = $(response).find('#pagination-data').html();
-            $('#assignclass-data').html(table);
-            $('#pagination-data').html(pagination);
-        }
+        let semester = $(this).data('semester');
+        $.ajax({
+            url: "{{ route('admin.assignclass') }}",
+            type: "GET",
+            data: {
+                semester: semester
+            },
+            success: function(response) {
+                let table = $(response).find('#assignclass-data').html();
+                let pagination = $(response).find('#pagination-data').html();
+                $('#assignclass-data').html(table);
+                $('#pagination-data').html(pagination);
+            }
+        });
     });
-});
 </script>

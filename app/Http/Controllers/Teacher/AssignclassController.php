@@ -17,9 +17,43 @@ class AssignclassController extends Controller
             return redirect('/home');
         }
 
+        $search = $request->search;
+        $semester = $request->semester;
+
+        $assignclasses = Assignclass::with('subjects')
+            ->where('teacher_id', $teacher->id)
+            ->when($semester, function ($query) use ($semester) {
+                $query->where('semester', $semester);
+            })
+
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+
+                    // semester search
+                    if (is_numeric($search)) {
+                        $q->orWhere('semester', $search);
+                    }
+
+                    // subject name search
+                    $q->orWhereHas('subjects', function ($subject) use ($search) {
+                        $subject->where('subject_name', 'like', '%' . $search . '%');
+                    });
+                });
+            })
+            ->orderBy('semester', 'asc')
+            ->get();
+
+        foreach ($assignclasses as $assignclass) {
+            $assignclass->student_count = \App\Models\Admin\Students::where(
+                'current_semester',
+                $assignclass->semester
+            )->count();
+        }
+
         return view('teacher.assignclass', [
-            'pageTitle' => 'Assign Classes',
-            'teacher' => $teacher
+            'pageTitle' => 'Assigned Classes',
+            'teacher' => $teacher,
+            'assignclasses' => $assignclasses
         ]);
     }
 }
