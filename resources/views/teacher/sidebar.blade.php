@@ -27,8 +27,8 @@
 
             <!-- CLASSES -->
             <li class="nav-item">
-                <a href="{{ route('teacher.classes') }}"
-                    class="nav-link {{ request()->routeIs('teacher.classes') ? 'active-sidebar' : '' }}">
+                <a href="{{ route('teacher.assignclass') }}"
+                    class="nav-link {{ request()->routeIs('teacher.assignclass') ? 'active-sidebar' : '' }}">
                     <i class="bi bi-building me-3"></i> Assign Classes
                 </a>
             </li>

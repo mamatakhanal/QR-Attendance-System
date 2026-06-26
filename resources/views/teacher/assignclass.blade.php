@@ -1,5 +1,5 @@
 <head>
-    <title>Class - Teacher</title>
+    <title>Assign Classes - Teacher</title>
     @include('layouts.link')
     @include('layouts.style')
 </head>

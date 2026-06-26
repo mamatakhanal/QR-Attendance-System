@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Teachers;
+use App\Models\Admin\Assignclass;
+use Illuminate\Http\Request;
 
-class ClassesController extends Controller
+class AssignclassController extends Controller
 {
-    public function classes()
+    public function assignclass(Request $request)
     {
         $teacher = Teachers::find(session('teacher_id'));
 
@@ -15,7 +17,7 @@ class ClassesController extends Controller
             return redirect('/home');
         }
 
-        return view('teacher.classes', [
+        return view('teacher.assignclass', [
             'pageTitle' => 'Assign Classes',
             'teacher' => $teacher
         ]);

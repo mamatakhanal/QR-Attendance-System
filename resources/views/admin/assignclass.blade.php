@@ -1,5 +1,5 @@
 <head>
-    <title>Assign Class - Admin</title>
+    <title>Assign Classes - Admin</title>
     @include('layouts.link')
     @include('layouts.style')
     @include('layouts.delete')

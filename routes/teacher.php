@@ -3,7 +3,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Teacher\LoginController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\StudentsController;
-use App\Http\Controllers\Teacher\ClassesController;
+use App\Http\Controllers\Teacher\AssignclassController;
 use App\Http\Controllers\Teacher\AttendanceController;
 use App\Http\Controllers\Teacher\ProfileController;
 
@@ -19,8 +19,8 @@ Route::prefix('/teacher')->group(function () {
     Route::get('/students', [StudentsController::class, 'students'])
         ->name('teacher.students');
 
-    Route::get('/classes', [ClassesController::class, 'classes'])
-        ->name('teacher.classes');
+    Route::get('/classes', [AssignclassController::class, 'assignclass'])
+        ->name('teacher.assignclass');
 
     Route::get('/attendance', [AttendanceController::class, 'attendance'])
         ->name('teacher.attendance');
