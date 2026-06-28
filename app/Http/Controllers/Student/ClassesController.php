@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Students;
+use App\Models\Admin\Assignclass;
 
 class ClassesController extends Controller
 {
@@ -15,9 +16,17 @@ class ClassesController extends Controller
             return redirect('/home');
         }
 
+        $classes = Assignclass::with([
+            'teacher',
+            'subjects'
+        ])
+            ->where('semester', $student->current_semester)
+            ->get();
+
         return view('student.classes', [
             'pageTitle' => 'Classes',
-            'student' => $student
+            'student' => $student,
+            'classes' => $classes
         ]);
     }
 }

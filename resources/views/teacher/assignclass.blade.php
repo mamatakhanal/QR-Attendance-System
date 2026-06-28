@@ -53,7 +53,7 @@
                                     <td>
                                         <a href="{{ route('teacher.attendance', $assignclass->id) }}"
                                             class="btn btn-sm btn-primary rounded-3">
-                                            <i class="bi bi-qr-code-scan"></i>
+                                            <i class="bi bi-qr-code-scan"></i> 
                                             Attendance
                                         </a>
                                     </td>

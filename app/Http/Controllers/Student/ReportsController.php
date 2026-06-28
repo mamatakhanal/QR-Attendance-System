@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Students;
 
-class TeachersController extends Controller
+class ReportsController extends Controller
 {
-    public function teachers()
+    public function reports()
     {
         $student = Students::find(session('student_id'));
 
@@ -15,9 +15,9 @@ class TeachersController extends Controller
             return redirect('/home');
         }
 
-        return view('student.teachers', [
-            'pageTitle' => 'Teachers',
-            'student' => $student
+        return view('student.reports', [
+            'pageTitle' => 'Reports',
+             'student' => $student
         ]);
     }
 }

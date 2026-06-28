@@ -25,16 +25,16 @@
                 </a>
             </li>
 
-            <!-- Teacher -->
+              <!-- QR Code -->
             <li class="nav-item">
-                <a href="{{ route('student.teachers') }}"
-                    class="nav-link {{ request()->routeIs('student.teachers') ? 'active-sidebar' : '' }}">
-                    <i class="bi bi-people me-3"></i> Teacher
+                <a href="{{ route('student.qrcode') }}"
+                    class="nav-link {{ request()->routeIs('student.qrcode') ? 'active-sidebar' : '' }}">
+                    <i class="bi bi-qr-code me-3"></i> QR Code
                 </a>
             </li>
 
             <!-- CLASSES -->
-            <li>
+            <li class="nav-item">
                 <a href="{{ route('student.classes') }}"
                     class="nav-link {{ request()->routeIs('student.classes') ? 'active-sidebar' : '' }}">
                     <i class="bi bi-building me-3"></i> Classes
@@ -51,7 +51,8 @@
 
             <!-- REPORT -->
             <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="{{ route('student.reports') }}" 
+                class="nav-link {{ request()->routeIs('student.reports') ? 'active-sidebar' : '' }}">
                     <i class="bi bi-clipboard-data me-3"></i> Reports
                 </a>
             </li>

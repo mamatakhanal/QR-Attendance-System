@@ -12,8 +12,8 @@
             @include('student.navbar')
 
             <!-- CONTENT -->
-            <div class="card shadow-sm border-0 mx-3 my-2 px-4 rounded-4">
-                <form id="editStudentProfile" class=" p-4">
+            <div class="card shadow-sm border-0 mx-2 my-2 px-4 rounded-4">
+                <form id="editStudentProfile" class="p-4 pb-1">
                     @csrf
                     @method('PUT')
 
@@ -87,8 +87,7 @@
                             <small class="text-danger" id="edit_password_error"></small>
                         </div>
 
-                        <div class="col-md-6">
-                            <div class="col-md-12 mb-3">
+                            <div class="col-md-6">
                                 <label class="form-label">Batch</label>
                                 <input type="number" id="edit_admission_year" name="admission_year"
                                     class="form-control" min="2010" max="{{ date('Y') }}"
@@ -96,30 +95,14 @@
                                 <small class="text-danger" id="edit_admission_year_error"></small>
                             </div>
 
-                            <div class="col-md-12 mb-3">
+                            <div class="col-md-6">
                                 <label class="form-label">Semester</label>
                                 <input type="text" class="form-control" value="{{ $student->current_semester }}"
                                     readonly>
                             </div>
-
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Student Code</label>
-                                <input type="text" name="student_code" id="edit_student_code"
-                                    class="form-control" value="{{ $student->student_code }}" readonly>
-                            </div>
-                        </div>
-
-                        <!-- QR Code -->
-                        <div class="col-md-6 d-flex flex-column align-items-center">
-                            <label class="form-label fw-semibold">QR Code</label>
-                            <img id="edit_qr_image"
-                                src="{{ asset('storage/qr/' . $student->student_code . '.png') }}"
-                                class="img-thumbnail shadow-sm p-2"
-                                style="width:210px;height:210px;object-fit:contain;">
-                        </div>
                     </div>
 
-                    <div class="modal-footer mt-3">
+                    <div class="modal-footer mt-4">
                         <button type="submit" class="btn btn-primary">Save Profile</button>
                     </div>
                 </form>

@@ -4,83 +4,95 @@
     @include('layouts.style')
 </head>
 
+
 <body>
 
-    <!-- MAIN LAYOUT -->
     <div class="main-wrapper">
         @include('teacher.sidebar')
         <div class="main-area">
             @include('teacher.navbar')
 
-            <!-- CONTENT -->
-            <div class="main-content">
-
-                <h1 class="fw-semibold mb-4">
+<div class="main-content">
+            <div class="card shadow-sm border-0 rounded-4 mx-2 my-2 p-2">
+                <h5 class="fw-semibold px-3 pt-3">
                     Attendance
-                </h1>
+                </h5>
 
+                <div class="card-body">
+                    <div class="row align-items-end g-3">
 
-                <div class="container-fluid">
+                        <!-- Select Class -->
+                        <div class="col-md-9">
+                            <label class="form-label fw-semibold">
+                                Select Class
+                            </label>
 
-                    <!-- PAGE TITLE -->
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h3 class="fw-semibold">Take Attendance</h3>
-                    </div>
+                            <select class="form-select" id="class_id">
+                                <option value="">
+                                    Select Class
+                                </option>
 
-                    <!-- QR ATTENDANCE CARD -->
-                    <div class="card shadow-sm border-0 rounded-4">
+                                @foreach ($assignclasses as $assignclass)
+                                    @foreach ($assignclass->subjects as $subject)
+                                        <option value="{{ $assignclass->id }}">
+                                            Semester {{ $assignclass->semester }}
+                                            -
+                                            {{ $subject->subject_name }}
+                                        </option>
+                                    @endforeach
+                                @endforeach
+                            </select>
+                        </div>
 
-                        <div class="card-body">
-
-                            <div class="row align-items-center">
-
-                                <!-- LEFT SIDE -->
-                                <div class="col-md-4 text-center border-end">
-
-                                    <h5 class="fw-semibold mb-3">
-                                        QR Attendance Scanner
-                                    </h5>
-
-                                    <button id="startScanner"
-                                        class="btn btn-primary px-4 py-2 rounded-pill">
-                                        Open Camera
-                                    </button>
-
-                                    <button id="stopScanner"
-                                        class="btn btn-danger px-4 py-2 rounded-pill mt-2">
-                                        Stop Camera
-                                    </button>
-
-                                </div>
-
-                                <!-- RIGHT SIDE -->
-                                <div class="col-md-8">
-
-                                    <!-- CAMERA -->
-                                    <div id="reader"
-                                        style="width:100%; max-width:500px;">
-                                    </div>
-
-                                    <!-- RESULT -->
-                                    <div class="mt-3">
-
-                                        <h6>Scan Result:</h6>
-
-                                        <div id="result"
-                                            class="alert alert-success d-none">
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
+                        <!-- Button -->
+                        <div class="col-md-3">
+                            <button id="startScanner" class="btn btn-primary w-100 rounded-3 py-2">
+                                <i class="bi bi-qr-code-scan me-2"></i>
+                                Start Attendance
+                            </button>
                         </div>
                     </div>
-                </div>
 
+                    <!-- Instruction -->
+                    <p class="text-muted small mt-1 mb-4">
+                        Select class before starting attendance
+                    </p>
+
+
+                    <!-- Attendance List -->
+                    <h5 class="fw-semibold mb-3">
+                        Today's Attendance
+                    </h5>
+
+                    <div class="table-responsive rounded-3">
+
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>S.N</th>
+                                    <th>Roll No</th>
+                                    <th>Name</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="attendance-data">
+
+                                <!-- scanned students will appear here -->
+                                <tr>
+
+                                    <td colspan="5" class="text-center text-muted py-3">
+                                        No attendance taken yet
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    </div>
+
 </body>

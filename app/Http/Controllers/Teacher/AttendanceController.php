@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Teachers;
+use App\Models\Admin\Assignclass;
 
 class AttendanceController extends Controller
 {
@@ -14,9 +15,17 @@ class AttendanceController extends Controller
         if (!$teacher) {
             return redirect('/home');
         }
+
+
+        $assignclasses = Assignclass::with('subjects')
+            ->where('teacher_id', $teacher->id)
+            ->orderBy('semester')
+            ->get();
+
         return view('teacher.attendance', [
             'pageTitle' => 'Attendance',
-            'teacher' => $teacher
+            'teacher' => $teacher,
+            'assignclasses' => $assignclasses
         ]);
     }
 }
