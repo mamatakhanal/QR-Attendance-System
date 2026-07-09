@@ -50,6 +50,7 @@
                                     <li>Select semester first</li>
                                 </ul>
                             </div>
+                            <small id="subject_ids_error" class="text-danger"></small>
                         </div>
 
                     </div>
@@ -69,27 +70,16 @@
             // Submit Assign Subject Form
             $('#assignclassForm').submit(function(e) {
                 e.preventDefault();
+
+                // Clear previous error
+                $('#subject_ids_error').text('');
+
+                // No subject selected
                 if ($('.subject-check:checked').length === 0) {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'error',
-                        title: 'Please select at least one subject',
-                        showConfirmButton: false,
-                        timer: 1000,
-                        timerProgressBar: true,
-                        customClass: {
-                            popup: 'small-toast'
-                        },
-                        showClass: {
-                            popup: 'animate__animated animate__fadeInRight'
-                        },
-                        hideClass: {
-                            popup: 'animate__animated animate__fadeOutRight'
-                        }
-                    });
+                    $('#subject_ids_error').text('Please select one subject.');
                     return;
                 }
+
                 let formData = new FormData(this);
                 $.ajax({
                     url: "{{ route('assignclass.create') }}",
@@ -97,58 +87,58 @@
                     data: formData,
                     processData: false,
                     contentType: false,
-
                     success: function(response) {
+
+                        if (!response.success) {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: response.message,
+                                showConfirmButton: false,
+                                timer: 1500,
+                                customClass: {
+                                    popup: 'small-toast'
+                                }
+                            });
+                            return;
+                        }
+
                         Swal.fire({
                             toast: true,
                             position: 'top-end',
-                            icon: response.success ? 'success' : 'error',
+                            icon: 'success',
                             title: response.message,
                             showConfirmButton: false,
-                            timer: 1000,
-                            timerProgressBar: true,
+                            timer: 1500,
                             customClass: {
                                 popup: 'small-toast'
-                            },
-                            showClass: {
-                                popup: 'animate__animated animate__fadeInRight'
-                            },
-
-                            hideClass: {
-                                popup: 'animate__animated animate__fadeOutRight'
                             }
                         });
 
-                        if (response.success) {
+                        $('#assignclassForm')[0].reset();
+                        $('#subjectDropdown').html('<li>Select semester first</li>');
+                        $('#subjectBtnCreate').text('Select Subjects');
 
-                            $('#assignclassForm')[0].reset();
-                            $('#subjectDropdown').html('<li>Select semester first</li>');
-                            $('#subjectBtnCreate').text('Select Subjects');
+                        bootstrap.Modal.getInstance(
+                            document.getElementById('addAssignclassModal')
+                        ).hide();
 
-                            let modal =
-                                bootstrap.Modal.getInstance(
-                                    document.getElementById('addAssignclassModal')
-                                );
-                            if (modal) {
-                                modal.hide();
-                            }
-
-                            setTimeout(function() {
-                                location.reload();
-                            }, 2000);
-                        }
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
                     },
 
                     error: function(xhr) {
+                        $('.text-danger').text('');
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
-                            $.each(errors, function(key, value) {
-                                $('#' + key + '_error').text(value[0]);
-                            });
+                            if (errors.subject_ids) {
+                                $('#subject_ids_error').text(errors.subject_ids[0]);
+                            }
                         }
                     }
                 });
-
             });
         });
     </script>
@@ -158,12 +148,12 @@
         $('#addAssignclassModal').on('hidden.bs.modal', function() {
 
             $('#assignclassForm')[0].reset();
-            $('#subjectDropdown').html(
-                '<li>Select semester first</li>'
-            );
+            $('#subjectDropdown').html('<li>Select semester first</li>');
             $('#selectedSubjects').empty();
             $('#subjectBtnCreate').text('Select Subjects');
             $('.text-danger').text('');
+            // Clear validation message
+            $('#subject_ids_error').text('');
         });
     </script>
 
@@ -171,21 +161,20 @@
         // Show selected subjects count
         $(document).on('change', '.subject-check', function() {
 
+            $('#subject_ids_error').text('');
+
             let selectedNames = [];
+
             $('.subject-check:checked').each(function() {
-                let name = $(this).next('label').text();
-                selectedNames.push(name);
+                selectedNames.push($(this).next('label').text());
             });
 
             if (selectedNames.length > 0) {
-                $('#subjectBtnCreate').text(
-                    selectedNames.length + ' Subjects Selected'
-                );
+                $('#subjectBtnCreate').text(selectedNames.length + ' Subject Selected');
             } else {
-                $('#subjectBtnCreate').text(
-                    'Select Subjects'
-                );
+                $('#subjectBtnCreate').text('Select Subjects');
             }
+
         });
     </script>
 

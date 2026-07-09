@@ -26,7 +26,17 @@
     </div>
 </body>
 
+<script>
+    $(document).on('click', '[data-bs-target="#deleteModal"]', function () {
 
+        let url = $(this).data('url');
+
+        $('#deleteForm').attr('action', url);
+
+    });
+</script>
+
+{{-- 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
 
@@ -42,4 +52,4 @@
         });
 
     });
-</script>
+</script> --}}

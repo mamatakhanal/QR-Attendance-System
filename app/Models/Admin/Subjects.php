@@ -14,7 +14,6 @@ class Subjects extends Model
         'semester',
     ];
 
-
     public function teachers()
     {
         return $this->belongsToMany(
@@ -27,7 +26,12 @@ class Subjects extends Model
 
     public function assignClasses()
     {
-        return $this->hasMany(AssignClass::class, 'subject_id');
+        return $this->belongsToMany(
+            Assignclass::class,
+            'assign_class_subject',
+            'subject_id',
+            'assign_class_id'
+        );
     }
 
     public function attendance()

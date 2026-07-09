@@ -13,28 +13,52 @@
     }
 </style>
 
-@if(session('success'))
-<script>
-    Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: '{{ session("success") }}',
-        customClass: {
-            popup: 'small-toast'
-        },
+@if (session('success'))
+    <script>
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: '{{ session('success') }}',
+            customClass: {
+                popup: 'small-toast'
+            },
 
-        showConfirmButton: false,
-        timer: 2000,
-        timerProgressBar: true,
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
 
-        showClass: {
-            popup: 'animate__animated animate__slideInRight'
-        },
+            showClass: {
+                popup: 'animate__animated animate__slideInRight'
+            },
 
-        hideClass: {
-            popup: 'animate__animated animate__slideOutRight'
-        }
-    });
-</script>
+            hideClass: {
+                popup: 'animate__animated animate__slideOutRight'
+            }
+        });
+    </script>
+@endif
+
+{{-- Error Toast --}}
+@if (session('error'))
+    <script>
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: '{{ session('error') }}',
+            customClass: {
+                popup: 'small-toast'
+            },
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
+            showClass: {
+                popup: 'animate__animated animate__slideInRight'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__slideOutRight'
+            }
+        });
+    </script>
 @endif

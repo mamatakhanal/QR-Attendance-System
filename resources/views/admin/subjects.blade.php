@@ -87,36 +87,29 @@
 </body>
 
 <script>
+    $(document).on('click', '.semester-btn', function() {
+        let semester = $(this).data('semester');
 
-$(document).on('click','.semester-btn',function(){
-    let semester = $(this).data('semester');
+        $('.semester-btn')
+            .removeClass('active btn-primary')
+            .addClass('btn-outline-primary');
 
-    $('.semester-btn')
-        .removeClass('active btn-primary')
-        .addClass('btn-outline-primary');
+        $(this)
+            .removeClass('btn-outline-primary')
+            .addClass('btn-primary active');
 
-    $(this)
-        .removeClass('btn-outline-primary')
-        .addClass('btn-primary active');
-
-    $.ajax({
-        url:"{{ route('admin.subjects') }}",
-        type:"GET",
-        data:{
-            semester:semester
-        },
-
-        success:function(response){
-
-            let table = $(response)
-                .find('#subject-data')
-                .html();
-            let pagination = $(response)
-                .find('#pagination-data')
-                .html();
-            $('#subject-data').html(table);
-            $('#pagination-data').html(pagination);
-        }
+        $.ajax({
+            url: "{{ route('admin.subjects') }}",
+            type: "GET",
+            data: {
+                semester: semester
+            },
+            success: function(response) {
+                let table = $(response).find('#subject-data').html();
+                let pagination = $(response).find('#pagination-data').html();
+                $('#subject-data').html(table);
+                $('#pagination-data').html(pagination);
+            }
+        });
     });
-});
 </script>

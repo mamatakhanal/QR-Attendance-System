@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 
 class SubjectsController extends Controller
 {
+
     public function subjects(Request $request)
     {
         $search = $request->search;
@@ -111,7 +112,20 @@ class SubjectsController extends Controller
     // Delete Subject
     public function delete($id)
     {
-        Subjects::findOrFail($id)->delete();
-        return redirect()->back()->with('success', 'Subject deleted successfully');
+        $subject = Subjects::findOrFail($id);
+
+        // Check if subject is assigned to any teacher/class
+        if ($subject->assignClasses()->exists()) {
+            return redirect()->back()->with(
+                'error',
+                'Assigned subject cannot be deleted.'
+            );
+        }
+
+        $subject->delete();
+        return redirect()->back()->with(
+            'success',
+            'Subject deleted successfully.'
+        );
     }
 }

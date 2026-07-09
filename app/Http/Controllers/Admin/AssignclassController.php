@@ -45,16 +45,15 @@ class AssignclassController extends Controller
         $teachers = Teachers::orderBy('name', 'asc')->get();
         $subjects = Subjects::pluck('subject_name', 'id');
 
-       if ($request->ajax()) {
+        if ($request->ajax()) {
 
-    return view('admin.assignclass', [
-        'assignclasses' => $assignclasses,
-        'teachers' => $teachers,
-        'subjects' => $subjects,
-        'pageTitle' => 'Assign Class'
-    ])->render();
-
-}
+            return view('admin.assignclass', [
+                'assignclasses' => $assignclasses,
+                'teachers' => $teachers,
+                'subjects' => $subjects,
+                'pageTitle' => 'Assign Class'
+            ])->render();
+        }
 
         return view('admin.assignclass', [
             'pageTitle' => 'Assign Classes',
@@ -71,56 +70,51 @@ class AssignclassController extends Controller
         $request->validate([
             'teacher_id'  => 'required',
             'semester'    => 'required',
-            'subject_ids' => 'required|array|min:1'
+            'subject_ids' => 'required|array|size:1',
+        ], [
+            'subject_ids.size' => 'Please select only one subject.',
         ]);
 
-        $teacherId = (int)$request->teacher_id;
-        $semester  = (int)$request->semester;
-        $newSubjects = array_map('intval', $request->subject_ids);
+        $teacherId = $request->teacher_id;
+        $semester  = $request->semester;
 
-        // check existing assign class
-        $assignClass = Assignclass::where('teacher_id', $teacherId)
+        // Teacher already assigned in this semester
+        $exists = Assignclass::where('teacher_id', $teacherId)
             ->where('semester', $semester)
-            ->first();
+            ->exists();
 
-        // Same teacher + same semester exists
-        if ($assignClass) {
-            // already assigned subjects
-            $oldSubjects = $assignClass->subjects()
-                ->pluck('subjects.id')
-                ->map(fn($id) => (int)$id)
-                ->toArray();
-
-            // find duplicate subjects
-            $duplicate = array_intersect($oldSubjects, $newSubjects);
-
-            if (!empty($duplicate)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Selected subjects are already assigned'
-                ]);
-            }
-
-            // only attach new subjects
-            $assignClass->subjects()->attach($newSubjects);
+        if ($exists) {
             return response()->json([
-                'success' => true,
-                'message' => 'New subjects added successfully'
+                'success' => false,
+                'message' => 'Teacher is already assigned to this semester.'
             ]);
         }
 
-        //  Create main assign class
-        $assignClass = Assignclass::create([
+        // Subjects already assigned to teacher
+        $subjectId = $request->subject_ids[0];
+        $subjectAssigned = Assignclass::where('semester', $semester)
+            ->whereHas('subjects', function ($q) use ($subjectId) {
+                $q->where('subjects.id', $subjectId);
+            })
+            ->exists();
+
+        if ($subjectAssigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This subject is already assigned to another teacher.'
+            ]);
+        }
+
+        $assignclass = Assignclass::create([
             'teacher_id' => $teacherId,
-            'semester' => $semester
+            'semester'   => $semester,
         ]);
 
-        // attach subjects into pivot table
-        $assignClass->subjects()->attach($newSubjects);
+        $assignclass->subjects()->attach($request->subject_ids);
 
         return response()->json([
             'success' => true,
-            'message' => 'Assignment created successfully'
+            'message' => 'Assignment created successfully.'
         ]);
     }
 
@@ -129,34 +123,62 @@ class AssignclassController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'teacher_id' => 'required',
-            'semester' => 'required',
-            'subject_ids' => 'required|array'
+            'teacher_id'  => 'required',
+            'semester'    => 'required',
+            'subject_ids' => 'required|array|size:1',
+        ], [
+            'subject_ids.size' => 'Please select only one subject.',
         ]);
+
+        $exists = Assignclass::where('teacher_id', $request->teacher_id)
+            ->where('semester', $request->semester)
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Teacher is already assigned to this semester.'
+            ]);
+        }
+
+        // Subject already assigned to teacher
+        $subjectId = $request->subject_ids[0];
+        $subjectAssigned = Assignclass::where('semester', $request->semester)
+            ->where('id', '!=', $id)
+            ->whereHas('subjects', function ($q) use ($subjectId) {
+                $q->where('subjects.id', $subjectId);
+            })
+            ->exists();
+
+        if ($subjectAssigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This subject is already assigned to another teacher.'
+            ]);
+        }
 
         $assignclass = Assignclass::findOrFail($id);
 
-        // JUST UPDATE SAME ROW
         $assignclass->update([
             'teacher_id' => $request->teacher_id,
-            'semester' => $request->semester,
+            'semester'   => $request->semester,
         ]);
 
-        // update subjects in pivot table
         $assignclass->subjects()->sync($request->subject_ids);
 
         return response()->json([
             'success' => true,
-            'message' => 'Updated successfully'
+            'message' => 'Updated successfully.'
         ]);
     }
+
 
     // Delete 
     public function delete($id)
     {
         Assignclass::findOrFail($id)->delete();
-        return redirect()->back()
-            ->with('success', 'Deleted successfully');
+        return redirect()->back()->with('success', 'Deleted successfully');
     }
 
 

@@ -54,6 +54,11 @@
                                     <td>{{ $assignclasses->firstItem() + $loop->index }}</td>
                                     <td>{{ $assignclass->teacher->name ?? 'No Teacher' }}</td>
                                     <td>Semester {{ $assignclass->semester }}</td>
+                                    {{-- <td>
+                                        @foreach ($assignclass->subjects as $subject)
+                                            {{ $subject->subject_name }}
+                                        @endforeach
+                                    </td> --}}
                                     <td>
                                         <div class="d-flex flex-wrap gap-2">
                                             @foreach ($assignclass->subjects as $subject)
@@ -99,6 +104,15 @@
     $(document).on('click', '.semester-btn', function() {
 
         let semester = $(this).data('semester');
+
+        $('.semester-btn')
+            .removeClass('active btn-primary')
+            .addClass('btn-outline-primary');
+
+        $(this)
+            .removeClass('btn-outline-primary')
+            .addClass('btn-primary active');
+
         $.ajax({
             url: "{{ route('admin.assignclass') }}",
             type: "GET",

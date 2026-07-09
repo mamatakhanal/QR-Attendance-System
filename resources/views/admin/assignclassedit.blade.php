@@ -56,6 +56,7 @@
                             </div>
                             {{-- Selected subject ids --}}
                             <div id="selectedSubjects"></div>
+                            <small id="edit_subject_ids_error" class="text-danger"></small>
                         </div>
                     </div>
 
@@ -134,7 +135,7 @@
     // Semester Change
     $(document).on('change', '#edit_semester', function() {
         let semester = $(this).val();
-        selectedSubjects = []; 
+        selectedSubjects = [];
         loadSubjects(semester);
     });
 
@@ -159,11 +160,28 @@
         $('#editsubjectDropdown').html('<li>Select semester first</li>');
         $('#subjectBtnEdit').text('Select Subjects');
         selectedSubjects = [];
+        // / Clear validation message
+        $('#edit_subject_ids_error').text('');
     });
 
     // Update AJAX
     $('#editAssignclassForm').submit(function(e) {
         e.preventDefault();
+
+        // Clear old error
+        $('#edit_subject_ids_error').text('');
+
+        // No subject selected
+        if ($('.edit-subject-check:checked').length === 0) {
+            $('#edit_subject_ids_error').text('Please select one subject.');
+            return;
+        }
+
+        // More than one subject selected
+        if ($('.edit-subject-check:checked').length > 1) {
+            $('#edit_subject_ids_error').text('Please select only one subject.');
+            return;
+        }
 
         $.ajax({
             url: '/admin/assignclass/update/' + $('#edit_id').val(),
@@ -180,23 +198,30 @@
 
             success: function(response) {
 
+                if (!response.success) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: response.message,
+                        showConfirmButton: false,
+                        timer: 1500,
+                        customClass: {
+                            popup: 'small-toast'
+                        }
+                    });
+                    return;
+                }
+
                 Swal.fire({
                     toast: true,
                     position: 'top-end',
                     icon: 'success',
                     title: response.message,
                     showConfirmButton: false,
-                    timer: 1000,
-                    timerProgressBar: true,
+                    timer: 1500,
                     customClass: {
                         popup: 'small-toast'
-                    },
-                    showClass: {
-                        popup: 'animate__animated animate__fadeInRight'
-                    },
-
-                    hideClass: {
-                        popup: 'animate__animated animate__fadeOutRight'
                     }
                 });
 
@@ -204,7 +229,20 @@
                     document.getElementById('editAssignclassModal')
                 ).hide();
 
-                setTimeout(() => location.reload(), 1500);
+                setTimeout(() => location.reload(), 2000);
+            },
+            error: function(xhr) {
+
+                $('#edit_subject_ids_error').text('');
+
+                if (xhr.status === 422) {
+
+                    let errors = xhr.responseJSON.errors;
+
+                    if (errors.subject_ids) {
+                        $('#edit_subject_ids_error').text(errors.subject_ids[0]);
+                    }
+                }
             }
         });
     });

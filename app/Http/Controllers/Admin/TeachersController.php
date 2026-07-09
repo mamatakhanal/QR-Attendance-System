@@ -117,8 +117,21 @@ class TeachersController extends Controller
     // Delete Student
     public function delete($id)
     {
-        Teachers::findOrFail($id)->delete();
-        return redirect()->back()->with('success', 'Teacher deleted successfully');
+        $teacher = Teachers::findOrFail($id);
+
+        // Check if teacher has assigned classes
+        if ($teacher->assignClasses()->exists()) {
+            return redirect()->back()->with(
+                'error',
+                'Assigned teacher cannot be deleted.'
+            );
+        }
+
+        $teacher->delete();
+        return redirect()->back()->with(
+            'success',
+            'Teacher deleted successfully.'
+        );
     }
 
     // Send Mail
