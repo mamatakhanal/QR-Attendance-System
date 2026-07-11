@@ -41,7 +41,8 @@ class AssignclassController extends Controller
                 });
             })
             ->orderBy('semester', 'asc')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         foreach ($assignclasses as $assignclass) {
             $assignclass->student_count = \App\Models\Admin\Students::where(

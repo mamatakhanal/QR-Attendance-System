@@ -95,7 +95,6 @@
                     @if ($students->hasPages())
                         @include('layouts.pagination', ['paginator' => $students])
                     @endif
-
                 </div>
             </div>
         </div>

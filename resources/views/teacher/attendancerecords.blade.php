@@ -55,24 +55,24 @@
                                     @foreach ($attendances as $attendance)
                                         <tr>
                                             <td> {{ $loop->iteration }} </td>
-                                            <td>{{ $attendance->date }}</td>
-                                            {{-- <td> {{ \Carbon\Carbon::parse($attendance->created_at)->format('d M Y') }} </td> --}}
+                                            <td>{{ \Carbon\Carbon::parse($attendance->date)->format('d M Y') }}</td>
                                             <td> Semester {{ $attendance->semester ?? '-' }} </td>
                                             <td> {{ $attendance->subject->subject_name ?? '-' }} </td>
                                             <td> {{ $attendance->student->roll_no ?? '-' }} </td>
                                             <td> {{ $attendance->student->name ?? '-' }} </td>
-                                            <td>{{ $attendance->time }}</td>
-                                            {{-- <td> {{ \Carbon\Carbon::parse($attendance->created_at)->format('h:i A') }} </td> --}}
+                                            <td>
+                                                {{ $attendance->time ? \Carbon\Carbon::parse($attendance->time)->format('h:i A') : '-' }}
+                                            </td>
                                             <td>
                                                 @if ($attendance->status == 'present')
                                                     <button class="btn btn-success btn-sm fw-bold rounded-3 action-btn"
                                                         style="font-size:10px; cursor:default;" disabled>
-                                                        <i class="bi bi-check-circle"></i> Present
+                                                        <i class="bi bi-check-circle"></i> &nbsp; Present
                                                     </button>
                                                 @else
                                                     <button class="btn btn-danger btn-sm fw-bold rounded-3 action-btn"
                                                         style="font-size:10px; cursor:default;" disabled>
-                                                        <i class="bi bi-x-circle"></i> Absent
+                                                        <i class="bi bi-x-circle"></i> &nbsp; Absent
                                                     </button>
                                                 @endif
                                             </td>
@@ -87,6 +87,11 @@
                                 @endif
                             </tbody>
                         </table>
+                    </div>
+                    <div id="pagination-data">
+                        @if ($attendances->hasPages())
+                            @include('layouts.pagination', ['paginator' => $attendances])
+                        @endif
                     </div>
                 </div>
             </div>

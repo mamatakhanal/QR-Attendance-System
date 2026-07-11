@@ -25,6 +25,7 @@
                                 <th class="py-3">S.N</th>
                                 <th class="py-3">Semester</th>
                                 <th class="py-3">Subjects</th>
+                                <th class="py-3">Code</th>
                                 <th class="py-3">Students</th>
                                 <th class="py-3">Action</th>
                             </tr>
@@ -48,12 +49,15 @@
                                         </div>
                                     </td>
                                     <td>
+                                        {{ $subject->subject_code }}
+                                    </td>
+                                    <td>
                                         {{ $assignclass->student_count }} Students
                                     </td>
                                     <td>
                                         <a href="{{ route('teacher.attendance', $assignclass->id) }}"
                                             class="btn btn-sm btn-primary rounded-3">
-                                            <i class="bi bi-qr-code-scan"></i> 
+                                            <i class="bi bi-qr-code-scan"></i>
                                             Attendance
                                         </a>
                                     </td>
@@ -62,6 +66,11 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+                <div id="pagination-data">
+                    @if ($assignclasses->hasPages())
+                        @include('layouts.pagination', ['paginator' => $assignclasses])
+                    @endif
                 </div>
             </div>
         </div>
