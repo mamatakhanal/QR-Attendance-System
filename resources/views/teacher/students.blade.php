@@ -20,8 +20,7 @@
                 <!-- Semester Filter -->
                 <div class="d-flex gap-2 mb-3 flex-wrap">
                     <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">
-                        <i class="bi bi-people"></i>
-                        All Students
+                        <i class="bi bi-people"></i> &nbsp; All Students
                     </button>
                     @foreach ($assignedSemesters as $semester)
                         <button class="btn btn-outline-primary btn-sm semester-btn" data-semester="{{ $semester }}">

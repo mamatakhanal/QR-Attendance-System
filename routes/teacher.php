@@ -1,10 +1,12 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Teacher\LoginController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\StudentsController;
 use App\Http\Controllers\Teacher\AssignclassController;
 use App\Http\Controllers\Teacher\AttendanceController;
+use App\Http\Controllers\Teacher\AttendanceRecordsController;
 use App\Http\Controllers\Teacher\ProfileController;
 
 Route::prefix('/teacher')->group(function () {
@@ -25,10 +27,14 @@ Route::prefix('/teacher')->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'attendance'])
         ->name('teacher.attendance');
 
+    Route::get('/attendance-records', [AttendanceRecordsController::class, 'attendancerecords'])
+        ->name('teacher.attendancerecords');
+
+    // Profile
     Route::get('/profile', [ProfileController::class, 'profile'])
         ->name('teacher.profile');
-    
-      Route::put('/profile/update/{id}', [ProfileController::class, 'update'])
+
+    Route::put('/profile/update/{id}', [ProfileController::class, 'update'])
         ->name('profile.profile.update');
 
     // Logout

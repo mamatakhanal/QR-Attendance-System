@@ -205,9 +205,16 @@
                         icon: 'error',
                         title: response.message,
                         showConfirmButton: false,
-                        timer: 1500,
+                        timer: 1000,
+                        timerProgressBar: true,
                         customClass: {
                             popup: 'small-toast'
+                        },
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInRight'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutRight'
                         }
                     });
                     return;
@@ -219,9 +226,16 @@
                     icon: 'success',
                     title: response.message,
                     showConfirmButton: false,
-                    timer: 1500,
+                    timer: 1000,
+                    timerProgressBar: true,
                     customClass: {
                         popup: 'small-toast'
+                    },
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInRight'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutRight'
                     }
                 });
 

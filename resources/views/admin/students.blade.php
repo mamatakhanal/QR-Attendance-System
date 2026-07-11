@@ -116,6 +116,12 @@
                 timerProgressBar: true,
                 customClass: {
                     popup: 'small-toast'
+                },
+                showClass: {
+                    popup: 'animate__animated animate__fadeInRight'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutRight'
                 }
             });
 
@@ -153,7 +159,16 @@
                         icon: 'error',
                         title: 'Mail failed',
                         showConfirmButton: false,
-                        timer: 1000
+                        timer: 1000,
+                        customClass: {
+                            popup: 'small-toast'
+                        },
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInRight'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutRight'
+                        }
                     });
                 }
             });

@@ -23,13 +23,13 @@ class Attendance extends Model
         return $this->belongsTo(Students::class, 'student_id');
     }
 
-    // public function subject()
-    // {
-    //     return $this->belongsTo(Subjects::class, 'subject_id');
-    // }
+    public function subject()
+    {
+        return $this->belongsTo(Subjects::class, 'subject_id');
+    }
 
-    // public function teacher()
-    // {
-    //     return $this->belongsTo(Teachers::class, 'teacher_id');
-    // }
+    public function teacher()
+    {
+        return $this->belongsTo(Teachers::class, 'teacher_id');
+    }
 }

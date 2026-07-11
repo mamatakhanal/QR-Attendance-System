@@ -18,15 +18,15 @@
                 <h5 class="fw-semibold mb-4">
                     Assigned Classes List
                 </h5>
-                <div class="table-responsive">
-                    <table class="table table-hover">
+                <div class="table-responsive rounded-2">
+                    <table class="table table-hover border-3 mb-0">
                         <thead class="table-secondary">
                             <tr>
-                                <th>S.N</th>
-                                <th>Semester</th>
-                                <th>Subjects</th>
-                                <th>Students</th>
-                                <th>Action</th>
+                                <th class="py-3">S.N</th>
+                                <th class="py-3">Semester</th>
+                                <th class="py-3">Subjects</th>
+                                <th class="py-3">Students</th>
+                                <th class="py-3">Action</th>
                             </tr>
                         </thead>
                         <tbody>
