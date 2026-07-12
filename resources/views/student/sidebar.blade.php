@@ -49,13 +49,13 @@
                 </a>
             </li>
 
-            <!-- REPORT -->
+            {{-- <!-- REPORT -->
             <li class="nav-item">
                 <a href="{{ route('student.reports') }}" 
                 class="nav-link {{ request()->routeIs('student.reports') ? 'active-sidebar' : '' }}">
                     <i class="bi bi-clipboard-data me-3"></i> Reports
                 </a>
-            </li>
+            </li> --}}
 
         </ul>
     </div>

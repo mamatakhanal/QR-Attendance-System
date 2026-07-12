@@ -16,7 +16,7 @@
             <div class="main-content">
                 <div class="card shadow-sm border-0 rounded-4 mx-2 my-2">
 
-                    <div class="card-body p-4">
+                    <div class="card-body px-4 py-3">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="fw-semibold mb-0">
                                 My Classes
@@ -43,28 +43,35 @@
                                     @php
                                         $sn = 1;
                                     @endphp
-                                    @foreach ($classes as $class)
-                                        @foreach ($class->subjects as $subject)
-                                            <tr>
-                                                <td class="pt-3"> {{ $sn++ }} </td>
-                                                <td class="pt-3"> {{ $subject->subject_code }} </td>
-                                                <td class="pt-3"> {{ $subject->subject_name }} </td>
-                                                <td class="pt-3 fw-semibold"> {{ $class->teacher->name ?? 'N/A' }} </td>
-                                                <td>
-                                                    <div>
-                                                        <i class="bi bi-envelope me-1 text-muted"></i>
-                                                        {{ $class->teacher->email ?? 'N/A' }}
-                                                    </div>
-                                                    <div class="mt-2">
-                                                        <i class="bi bi-telephone me-1 text-muted"></i>
-                                                        {{ $class->teacher->phone ?? 'N/A' }}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
+                                    @foreach ($subjects as $subject)
+                                        <tr>
+                                            <td class="pt-3"> {{ $loop->iteration }}</td>
+                                            <td class="pt-3"> {{ $subject->subject_code }} </td>
+                                            <td class="pt-3"> {{ $subject->subject_name }} </td>
+                                            <td>
+                                                @if (isset($teacherBySubject[$subject->id]))
+                                                    {{ $teacherBySubject[$subject->id]->name }}
+                                                @else
+                                                    <span class="text-muted">Not Assigned</span>
+                                                @endif
+                                            </td>
+                                            @php
+                                                $teacher = $teacherBySubject[$subject->id] ?? null;
+                                            @endphp
+                                            <td>
+                                                <div>
+                                                    <i class="bi bi-envelope me-1 text-muted"></i>
+                                                    {{ $teacher?->email ?? 'N/A' }}
+                                                </div>
+                                                <div class="mt-2">
+                                                    <i class="bi bi-telephone me-1 text-muted"></i>
+                                                    {{ $teacher?->phone ?? 'N/A' }}
+                                                </div>
+                                            </td>
+                                        </tr>
                                     @endforeach
 
-                                    @if ($classes->count() == 0)
+                                    @if ($subjects->count() == 0)
                                         <tr>
                                             <td colspan="6" class="text-center text-muted py-3">
                                                 No classes assigned yet

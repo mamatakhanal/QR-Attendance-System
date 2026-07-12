@@ -5,7 +5,6 @@
 </head>
 
 <body>
-
     <!-- MAIN LAYOUT -->
     <div class="main-wrapper">
         @include('student.sidebar')
@@ -35,9 +34,9 @@
                                 <div class="card-body d-flex justify-content-between align-items-center">
                                     <div>
                                         <h5> Present </h5>
-                                        <h2 class="fw-bold mb-0"> 0 </h2>
+                                        <h2 class="fw-bold mb-0"> {{ $present }} </h2>
                                     </div>
-                                       <i class="bi bi-check-circle-fill fs-1"></i>
+                                    <i class="bi bi-check-circle-fill fs-1"></i>
                                 </div>
                             </div>
                         </a>
@@ -49,9 +48,9 @@
                                 <div class="card-body d-flex justify-content-between align-items-center">
                                     <div>
                                         <h5> Absent </h5>
-                                        <h2 class="fw-bold mb-0"> 0 </h2>
+                                        <h2 class="fw-bold mb-0"> {{ $absent }} </h2>
                                     </div>
-                                      <i class="bi bi-x-circle-fill fs-1"></i>
+                                    <i class="bi bi-x-circle-fill fs-1"></i>
                                 </div>
                             </div>
                         </a>
@@ -63,9 +62,9 @@
                                 <div class="card-body d-flex justify-content-between align-items-center">
                                     <div>
                                         <h5> Attendance % </h5>
-                                        <h2 class="fw-bold mb-0"> 0 %</h2>
+                                        <h2 class="fw-bold mb-0"> {{ $percentage }}% </h2>
                                     </div>
-                                     <i class="bi bi-qr-code-scan fs-1"></i>
+                                    <i class="bi bi-qr-code-scan fs-1"></i>
                                 </div>
                             </div>
                         </a>

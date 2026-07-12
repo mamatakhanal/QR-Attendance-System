@@ -16,7 +16,6 @@
                         Attendance Records List
                     </h5>
 
-                    </form>
                     {{-- Filter --}}
                     <form method="GET" action="{{ route('teacher.attendancerecords') }}">
                         <div class="row g-3">
@@ -112,7 +111,7 @@
                                 @if ($attendances->count())
                                     @foreach ($attendances as $attendance)
                                         <tr>
-                                            <td> {{ $loop->iteration }} </td>
+                                            <td> {{ $attendances->firstItem() + $loop->index }} </td>
                                             <td>{{ \Carbon\Carbon::parse($attendance->date)->format('d M Y') }}</td>
                                             <td> Semester {{ $attendance->semester ?? '-' }} </td>
                                             <td> {{ $attendance->subject->subject_name ?? '-' }} </td>
@@ -156,4 +155,3 @@
         </div>
     </div>
 </body>
-

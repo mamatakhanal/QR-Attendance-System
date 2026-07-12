@@ -1,4 +1,4 @@
-<head>
+{{-- <head>
     <title>Notice - Student</title>
     @include('layouts.link')
     @include('layouts.style')
@@ -131,4 +131,4 @@
 </div>
 
 
-</body>
+</body> --}}
