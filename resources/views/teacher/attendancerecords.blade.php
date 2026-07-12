@@ -13,27 +13,85 @@
             <div class="main-content">
                 <div class="card shadow-sm border-0 rounded-4 mx-2 my-2 p-4">
                     <h5 class="fw-semibold mb-3">
-                        Attendance Records
+                        Attendance Records List
                     </h5>
 
-                    <!-- Semester Filter -->
-                    <div class="d-flex gap-2 mb-3 flex-wrap">
-                        <!-- All Classes -->
-                        <button
-                            class="btn btn-sm semester-btn {{ request('semester') == null || request('semester') == 'all' ? 'btn-primary active' : 'btn-outline-primary' }}"
-                            data-semester="all">
-                            <i class="bi bi-people"></i> &nbsp; All Classes
-                        </button>
+                    </form>
+                    {{-- Filter --}}
+                    <form method="GET" action="{{ route('teacher.attendancerecords') }}">
+                        <div class="row g-3">
 
-                        <!-- Teacher Assigned Semesters -->
-                        @foreach ($assignedSemesters as $semester)
-                            <button
-                                class="btn btn-sm semester-btn {{ request('semester') == $semester ? 'btn-primary active' : 'btn-outline-primary' }}"
-                                data-semester="{{ $semester }}">
-                                Semester {{ $semester }}
-                            </button>
-                        @endforeach
-                    </div>
+                            {{-- Search --}}
+                            <div class="col-md-2">
+                                <input type="text" name="search" class="form-control" placeholder="Search Student..."
+                                    value="{{ request('search') }}">
+                            </div>
+
+                            {{-- Semester --}}
+                            <div class="col-md-2">
+                                <select name="semester" class="form-select">
+                                    <option value="">All Semester</option>
+
+                                    @foreach ($assignedSemesters as $semester)
+                                        <option value="{{ $semester }}"
+                                            {{ request('semester') == $semester ? 'selected' : '' }}>
+                                            Semester {{ $semester }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Subject --}}
+                            <div class="col-md-2">
+                                <select name="subject_id" class="form-select">
+                                    <option value="">All Subjects</option>
+
+                                    @foreach ($subjects as $subject)
+                                        <option value="{{ $subject->id }}"
+                                            {{ request('subject_id') == $subject->id ? 'selected' : '' }}>
+                                            {{ $subject->subject_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Date --}}
+                            <div class="col-md-2">
+                                <input type="date" name="date" class="form-control" value="{{ request('date') }}">
+                            </div>
+
+                            {{-- Status --}}
+                            <div class="col-md-2">
+                                <select name="status" class="form-select">
+                                    <option value="">All Status</option>
+
+                                    <option value="present" {{ request('status') == 'present' ? 'selected' : '' }}>
+                                        Present
+                                    </option>
+
+                                    <option value="absent" {{ request('status') == 'absent' ? 'selected' : '' }}>
+                                        Absent
+                                    </option>
+                                </select>
+                            </div>
+
+                            {{-- Search Button --}}
+                            <div class="col-md-1 d-grid">
+                                <button class="btn btn-primary">
+                                    Search
+                                </button>
+                            </div>
+
+                            {{-- Reset Button --}}
+                            <div class="col-md-1 d-grid">
+                                <a href="{{ route('teacher.attendancerecords') }}" class="btn btn-outline-secondary">
+                                    Reset
+                                </a>
+                            </div>
+
+                        </div>
+                    </form>
+
 
                     <div class="table-responsive rounded-2">
                         <table class="table table-hover border-3 mb-0">
@@ -81,7 +139,7 @@
                                 @else
                                     <tr>
                                         <td colspan="8" class="text-center text-muted py-3">
-                                            No attendance records found.
+                                            No attendance records found for this semester.
                                         </td>
                                     </tr>
                                 @endif
@@ -99,20 +157,3 @@
     </div>
 </body>
 
-{{-- Semester Fliter --}}
-<script>
-    $(document).on('click', '.semester-btn', function() {
-
-        $('.semester-btn')
-            .removeClass('active btn-primary')
-            .addClass('btn-outline-primary');
-
-        $(this)
-            .removeClass('btn-outline-primary')
-            .addClass('active btn-primary');
-
-        let semester = $(this).data('semester');
-
-        window.location.href = "{{ route('teacher.attendancerecords') }}?semester=" + semester;
-    });
-</script>

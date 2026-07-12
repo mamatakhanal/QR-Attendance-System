@@ -169,7 +169,7 @@
         border: none !important;
         border-radius: 10px;
         padding: 6px 18px;
-        margin: 2px; 
+        margin: 2px;
         background: #f1f3f5;
         color: #333;
         font-weight: 500;
@@ -186,4 +186,5 @@
         color: white !important;
         box-shadow: 0 2px 2px rgba(15, 9, 110, 0.25);
     }
+
 </style>

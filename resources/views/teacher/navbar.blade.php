@@ -14,13 +14,13 @@
 
       <!-- RIGHT -->
       <div class="d-flex align-items-center gap-4">
-        <!-- SEARCH -->
+        {{-- <!-- SEARCH -->
         <form method="GET" action="{{ url()->current() }}">
           <div class="search-box position-relative mt-3" style="max-width:300px;">
             <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2 small text-muted"></i>
             <input type="text" id="searchInput" name="search" value="{{ request('search') }}" class="form-control form-control-sm rounded-3 ps-4 py-2" placeholder="Search.....">
           </div>
-        </form>
+        </form> --}}
 
         <!-- PROFILE -->
         <div class="dropdown">
@@ -83,7 +83,7 @@
   });
 </script>
 
-
+{{-- 
 <!-- Search  -->
 <script>
   let searchTimer;
@@ -99,4 +99,4 @@
     }, 1000); // wait 1 seconds after typing stops
 
   });
-</script>
+</script> --}}

@@ -13,7 +13,7 @@
             @include('teacher.navbar')
 
             <!-- CONTENT -->
-            <div class="container-fluid py-1">
+            <div class="container-fluid py-2">
                 <div class="row g-4">
                     <!-- Total Classes -->
                     <div class="col-md-4 col-sm-6">

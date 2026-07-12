@@ -77,7 +77,7 @@
             <li class="nav-item">
                 <a href="{{ route('admin.attendance') }}"
                     class="nav-link {{ request()->routeIs('admin.attendance') ? 'active-sidebar' : '' }}">
-                    <i class="bi bi-qr-code-scan me-3"></i> Attendance
+                    <i class="bi bi-qr-code-scan me-3"></i> Attendance Records
                 </a>
             </li>
 

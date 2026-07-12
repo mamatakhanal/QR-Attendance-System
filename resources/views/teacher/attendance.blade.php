@@ -15,7 +15,7 @@
             <div class="main-content">
                 <div class="card shadow-sm border-0 rounded-4 mx-2 my-2 p-2">
                     <h5 class="fw-semibold px-3 pt-3">
-                        Attendance
+                        Take Attendance
                     </h5>
 
                     <div class="card-body">
@@ -33,7 +33,7 @@
                                     @foreach ($assignclasses as $assignclass)
                                         @foreach ($assignclass->subjects as $subject)
                                             <option value="{{ $assignclass->id }}"
-                                                data-semester="{{ $assignclass->semester }}" >
+                                                data-semester="{{ $assignclass->semester }}">
                                                 Semester {{ $assignclass->semester }}
                                                 -
                                                 {{ $subject->subject_name }}

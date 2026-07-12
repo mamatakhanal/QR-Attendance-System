@@ -14,11 +14,23 @@
 
             <!-- CONTENT -->
             <div class="card shadow-sm border-0 mx-2 my-2 p-4 rounded-4">
-                <h5 class="fw-semibold mb-3">
-                    Student List
-                </h5>
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <h5 class="fw-semibold mb-3">
+                        Student List
+                    </h5>
+                    <form method="GET" action="{{ url()->current() }}">
+                        <div class="search-box position-relative" style="width:340px;">
+                            <i
+                                class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2 small text-muted"></i>
+                            <input type="text" id="searchInput" name="search" value="{{ request('search') }}"
+                                class="form-control form-control-sm rounded-3 ps-4 py-2"
+                                placeholder="Search by Name, Roll No or Student Code...">
+                        </div>
+                    </form>
+                </div>
+
                 <!-- Semester Filter -->
-                <div class="d-flex gap-2 mb-3 flex-wrap">
+                <div class="d-flex gap-2 mb-4 flex-wrap">
                     <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">
                         <i class="bi bi-people"></i> &nbsp; All Students
                     </button>
@@ -33,13 +45,13 @@
                     <table class="table table-hover">
                         <thead class="table-secondary">
                             <tr>
-                                <th>S.N</th>
-                                <th>Student Code</th>
-                                <th>Name</th>
-                                <th>Roll No</th>
-                                <th>Semester</th>
-                                <th>Email</th>
-                                <th>Action</th>
+                                <th class="py-3">S.N</th>
+                                <th class="py-3">Student Code</th>
+                                <th class="py-3">Name</th>
+                                <th class="py-3">Roll No</th>
+                                <th class="py-3">Semester</th>
+                                <th class="py-3">Email</th>
+                                <th class="py-3">Action</th>
                             </tr>
                         </thead>
                         <tbody id="student-data">
@@ -185,5 +197,23 @@
             $('#student-photo')
                 .attr('src', '/images/default-user.png');
         }
+    });
+</script>
+
+
+<!-- Search  -->
+<script>
+    let searchTimer;
+
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+
+        clearTimeout(searchTimer);
+
+        let form = this.form;
+
+        searchTimer = setTimeout(function() {
+            form.submit();
+        }, 1000); // wait 1 seconds after typing stops
+
     });
 </script>
