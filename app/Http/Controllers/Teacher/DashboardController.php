@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin\Teachers;
 use App\Models\Admin\Assignclass;
 use App\Models\Admin\Students;
+use App\Models\Admin\Attendance;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -33,12 +35,21 @@ class DashboardController extends Controller
             $assignclasses->pluck('semester')
         )->count();
 
+        $attendanceTaken = Attendance::where('teacher_id', $teacher->id)
+            ->whereDate('created_at', Carbon::today())
+            ->distinct('subject_id')
+            ->count('subject_id');
+
+        $remaining = max(0, $totalClasses - $attendanceTaken);
+
         return view('teacher.dashboard', [
             'pageTitle' => 'Dashboard',
             'teacher' => $teacher,
             'totalClasses' => $totalClasses,
             'totalSubjects' => $totalSubjects,
-            'totalStudents' => $totalStudents
+            'totalStudents' => $totalStudents,
+            'attendanceTaken' => $attendanceTaken,
+            'remaining' => $remaining
         ]);
     }
 }
