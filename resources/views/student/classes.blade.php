@@ -22,7 +22,7 @@
                                 My Classes
                             </h5>
 
-                            <span class="bg-light fw-semibold text-dark rounded-3 px-3 py-2">
+                            <span class="badge bg-light text-muted fs-6 rounded-3 px-3 py-2">
                                 Semester {{ $student->current_semester }}
                             </span>
                         </div>

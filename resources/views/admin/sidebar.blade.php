@@ -81,12 +81,12 @@
                 </a>
             </li>
 
-            <!-- REPORT -->
+            {{-- <!-- REPORT -->
             <li class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="bi bi-clipboard-data me-3"></i> Reports
                 </a>
-            </li>
+            </li> --}}
 
         </ul>
     </div>

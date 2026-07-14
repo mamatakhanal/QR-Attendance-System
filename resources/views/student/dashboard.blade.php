@@ -12,7 +12,7 @@
             @include('student.navbar')
 
             <!-- CONTENT -->
-            <div class="container-fluid py-1">
+            <div class="container-fluid py-2">
                 <div class="row g-4">
                     <div class="col-md-3 col-sm-6">
                         <a href="{{ route('student.classes') }}" class="text-decoration-none">

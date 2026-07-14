@@ -20,10 +20,12 @@ class TeachersController extends Controller
         $search = $request->search;
 
         $teachers = Teachers::when($search, function ($query) use ($search) {
-            $query->Where('name', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%")
-                ->orWhere('address', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
         })
             ->orderBy('name', 'asc')
             ->paginate(10)
@@ -33,6 +35,14 @@ class TeachersController extends Controller
 
         if (!$admin) {
             return redirect('/admin/login');
+        }
+
+        // AJAX request
+        if ($request->ajax()) {
+            return view('admin.teachers', [
+                'pageTitle' => 'Teachers',
+                'teachers' => $teachers
+            ])->render();
         }
 
         return view('admin.teachers', [

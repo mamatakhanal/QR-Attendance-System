@@ -11,6 +11,10 @@
         min-height: 100vh;
     }
 
+    .main-area {
+        padding: 0;
+    }
+
     /* SIDEBAR */
     .sidebar {
         width: 270px;
@@ -35,6 +39,10 @@
         width: 100%;
     }
 
+    .table {
+        min-width: 850px;
+    }
+
     .main-area {
         flex: 1;
         display: flex;
@@ -45,7 +53,7 @@
     }
 
     .navbar {
-        height: 64px;
+        min-height: 64px;
         background: #ffffff;
         border-bottom: 1px solid #ececec;
         display: flex;
@@ -78,6 +86,10 @@
         font-weight: 500;
     }
 
+    .search-box {
+        width: 360px;
+    }
+
     .dropdown-item:focus,
     .dropdown-item:active {
         background-color: #c8d2e7;
@@ -107,29 +119,55 @@
     }
 
     /* MOBILE */
-    @media(max-width:768px) {
-        .sidebar {
-            position: fixed;
-            z-index: 1050;
+    @media (max-width:768px) {
+
+        .navbar {
+            padding: 10px 12px;
+        }
+
+        .navbar .container-fluid {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
         }
 
         .search-box {
-            display: block;
-            width: 150px;
+            width: 170px;
         }
 
-        .navbar {
-            padding: 0 10px;
+        .search-box input {
+            font-size: 14px;
         }
 
-        .main-content {
-            padding: 20px 14px;
+        .dropdown span {
+            display: none;
+        }
+
+        .navbar-right {
+            gap: 10px !important;
+        }
+
+        .main-area {
+            overflow-x: auto;
+        }
+
+        .dropdown .rounded-circle {
+            width: 30px !important;
+            height: 30px !important;
+            font-size: 13px !important;
         }
     }
 
     @media(max-width:768px) {
         .sidebar-close-btn {
             display: block;
+        }
+    }
+
+    @media (max-width:992px) {
+        .search-box {
+            width: 230px;
         }
     }
 
@@ -187,4 +225,33 @@
         box-shadow: 0 2px 2px rgba(15, 9, 110, 0.25);
     }
 
+    /* Quick Action */
+    .quick-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px;
+        transition: all .3s ease;
+    }
+
+    .quick-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .6rem 1.2rem rgba(0, 0, 0, .12);
+        border-color: #c9dfc7;
+    }
+
+    .quick-icon {
+        font-size: 24px;
+        color: #2563eb;
+    }
+
+    .quick-link {
+        color: #2563eb;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .quick-card:hover .quick-link {
+        text-decoration: underline;
+    }
 </style>

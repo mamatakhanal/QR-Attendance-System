@@ -17,13 +17,18 @@
 
             <!-- CONTENT -->
             <div class="card shadow-sm border-0 mx-2 my-2 p-4 rounded-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
                     <h5 class="fw-semibold mb-0">Teacher List</h5>
-                    <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
-                        data-bs-target="#addTeacherModal">
-                        New Teacher
-                    </button>
+
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
+                            data-bs-target="#addTeacherModal">
+                            New Teacher
+                        </button>
+                    </div>
                 </div>
+
                 <div class="table-responsive rounded-2">
                     <table class="table table-hover border-3 mb-0">
                         <thead class="table-secondary">
@@ -36,7 +41,7 @@
                                 <th class="py-3">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="teacher-data">
                             @foreach ($teachers as $teacher)
                                 <tr class="teacher-row">
                                     <td>{{ $teachers->firstItem() + $loop->index }}</td>
@@ -74,10 +79,17 @@
                                     </td>
                                 </tr>
                             @endforeach
+                            <tr id="noTeacherRow" style="{{ $teachers->count() ? 'display:none;' : '' }}">
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    No teachers found.
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-                @include('layouts.pagination', ['paginator' => $teachers])
+                <div id="pagination-data">
+                    @include('layouts.pagination', ['paginator' => $teachers])
+                </div>
             </div>
         </div>
     </div>
@@ -136,6 +148,24 @@
                 }
             });
         });
+    </script>
+
+    <script>
+        function loadData() {
+
+            $.ajax({
+                url: "{{ route('admin.teachers') }}",
+                type: "GET",
+                data: {
+                    search: $("#globalSearch").val()
+                },
+                success: function(response) {
+
+                    $("#teacher-data").html($(response).find("#teacher-data").html());
+                    $("#pagination-data").html($(response).find("#pagination-data").html());
+                }
+            });
+        }
     </script>
 </body>
 

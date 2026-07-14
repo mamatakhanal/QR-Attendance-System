@@ -13,7 +13,7 @@
             @include('admin.navbar')
 
             <!-- CONTENT -->
-            <div class="container-fluid py-1">
+            <div class="container-fluid py-2">
                 <div class="row g-4">
                     <!-- Teachers -->
                     <div class="col-md-4 col-sm-6">
@@ -62,68 +62,151 @@
                 </div>
             </div>
 
-            <!-- Students By Semester -->
-            {{-- <div class="card shadow-sm border-0 rounded-4 mx-4 p-2 my-2 pb-0">
+            <!-- Quick Actions -->
+            <div class="card shadow-sm border-0 rounded-4 mx-2 my-2">
                 <div class="card-body">
                     <h5 class="fw-semibold mb-4">
-                        <i class="bi bi-bar-chart-fill"></i>
-                        Students By Semester
+                        <i class="bi bi-lightning-charge-fill text-warning"></i>
+                        Quick Actions
                     </h5>
-                    @foreach ($studentsBySemester as $semester)
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between">
-                                <span>
-                                    Semester {{ $semester->current_semester }}
-                                </span>
-                                <span class="fw-bold">
-                                    {{ $semester->total }}
-                                </span>
-                            </div>
-                            <div class="progress" style="height:6px;">
-                                <div class="progress-bar"
-                                    style="width: {{ ($semester->total / $studentsBySemester->max('total')) * 100 }}%">
+
+                    <div class="row g-3">
+
+                        <!-- Student Management -->
+                        <div class="col-lg-3 col-md-6">
+                            <a href="{{ route('admin.students') }}" class="text-decoration-none">
+                                <div class="quick-card h-100">
+                                    <i class="bi bi-people-fill quick-icon fs-2"></i>
+                                    <h6 class="fw-bold mt-3 mb-2 text-dark"> Student Management </h6>
+                                    <p class="text-muted small mb-3"> Add, edit and manage student records. </p>
+                                    <span class="quick-link"> Manage Students → </span>
                                 </div>
-                            </div>
+                            </a>
                         </div>
-                    @endforeach
+
+                        <!-- Teacher Management -->
+                        <div class="col-lg-3 col-md-6">
+                            <a href="{{ route('admin.teachers') }}" class="text-decoration-none">
+                                <div class="quick-card h-100">
+                                    <i class="bi bi-person-workspace quick-icon fs-2 text-success"></i>
+                                    <h6 class="fw-bold mt-3 mb-2 text-dark"> Teacher Management </h6>
+                                    <p class="text-muted small mb-3"> Manage teacher profiles and assignments. </p>
+                                    <span class="quick-link"> Manage Teachers → </span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Subject Management -->
+                        <div class="col-lg-3 col-md-6">
+                            <a href="{{ route('admin.subjects') }}" class="text-decoration-none">
+                                <div class="quick-card h-100">
+                                    <i class="bi bi-book-half quick-icon fs-2 text-danger"></i>
+                                    <h6 class="fw-bold mt-3 mb-2 text-dark"> Subject Management </h6>
+                                    <p class="text-muted small mb-3"> Manage subjects and their assignments. </p>
+                                    <span class="quick-link"> Manage Subjects → </span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Assign Class -->
+                        <div class="col-lg-3 col-md-6">
+                            <a href="{{ route('admin.assignclass') }}" class="text-decoration-none">
+                                <div class="quick-card h-100">
+                                    <i class="bi bi-diagram-3-fill quick-icon fs-2 text-warning"></i>
+                                    <h6 class="fw-bold mt-3 mb-2 text-dark"> Assign Class </h6>
+                                    <p class="text-muted small mb-3"> Assign teachers to subjects and semesters. </p>
+                                    <span class="quick-link"> Manage Assignments → </span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div> --}}
+            </div>
 
-            <!-- Attendance Overview -->
-            <div class="card shadow-sm border-0 rounded-4 mx-3 p-1 my-2 pb-0">
-                 <div class="card-body">
-                    <h5 class="fw-semibold mb-4">
-                        <i class="bi bi-calendar-check"></i>
-                        Attendance Overview
-                    </h5>
+            <div class="card shadow-sm border-0 rounded-4 mx-2 my-2">
+                <div class="card-body">
 
-                    @foreach ($attendanceBySemester as $attendance)
-                        @php
-                            $total = $attendance->present + $attendance->absent;
-                            $percentage = $total > 0 ? ($attendance->present / $total) * 100 : 0;
-                        @endphp
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-semibold mb-0">
+                            <i class="bi bi-bar-chart-fill text-primary"></i>
+                            Students by Semester
+                        </h5>
 
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between">
-                                <span>
-                                    Semester {{ $attendance->semester }}
-                                </span>
+                        <span class="badge bg-light text-muted fs-6 rounded-3 px-3 py-2">
+                            Total Students: {{ $studentsCount }}
+                        </span>
 
-                                <span class="fw-bold">
-                                    Present: {{ $attendance->present }}
-                                    &nbsp;
-                                    Absent: {{ $attendance->absent }}
-                                </span>
-                            </div>
-                            <div class="progress mt-1" style="height:4px;">
-                                <div class="progress-bar bg-success" style="width: {{ $percentage }}%">
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                    </div>
+                    <canvas id="semesterChart" height="80"></canvas>
                 </div>
             </div>
 
         </div>
     </div>
+
+    {{-- Chart --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const ctx = document.getElementById('semesterChart');
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: @json($semesterLabels),
+                datasets: [{
+                    label: 'Students',
+                    data: @json($semesterData),
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    backgroundColor: [
+                        '#0d6efd',
+                        '#198754',
+                        '#dc3545',
+                        '#ffc107',
+                        '#6f42c1',
+                        '#20c997',
+                        '#fd7e14',
+                        '#4F46E5'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        },
+                        title: {
+                            display: true,
+                            text: 'Number of Students',
+                            color: '#212529',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Semester',
+                            color: '#212529',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 </body>

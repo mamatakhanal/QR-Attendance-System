@@ -41,7 +41,8 @@ class StudentsController extends Controller
             })
             ->orderBy('current_semester', 'asc')
             ->orderByRaw('CAST(roll_no AS UNSIGNED) ASC')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();            
 
         return view('teacher.students', [
             'pageTitle' => 'Students',

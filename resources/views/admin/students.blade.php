@@ -17,12 +17,14 @@
 
             <!-- CONTENT -->
             <div class="card shadow-sm border-0 mx-2 my-2 p-4 rounded-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
                     <h5 class="fw-semibold mb-0">Student List</h5>
-                    <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
-                        data-bs-target="#addStudentModal">
-                        New Student
-                    </button>
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
+                            data-bs-target="#addStudentModal">
+                            New Student
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Semester Filter Buttons -->
@@ -51,8 +53,9 @@
                                 <th class="py-3">Actions</th>
                             </tr>
                         </thead>
+
                         <tbody id="student-data">
-                            @foreach ($students as $student)
+                            @forelse ($students as $student)
                                 <tr class="student-row" data-semester="{{ $student->current_semester }}">
                                     <td>{{ $students->firstItem() + $loop->index }}</td>
                                     <td>{{ $student->student_code }}</td>
@@ -87,7 +90,14 @@
                                         </button>
                                     </td>
                                 </tr>
+
                             @endforeach
+                            <tr id="noStudentRow" style="{{ $students->count() ? 'display:none;' : '' }}">
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    No students found.
+                                </td>
+                            </tr>
+
                         </tbody>
                     </table>
                 </div>
@@ -175,34 +185,67 @@
     </script>
 </body>
 
+{{-- Semester fliter --}}
 <script>
-    $(document).on('click', '.semester-btn', function() {
-        let semester = $(this).data('semester');
-        $('.semester-btn')
-            .removeClass('active')
-            .css({
-                'background': '#f1f3f5',
-                'color': '#333'
-            });
-        $(this)
-            .addClass('active')
-            .css({
-                'background': '#421dd5',
-                'color': 'white'
-            });
+    function loadData() {
+
+        let semester = $(".semester-btn.active").data("semester");
+        let search = $("#globalSearch").val();
 
         $.ajax({
             url: "{{ route('admin.students') }}",
             type: "GET",
             data: {
-                semester: semester
+                semester: semester,
+                search: search
             },
             success: function(response) {
-                let table = $(response).find('#student-data').html();
-                let pagination = $(response).find('#pagination-data').html();
-                $('#student-data').html(table);
-                $('#pagination-data').html(pagination);
+
+                $("#student-data").html($(response).find("#student-data").html());
+                $("#pagination-data").html($(response).find("#pagination-data").html());
+
             }
         });
+
+    }
+
+    $(document).on("click", ".semester-btn", function() {
+
+        $(".semester-btn")
+            .removeClass("active btn-primary")
+            .addClass("btn-outline-primary");
+
+        $(this)
+            .removeClass("btn-outline-primary")
+            .addClass("btn-primary active");
+
+        loadData();
+
+    });
+</script>
+
+<script>
+    function loadData() {
+
+        $.ajax({
+            url: window.location.pathname,
+            data: {
+                search: $("#globalSearch").val(),
+                semester: $(".semester-btn.active").data("semester")
+            },
+            success: function(response) {
+                $("#student-data").html($(response).find("#student-data").html());
+            }
+        });
+
+    }
+
+    $(".semester-btn").click(function() {
+
+        $(".semester-btn").removeClass("active");
+        $(this).addClass("active");
+
+        loadData();
+
     });
 </script>

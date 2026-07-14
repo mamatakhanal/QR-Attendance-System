@@ -17,11 +17,14 @@
 
             <!-- CONTENT -->
             <div class="card shadow-sm border-0 mx-2 my-2 p-4 rounded-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
                     <h5 class="fw-semibold mb-0">Subject List</h5>
-                    <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
-                        data-bs-target="#addSubjectModal"> New Subject
-                    </button>
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
+                            data-bs-target="#addSubjectModal">
+                            New Subject
+                        </button>
+                    </div>
                 </div>
 
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
@@ -73,6 +76,11 @@
                                     </td>
                                 </tr>
                             @endforeach
+                            <tr id="noSubjectRow" style="{{ $subjects->count() ? 'display:none;' : '' }}">
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    No subjects found.
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -86,30 +94,41 @@
     </div>
 </body>
 
+{{-- Semester Fliter --}}
 <script>
-    $(document).on('click', '.semester-btn', function() {
-        let semester = $(this).data('semester');
+    function loadData() {
 
-        $('.semester-btn')
-            .removeClass('active btn-primary')
-            .addClass('btn-outline-primary');
-
-        $(this)
-            .removeClass('btn-outline-primary')
-            .addClass('btn-primary active');
+        let semester = $(".semester-btn.active").data("semester");
+        let search = $("#globalSearch").val();
 
         $.ajax({
             url: "{{ route('admin.subjects') }}",
             type: "GET",
             data: {
-                semester: semester
+                semester: semester,
+                search: search
             },
             success: function(response) {
-                let table = $(response).find('#subject-data').html();
-                let pagination = $(response).find('#pagination-data').html();
-                $('#subject-data').html(table);
-                $('#pagination-data').html(pagination);
+
+                $("#subject-data").html($(response).find("#subject-data").html());
+                $("#pagination-data").html($(response).find("#pagination-data").html());
+
             }
         });
+
+    }
+
+    $(document).on("click", ".semester-btn", function() {
+
+        $(".semester-btn")
+            .removeClass("active btn-primary")
+            .addClass("btn-outline-primary");
+
+        $(this)
+            .removeClass("btn-outline-primary")
+            .addClass("btn-primary active");
+
+        loadData();
+
     });
 </script>

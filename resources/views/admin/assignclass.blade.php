@@ -16,11 +16,13 @@
 
             <!-- CONTENT -->
             <div class="card shadow-sm border-0 mx-2 my-2 p-4 rounded-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-semibold mb-0">Assign Classes List</h5>
+                     <div class="d-flex align-items-center">
                     <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
                         data-bs-target="#addAssignclassModal"> Assign Class
                     </button>
+                     </div>
                 </div>
 
                 <!-- Semester Filter Buttons -->
@@ -49,16 +51,11 @@
 
 
                         <tbody id="assignclass-data">
-                            @foreach ($assignclasses as $assignclass)
+                            @forelse ($assignclasses as $assignclass)
                                 <tr class="assignclass-row" data-semester="{{ $assignclass->semester }}">
                                     <td>{{ $assignclasses->firstItem() + $loop->index }}</td>
                                     <td>{{ $assignclass->teacher->name ?? 'No Teacher' }}</td>
                                     <td>Semester {{ $assignclass->semester }}</td>
-                                    {{-- <td>
-                                        @foreach ($assignclass->subjects as $subject)
-                                            {{ $subject->subject_name }}
-                                        @endforeach
-                                    </td> --}}
                                     <td>
                                         <div class="d-flex flex-wrap gap-2">
                                             @foreach ($assignclass->subjects as $subject)
@@ -86,45 +83,61 @@
                                         </button>
                                     </td>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <div id="pagination-data">
-                    @if ($assignclasses->hasPages())
-                        @include('layouts.pagination', ['paginator' => $assignclasses])
-                    @endif
+                                @empty
+                                    <tr id="noAssignClassRow">
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            No classes found.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="pagination-data">
+                        @if ($assignclasses->hasPages())
+                            @include('layouts.pagination', ['paginator' => $assignclasses])
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</body>
+    </body>
 
-<script>
-    $(document).on('click', '.semester-btn', function() {
+    <script>
+        function loadData() {
 
-        let semester = $(this).data('semester');
+            $.ajax({
+                url: window.location.pathname,
+                type: "GET",
+                data: {
+                    search: $("#globalSearch").val(),
+                    semester: $(".semester-btn.active").data("semester")
+                },
+                success: function(response) {
 
-        $('.semester-btn')
-            .removeClass('active btn-primary')
-            .addClass('btn-outline-primary');
+                    $("#assignclass-data").html(
+                        $(response).find("#assignclass-data").html()
+                    );
 
-        $(this)
-            .removeClass('btn-outline-primary')
-            .addClass('btn-primary active');
+                    $("#pagination-data").html(
+                        $(response).find("#pagination-data").html()
+                    );
+                }
+            });
 
-        $.ajax({
-            url: "{{ route('admin.assignclass') }}",
-            type: "GET",
-            data: {
-                semester: semester
-            },
-            success: function(response) {
-                let table = $(response).find('#assignclass-data').html();
-                let pagination = $(response).find('#pagination-data').html();
-                $('#assignclass-data').html(table);
-                $('#pagination-data').html(pagination);
-            }
+        }
+
+        $(document).on("click", ".semester-btn", function() {
+
+            $(".semester-btn")
+                .removeClass("active btn-primary")
+                .addClass("btn-outline-primary");
+
+            $(this)
+                .removeClass("btn-outline-primary")
+                .addClass("btn-primary active");
+
+            loadData();
+
         });
-    });
-</script>
+    </script>

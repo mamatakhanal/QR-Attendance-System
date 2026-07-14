@@ -14,24 +14,22 @@ class SubjectsController extends Controller
     public function subjects(Request $request)
     {
         $search = $request->search;
-        $subjects = Subjects::when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('subject_name', 'like', "%{$search}%")
-                    ->orWhere('subject_code', 'like', "%{$search}%")
-                    ->orWhere('semester', 'like', "%{$search}%");
-            });
-        });
+        $semester = $request->semester;
 
-        // Semester filter
-        if ($request->semester && $request->semester != 'all') {
-            $subjects->where(
-                'semester',
-                $request->semester
-            );
-        }
+        $subjects = Subjects::query()
 
-        // Semester wise + code number order
-        $subjects = $subjects
+            ->when($semester && $semester != 'all', function ($query) use ($semester) {
+                $query->where('semester', $semester);
+            })
+
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('subject_name', 'like', "%{$search}%")
+                        ->orWhere('subject_code', 'like', "%{$search}%")
+                        ->orWhere('semester', 'like', "%{$search}%");
+                });
+            })
+
             ->orderBy('semester', 'asc')
             ->orderByRaw('CAST(RIGHT(subject_code, 3) AS UNSIGNED) ASC')
             ->paginate(10)
@@ -41,6 +39,13 @@ class SubjectsController extends Controller
 
         if (!$admin) {
             return redirect('/admin/login');
+        }
+
+        if ($request->ajax()) {
+            return view('admin.subjects', [
+                'pageTitle' => 'Subjects',
+                'subjects' => $subjects
+            ])->render();
         }
 
         return view('admin.subjects', [

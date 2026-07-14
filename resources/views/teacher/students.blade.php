@@ -18,24 +18,30 @@
                     <h5 class="fw-semibold mb-3">
                         Student List
                     </h5>
-                    <form method="GET" action="{{ url()->current() }}">
-                        <div class="search-box position-relative" style="width:340px;">
+                    <form method="GET" action="{{ url()->current() }}" id="searchForm">
+                        <input type="hidden" name="semester" id="selectedSemester"
+                            value="{{ request('semester', 'all') }}">
+                        <div class="search-box position-relative">
                             <i
-                                class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2 small text-muted"></i>
+                                class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 small text-muted"></i>
                             <input type="text" id="searchInput" name="search" value="{{ request('search') }}"
-                                class="form-control form-control-sm rounded-3 ps-4 py-2"
+                                class="form-control form-control-sm rounded-3 ps-5 py-2"
                                 placeholder="Search by Name, Roll No or Student Code...">
                         </div>
                     </form>
                 </div>
 
-                <!-- Semester Filter -->
+                <!-- Semester   Filter -->
                 <div class="d-flex gap-2 mb-4 flex-wrap">
-                    <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">
+                    <button
+                        class="btn btn-primary btn-sm semester-btn active {{ request('semester', 'all') == 'all' ? 'btn-primary active' : 'btn-outline-primary' }}"
+                        data-semester="all">
                         <i class="bi bi-people"></i> &nbsp; All Students
                     </button>
                     @foreach ($assignedSemesters as $semester)
-                        <button class="btn btn-outline-primary btn-sm semester-btn" data-semester="{{ $semester }}">
+                        <button
+                            class="btn btn-outline-primary btn-sm semester-btn {{ request('semester') == $semester ? 'btn-primary active' : 'btn-outline-primary' }}"
+                            data-semester="{{ $semester }}">
                             Semester {{ $semester }}
                         </button>
                     @endforeach
@@ -56,7 +62,7 @@
                         </thead>
                         <tbody id="student-data">
                             @foreach ($students as $student)
-                                <tr>
+                                <tr class="student-row">
                                     <td> {{ $students->firstItem() + $loop->index }} </td>
                                     <td> {{ $student->student_code }} </td>
                                     <td> {{ $student->name }} </td>
@@ -80,6 +86,11 @@
                                     </td>
                                 </tr>
                             @endforeach
+                            <tr id="noStudentRow" style="{{ $students->count() ? 'display:none;' : '' }}">
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    No students found.
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -156,15 +167,25 @@
 
 <script>
     $(document).on('click', '.semester-btn', function() {
+
         let semester = $(this).data('semester');
+
+        $('#selectedSemester').val(semester);
+
         $('.semester-btn')
-            .removeClass('active');
-        $(this).addClass('active');
+            .removeClass('active btn-primary')
+            .addClass('btn-outline-primary');
+
+        $(this)
+            .removeClass('btn-outline-primary')
+            .addClass('btn-primary active');
+
         $.ajax({
             url: "{{ route('teacher.students') }}",
             type: "GET",
             data: {
-                semester: semester
+                semester: semester,
+                search: $('#searchInput').val()
             },
             success: function(response) {
                 $('#student-data').html(
@@ -173,8 +194,10 @@
                 $('#pagination-data').html(
                     $(response).find('#pagination-data').html()
                 );
+                checkNoStudent();
             }
         });
+
     });
 
     // View Student Details
@@ -198,6 +221,18 @@
                 .attr('src', '/images/default-user.png');
         }
     });
+
+    function checkNoStudent() {
+
+        let visibleRows = $('#student-data .student-row:visible').length;
+
+        if (visibleRows === 0) {
+            $('#noStudentRow').show();
+        } else {
+            $('#noStudentRow').hide();
+        }
+
+    }
 </script>
 
 
@@ -205,15 +240,37 @@
 <script>
     let searchTimer;
 
-    document.getElementById('searchInput').addEventListener('keyup', function() {
+    $('#searchInput').on('keyup', function() {
 
         clearTimeout(searchTimer);
 
-        let form = this.form;
-
         searchTimer = setTimeout(function() {
-            form.submit();
-        }, 1000); // wait 1 seconds after typing stops
 
+            $.ajax({
+                url: "{{ route('teacher.students') }}",
+                type: "GET",
+                data: {
+                    search: $('#searchInput').val(),
+                    semester: $('#selectedSemester').val()
+                },
+                success: function(response) {
+
+                    $('#student-data').html(
+                        $(response).find('#student-data').html()
+                    );
+
+                    $('#pagination-data').html(
+                        $(response).find('#pagination-data').html()
+                    );
+
+                    checkNoStudent();
+                }
+            });
+
+        }, 300);
+
+    });
+    $('#searchForm').on('submit', function(e) {
+        e.preventDefault();
     });
 </script>
