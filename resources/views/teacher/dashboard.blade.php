@@ -107,7 +107,7 @@
             <div class="card shadow-sm border-0 rounded-4 mx-2 my-2">
                 <div class="card-body">
                     <h5 class="fw-semibold mb-3">
-                        <i class="bi bi-lightning-charge-fill text-warning"></i>
+                        <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
                         Quick Actions
                     </h5>
 

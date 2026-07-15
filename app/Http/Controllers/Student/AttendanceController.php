@@ -44,19 +44,19 @@ class AttendanceController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-       
+
         $subjects = Subjects::where('semester', $student->current_semester)
             ->orderBy('subject_name')
             ->get();
 
-       $teachers = Teachers::whereIn(
-    'id',
-    Assignclass::where('semester', $student->current_semester)
-        ->pluck('teacher_id')
-        ->unique()
-)
-->orderBy('name')
-->get();
+        $teachers = Teachers::whereIn(
+            'id',
+            Assignclass::where('semester', $student->current_semester)
+                ->pluck('teacher_id')
+                ->unique()
+        )
+            ->orderBy('name')
+            ->get();
 
         return view('student.attendance', [
             'pageTitle'   => 'Attendance',

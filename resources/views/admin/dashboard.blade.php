@@ -66,7 +66,7 @@
             <div class="card shadow-sm border-0 rounded-4 mx-2 my-2">
                 <div class="card-body">
                     <h5 class="fw-semibold mb-4">
-                        <i class="bi bi-lightning-charge-fill text-warning"></i>
+                        <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
                         Quick Actions
                     </h5>
 
@@ -125,10 +125,9 @@
 
             <div class="card shadow-sm border-0 rounded-4 mx-2 my-2">
                 <div class="card-body">
-
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-semibold mb-0">
-                            <i class="bi bi-bar-chart-fill text-primary"></i>
+                            <i class="bi bi-bar-chart-fill text-primary me-2"></i>
                             Students by Semester
                         </h5>
 

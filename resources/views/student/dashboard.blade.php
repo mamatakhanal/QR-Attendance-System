@@ -70,8 +70,124 @@
                         </a>
                     </div>
                 </div>
+
+
+                <!-- Attendance Summary -->
+                <div class="card shadow-sm border-0 rounded-4 my-3">
+                    <div class="card-body">
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-bar-chart-fill text-primary me-2"></i>
+                            Attendance by Subject
+                        </h5>
+                        <canvas id="attendanceChart" height="80"></canvas>
+                    </div>
+                </div>
+
+
+                <!-- Subject Attendance Status -->
+                <div class="card shadow-sm border-0 rounded-4 my-3 mb-0">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">
+                            <i class="bi bi-award-fill text-success me-2"></i>
+                            Subject Attendance Status
+                        </h5>
+
+                        @foreach ($subjectStatuses as $status)
+                            <div
+                                class="alert alert-{{ $status['class'] }} d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="fw-bold">
+                                        <i class="bi {{ $status['icon'] }} me-2"></i>
+                                        {{ $status['subject'] }}
+                                    </h6>
+                                    <small>
+                                        <strong>{{ $status['title'] }}</strong> -
+                                        {{ $status['message'] }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-dark fs-6">
+                                    {{ $status['percentage'] }}%
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <script>
+        const ctx = document.getElementById('attendanceChart');
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: @json($subjectLabels),
+                datasets: [{
+                    label: 'Attendance %',
+                    data: @json($subjectPercentages),
+                    backgroundColor: [
+                        '#0d6efd',
+                        '#198754',
+                        '#ffc107'
+                    ],
+                    borderRadius: 8,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                
+
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw + "%";
+                            }
+                        }
+                    }
+                },
+
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + "%";
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: "Attendance Percentage",
+                            color: '#212529',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+
+                    y: {
+                        title: {
+                            display: true,
+                            text: "Subjects",
+                            color: '#212529',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>

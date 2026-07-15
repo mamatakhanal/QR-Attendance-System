@@ -125,8 +125,10 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-3">
-                        {{ $attendances->links() }}
+                    <div id="pagination-data">
+                        @if ($attendances->hasPages())
+                            @include('layouts.pagination', ['paginator' => $attendances])
+                        @endif
                     </div>
                 </div>
             </div>
@@ -134,3 +136,9 @@
     </div>
     </div>
 </body>
+
+
+{{-- Basanta Sir 
+INSERT INTO `attendance` (`id`, `semester`, `student_id`, `subject_id`, `teacher_id`, `date`, 
+`time`, `status`, `created_at`, `updated_at`) VALUES ('1', '4', '11', '41', '4', '2026/7/16', '01:00',
+ 'present', current_timestamp(), current_timestamp()); --}}

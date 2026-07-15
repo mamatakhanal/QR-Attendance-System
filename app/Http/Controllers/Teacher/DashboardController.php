@@ -36,8 +36,8 @@ class DashboardController extends Controller
         )->count();
 
         $attendanceTaken = Attendance::where('teacher_id', $teacher->id)
-            ->whereDate('created_at', Carbon::today())
-            ->distinct('subject_id')
+            ->where('date', Carbon::today()->toDateString())
+            ->distinct()
             ->count('subject_id');
 
         $remaining = max(0, $totalClasses - $attendanceTaken);

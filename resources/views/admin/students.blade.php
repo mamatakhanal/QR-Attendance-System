@@ -97,7 +97,6 @@
                                     No students found.
                                 </td>
                             </tr>
-
                         </tbody>
                     </table>
                 </div>
