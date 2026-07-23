@@ -44,7 +44,7 @@
     <div class="container py-1">
       <!-- LOGO -->
       <a href="{{ url('/home') }}" class="text-decoration-none d-flex align-items-center">
-        <img src="{{ asset('storage/images/logo.png') }}" alt="logo" height="50" style="margin-right:4px;">
+        <img src="{{ asset('images/logo.png') }}" alt="logo" height="50" style="margin-right:4px;">
         <h2 class=" fw-bold mt-2">
           <span class="text-success">QR</span> <span class="text-primary">Attendance</span>
         </h2>
