@@ -1,59 +1,59 @@
 <body>
     <!-- Create Student -->
-    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div @class(['modal', 'fade']) id="addStudentModal" tabindex="-1" aria-hidden="true">
+        <div @class(['modal-dialog', 'modal-lg', 'modal-dialog-centered'])>
 
-            <div class="modal-content px-4 pt-4 rounded-4">
+            <div @class(['modal-content', 'px-4', 'pt-4', 'rounded-4'])>
 
                 <form id="studentForm">
                     @csrf
 
-                    <div class="modal-header">
-                        <h3 class="modal-title fw-bold">Add New Student</h3>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div @class(['modal-header'])>
+                        <h3 @class(['modal-title', 'fw-bold'])>Add New Student</h3>
+                        <button type="button" @class(['btn-close']) data-bs-dismiss="modal"></button>
                     </div>
 
-                    <div class="modal-body row g-3">
+                    <div @class(['modal-body', 'row', 'g-3'])>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Name</label>
-                            <input type="text" name="name" class="form-control" required>
-                            <small class="text-danger" id="name_error"></small>
+                        <div @class(['col-md-6'])>
+                            <label @class(['form-label'])>Name</label>
+                            <input type="text" name="name" @class(['form-control']) required>
+                            <small @class(['text-danger']) id="name_error"></small>
 
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Roll No</label>
-                            <input type="number" name="roll_no" class="form-control" min="1" required>
-                            <small class="text-danger" id="roll_no_error"></small>
+                        <div @class(['col-md-6'])>
+                            <label @class(['form-label'])>Roll No</label>
+                            <input type="number" name="roll_no" @class(['form-control']) min="1" required>
+                            <small @class(['text-danger']) id="roll_no_error"></small>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" required>
-                            <small class="text-danger" id="email_error"></small>
+                        <div @class(['col-md-6'])>
+                            <label @class(['form-label'])>Email</label>
+                            <input type="email" name="email" @class(['form-control']) required>
+                            <small @class(['text-danger']) id="email_error"></small>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Password</label>
-                            <div class="input-group">
-                                <input type="password" name="password" class="form-control create-password" required>
-                                <span class="input-group-text toggle-password" style="cursor:pointer;">
-                                    <i class="ri-eye-off-line"></i>
+                        <div @class(['col-md-6'])>
+                            <label @class(['form-label'])>Password</label>
+                            <div @class(['input-group'])>
+                                <input type="password" name="password" @class(['form-control', 'create-password']) required>
+                                <span @class(['input-group-text', 'toggle-password']) style="cursor:pointer;">
+                                    <i @class(['ri-eye-off-line'])></i>
                                 </span>
                             </div>
-                            <small class="text-danger" id="password_error"></small>
+                            <small @class(['text-danger']) id="password_error"></small>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Batch</label>
-                            <input type="number" id="admission_year" name="admission_year" class="form-control" min="2010" max="{{ date('Y') }}" required>
-                            <small class="text-danger" id="admission_year_error"></small>
+                        <div @class(['col-md-6'])>
+                            <label @class(['form-label'])>Batch</label>
+                            <input type="number" id="admission_year" name="admission_year" @class(['form-control']) min="2010" max="{{ date('Y') }}" required>
+                            <small @class(['text-danger']) id="admission_year_error"></small>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Semester</label>
-                            <select id="current_semester" class="form-select" disabled>
+                        <div @class(['col-md-6'])>
+                            <label @class(['form-label'])>Semester</label>
+                            <select id="current_semester" @class(['form-select']) disabled>
                                 <option value="">Select Semester</option>
                                 <option value="1">Semester 1</option>
                                 <option value="2">Semester 2</option>
@@ -65,12 +65,12 @@
                                 <option value="8">Semester 8</option>
                             </select>
                             <input type="hidden" name="current_semester" id="current_semester_hidden">
-                            <small class="text-danger" id="current_semester_error"></small>
+                            <small @class(['text-danger']) id="current_semester_error"></small>
                         </div>
                     </div>
 
-                    <div class="modal-footer mt-3 mb-0">
-                        <button type="submit" class="btn btn-success">Save Student</button>
+                    <div @class(['modal-footer', 'mt-3', 'mb-0'])>
+                        <button type="submit" @class(['btn', 'btn-success'])>Save Student</button>
                     </div>
 
                 </form>
@@ -83,7 +83,7 @@
     <script>
         $('#studentForm').submit(function(e) {
 
-            e.preventDefault();
+        e.preventDefault();
 
             $('.text-danger').text('');
 
@@ -113,24 +113,24 @@
 
                         hideClass: {
                             popup: 'animate__animated animate__fadeOutRight'
-                        }
+                        },
                     });
 
                     $('#studentForm')[0].reset();
 
-                    const modal = bootstrap.Modal.getInstance(
-                        document.getElementById('addStudentModal')
-                    );
+                const modal = bootstrap.Modal.getInstance(
+                    document.getElementById('addStudentModal')
+                );
 
-                    if (modal) {
-                        modal.hide();
-                    }
+                if (modal) {
+                    modal.hide();
+                }
 
-                    // Reload page after 3 seconds
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                },
+                // Reload page after 3 seconds
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+            },
 
                 // Validation Error Response
                 error: function(xhr) {

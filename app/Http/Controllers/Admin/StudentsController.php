@@ -69,6 +69,7 @@ class StudentsController extends Controller
     // Create Student
     public function create(Request $request)
     {
+        try {
 
         // Validation
         $request->validate([
@@ -137,11 +138,21 @@ class StudentsController extends Controller
             'success' => true,
             'message' => 'Student added successfully'
         ]);
+
+         } catch (\Exception $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ],500);
+
+    }
     }
 
     // Edit Student
     public function update(Request $request, $id)
     {
+        try {
 
         $student = Students::findOrFail($id);
 
@@ -225,6 +236,15 @@ class StudentsController extends Controller
             'success' => true,
             'message' => 'Student updated successfully'
         ]);
+
+         } catch (\Exception $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ],500);
+
+    }
     }
 
     // Delete Student

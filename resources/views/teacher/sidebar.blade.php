@@ -4,7 +4,7 @@
         <!-- LOGO -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-2 px-2">
             <a href="{{ url('/teacher/dashboard') }}"
-                class="text-decoration-none d-flex align-items-center border-bottom border-3 pb-2">
+                class="text-decoration-none d-flex align-items-center border-bottom border-3 pb-1">
                 <img src="{{ asset('images/logo.png') }}" alt="logo" height="30" class="me-2">
                 <h4 class="fw-bold mt-2">
                     <span class="text-success">QR</span>

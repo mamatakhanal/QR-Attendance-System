@@ -146,7 +146,7 @@
                         Hold the student's QR code inside the camera frame.
                     </div>
 
-                    <div id="reader" style="width:100%; max-width:600px; margin:auto;">
+                    <div id="reader" style="width:700px; max-width:700px; margin:auto;">
                     </div>
                 </div>
             </div>

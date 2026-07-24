@@ -33,7 +33,7 @@
             <!-- LOGO -->
             <div class="d-flex justify-content-center mb-2">
                 <a href="{{ url('/home') }}" class="text-decoration-none d-flex align-items-center">
-                    <img src="{{ asset('storage/images/logo.png') }}" alt="logo" height="30" style="margin-right:4px;">
+                    <img src="{{ asset('images/logo.png') }}" alt="logo" height="30" style="margin-right:4px;">
                     <h4 class="fw-bold mt-2">
                         <span class="text-success">QR</span>
                         <span class="text-primary">Attendance</span>

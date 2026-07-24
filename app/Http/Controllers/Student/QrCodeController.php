@@ -27,7 +27,7 @@ class QrCodeController extends Controller
             ->generate($data);
 
         $qrDownload = base64_encode(
-            QrCode::format('png')
+            QrCode::format('svg')
                 ->size(500)
                 ->generate($data)
         );

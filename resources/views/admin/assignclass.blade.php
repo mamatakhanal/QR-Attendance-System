@@ -8,6 +8,7 @@
 </head>
 
 <body>
+    @include('layouts.toast')
     <!-- MAIN LAYOUT -->
     <div class="main-wrapper">
         @include('admin.sidebar')
@@ -26,7 +27,7 @@
                 </div>
 
                 <!-- Semester Filter Buttons -->
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <div class="d-flex flex-wrap align-items-center mb-3">
                     <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">
                         <i class="bi bi-people"></i> &nbsp; All Classes
                     </button>

@@ -27,9 +27,9 @@
                     </div>
                 </div>
 
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <div class="d-flex flex-wrap align-items-center mb-3">
                     <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">
-                        <i class="bi bi-book"></i> &nbsp; All Subjects
+                        <i class="bi bi-book"></i> &nbsp;  All Subjects
                     </button>
 
                     @for ($i = 1; $i <= 8; $i++)

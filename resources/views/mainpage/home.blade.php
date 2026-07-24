@@ -41,7 +41,7 @@
 
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg bg-white shadow fixed-top">
-    <div class="container py-1">
+    <div class="container">
       <!-- LOGO -->
       <a href="{{ url('/home') }}" class="text-decoration-none d-flex align-items-center">
         <img src="{{ asset('images/logo.png') }}" alt="logo" height="50" style="margin-right:4px;">
@@ -89,7 +89,7 @@
         <div class="feature-box">
           <i class="bi bi-qr-code-scan  fs-1 text-success"></i>
           <h5 class="mt-3">QR Scan</h5>
-          <p class="text-muted">Quick attendance marking using QR code scanning.</p>
+          <p class="text-muted">Quick attendance marking using QR code.</p>
         </div>
       </div>
       <div class="col-md-4">
@@ -134,7 +134,7 @@
         <div class="feature-box">
           <i class="bi bi-phone fs-1 text-warning"></i>
           <h5 class="mt-3">Step 3</h5>
-          <p class="text-muted">Teacher scans the QR code.</p>
+          <p class="text-muted">Teacher scans the QR <br> code.</p>
         </div>
       </div>
       <div class="col-md-3">

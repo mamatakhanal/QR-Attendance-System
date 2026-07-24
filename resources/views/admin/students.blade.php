@@ -10,17 +10,17 @@
 <body>
     @include('layouts.toast')
     <!-- MAIN LAYOUT -->
-    <div class="main-wrapper">
+    <div @class(['main-wrapper'])>
         @include('admin.sidebar')
-        <div class="main-area">
+        <div @class(['main-area'])>
             @include('admin.navbar')
 
             <!-- CONTENT -->
-            <div class="card shadow-sm border-0 mx-2 my-2 p-4 rounded-4">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
-                    <h5 class="fw-semibold mb-0">Student List</h5>
-                    <div class="d-flex align-items-center">
-                        <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
+            <div @class(['card', 'shadow-sm', 'border-0', 'mx-2', 'my-2', 'p-4', 'rounded-4'])>
+                <div @class(['d-flex', 'justify-content-between', 'align-items-center', 'flex-wrap', 'gap-3', 'mb-3'])>
+                    <h5 @class(['fw-semibold', 'mb-0'])>Student List</h5>
+                    <div @class(['d-flex', 'align-items-center'])>
+                        <button @class(['btn', 'btn-primary', 'btn-sm', 'rounded-3']) data-bs-toggle="modal"
                             data-bs-target="#addStudentModal">
                             New Student
                         </button>
@@ -28,35 +28,35 @@
                 </div>
 
                 <!-- Semester Filter Buttons -->
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                    <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">
-                        <i class="bi bi-people"></i> &nbsp; All Students
+                <div @class(['d-flex', 'flex-wrap', 'align-items-center', 'mb-3'])>
+                    <button @class(['btn', 'btn-primary', 'btn-sm', 'semester-btn', 'active']) data-semester="all">
+                        <i @class(['bi', 'bi-people'])></i> &nbsp; All Students
                     </button>
                     @for ($i = 1; $i <= 8; $i++)
-                        <button class="btn btn-outline-primary btn-sm semester-btn" data-semester="{{ $i }}">
+                        <button @class(['btn', 'btn-outline-primary', 'btn-sm', 'semester-btn']) data-semester="{{ $i }}">
                             Semester {{ $i }}
                         </button>
                     @endfor
                 </div>
 
-                <div class="table-responsive rounded-2">
-                    <table class="table table-hover border-3 mb-0">
-                        <thead class="table-secondary">
+                <div @class(['table-responsive', 'rounded-2'])>
+                    <table @class(['table', 'table-hover', 'border-3', 'mb-0'])>
+                        <thead @class(['table-secondary'])>
                             <tr>
-                                <th class="py-3">S.N</th>
-                                <th class="py-3">Student Code</th>
-                                <th class="py-3">Name</th>
-                                <th class="py-3">Roll No</th>
-                                <th class="py-3">Semester</th>
-                                <th class="py-3">Batch</th>
-                                <th class="py-3">Email</th>
-                                <th class="py-3">Actions</th>
+                                <th @class(['py-3'])>S.N</th>
+                                <th @class(['py-3'])>Student Code</th>
+                                <th @class(['py-3'])>Name</th>
+                                <th @class(['py-3'])>Roll No</th>
+                                <th @class(['py-3'])>Semester</th>
+                                <th @class(['py-3'])>Batch</th>
+                                <th @class(['py-3'])>Email</th>
+                                <th @class(['py-3'])>Actions</th>
                             </tr>
                         </thead>
 
                         <tbody id="student-data">
                             @forelse ($students as $student)
-                                <tr class="student-row" data-semester="{{ $student->current_semester }}">
+                                <tr @class(['student-row']) data-semester="{{ $student->current_semester }}">
                                     <td>{{ $students->firstItem() + $loop->index }}</td>
                                     <td>{{ $student->student_code }}</td>
                                     <td>{{ $student->name }}</td>
@@ -65,7 +65,7 @@
                                     <td>{{ $student->admission_year }}</td>
                                     <td>{{ $student->email }}</td>
                                     <td>
-                                        <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 action-btn"
+                                        <button @class(['btn', 'btn-outline-primary', 'fw-semibold', 'btn-sm', 'rounded-3', 'action-btn'])
                                             style="font-size:10px;" data-bs-toggle="modal"
                                             data-bs-target="#editStudentModal" data-id="{{ $student->id }}"
                                             data-name="{{ $student->name }}" data-roll_no="{{ $student->roll_no }}"
@@ -75,25 +75,25 @@
                                             data-current_semester="{{ $student->current_semester }}"
                                             data-admission_year="{{ $student->admission_year }}"
                                             data-student_code="{{ $student->student_code }}">
-                                            <i class="bi bi-pencil-square"></i> Edit
+                                            <i @class(['bi', 'bi-pencil-square'])></i> Edit
                                         </button> &nbsp;
-                                        <button class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn"
+                                        <button @class(['btn', 'btn-outline-danger', 'fw-semibold', 'btn-sm', 'rounded-3', 'action-btn'])
                                             style="font-size:10px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
                                             data-id="{{ $student->id }}"
                                             data-url="{{ route('students.delete', $student->id) }}">
-                                            <i class="bi bi-trash"></i> Delete
+                                            <i @class(['bi', 'bi-trash'])></i> Delete
                                         </button> &nbsp;
-                                        <button class="btn btn-outline-secondary fw-semibold btn-sm rounded-3 send-mail"
+                                        <button @class(['btn', 'btn-outline-secondary', 'fw-semibold', 'btn-sm', 'rounded-3', 'send-mail'])
                                             style="font-size:10px;" data-bs-toggle="modal"
                                             data-id="{{ $student->id }}">
-                                            <i class="bi bi-envelope"></i> Send
+                                            <i @class(['bi', 'bi-envelope'])></i> Send
                                         </button>
                                     </td>
                                 </tr>
 
                             @endforeach
                             <tr id="noStudentRow" style="{{ $students->count() ? 'display:none;' : '' }}">
-                                <td colspan="8" class="text-center text-muted py-4">
+                                <td colspan="8" @class(['text-center', 'text-muted', 'py-4'])>
                                     No students found.
                                 </td>
                             </tr>

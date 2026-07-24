@@ -3,7 +3,7 @@
     <div class="sidebar d-flex flex-column border-end shadow-lg border-2 p-2 rounded-end-4">
         <!-- LOGO -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-2 px-2" >
-            <a href="{{ url('/admin/dashboard') }}" class="text-decoration-none d-flex align-items-center border-bottom border-3 pb-2">
+            <a href="{{ url('/admin/dashboard') }}" class="text-decoration-none d-flex align-items-center border-bottom border-3 pb-1">
                 <img src="{{ asset('images/logo.png') }}" alt="logo" height="30" class="me-2">
                 <h4 class="fw-bold mt-2">
                     <span class="text-success">QR</span>

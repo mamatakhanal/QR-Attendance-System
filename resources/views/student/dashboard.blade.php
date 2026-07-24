@@ -167,7 +167,7 @@
                         title: {
                             display: true,
                             text: "Attendance Percentage",
-                            color: '#212529',
+                            color: '#54595e',
                             font: {
                                 size: 14,
                                 weight: 'bold'
@@ -179,7 +179,7 @@
                         title: {
                             display: true,
                             text: "Subjects",
-                            color: '#212529',
+                            color: '#54595e',
                             font: {
                                 size: 14,
                                 weight: 'bold'

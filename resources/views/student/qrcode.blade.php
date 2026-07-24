@@ -11,17 +11,17 @@
             @include('student.navbar')
             <div class="main-content">
                 <div class="card shadow-sm border-0 rounded-4 mx-2 my-2">
-                    <div class="card-body text-center p-5 pt-4 pb-2">
+                    <div class="card-body text-center p-5 pt-4 pb-1">
 
-                        <h4 class="fw-bold mb-3">
+                        <h4 class="fw-bold mb-1">
                             My QR Code
                         </h4>
 
-                        <div class="bg-light rounded-4 p-4 d-inline-block">
+                        <div class="bg-light rounded-4 p-4  d-inline-block">
                             {!! $qr !!}
                         </div>
 
-                        <h5 class="mt-3 fw-semibold">
+                        <h5 class="mt-2 fw-semibold">
                             {{ $student->name }}
                         </h5>
 
@@ -42,7 +42,7 @@
                             Download QR Code
                         </a>
 
-                        <p class="small text-muted mt-4">
+                        <p class="small text-muted mt-2">
                             Show this QR code to teacher while taking attendance
                         </p>
 

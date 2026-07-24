@@ -206,8 +206,8 @@
     .semester-btn {
         border: none !important;
         border-radius: 10px;
-        padding: 6px 18px;
-        margin: 2px;
+        padding: 6px 16px;
+        margin: 3px;
         background: #f1f3f5;
         color: #333;
         font-weight: 500;
