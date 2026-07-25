@@ -191,6 +191,24 @@
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
     <script>
+        // Attendance Count
+        function loadAttendanceCount() {
+            $.ajax({
+                url: "{{ route('teacher.attendance.count') }}",
+                type: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    assign_class_id: $('#class_id').val()
+                },
+                success: function(res) {
+                    $('#totalStudents').text(res.total);
+                    $('#presentCount').text(res.present);
+                    $('#absentCount').text(res.absent);
+                }
+            });
+
+        }
+
         $(document).ready(function() {
 
             // QR Scanner Object
@@ -223,14 +241,40 @@
                     return;
                 }
 
-                const modal = new bootstrap.Modal(document.getElementById('scannerModal'));
-                modal.show();
+                $.ajax({
+                    url: "{{ route('teacher.attendance.startSession') }}",
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        assign_class_id: classId
+                    },
+                    success: function(response) {
+                         // Attendance already closed today
+                        if (response.success) {
 
-                $('#scannerModal').one('shown.bs.modal', function() {
-                    startScanner();
+                        //     Swal.fire({
+                        //         icon: 'warning',
+                        //         title: 'Attendance Closed',
+                        //         html: response.message,
+                        //         confirmButtonColor: '#198754',
+                        //         width: 500
+                        //     });
+
+                        //     return;
+                        // }
+
+                            const modal = new bootstrap.Modal(document.getElementById(
+                                'scannerModal'));
+                            modal.show();
+
+                            $('#scannerModal').one('shown.bs.modal', function() {
+                                startScanner();
+                            });
+                        }
+                    }
                 });
+                return;
             });
-
 
 
             // Start Camera
@@ -273,6 +317,9 @@
                                             // Attendance Successfully Marked
                                             success: function(response) {
                                                 if (response.success) {
+
+                                                    loadAttendanceCount();
+
                                                     Swal.fire({
                                                         icon: 'success',
                                                         title: 'Attendance Marked Successfully',
@@ -352,19 +399,27 @@
                                                     let title = 'Invalid QR Code';
                                                     let showOnlyClose = false;
 
-                                                    if (response.message === 'This student\'s attendance has already been marked for today.') {
+                                                    if (response.message ===
+                                                        'This student\'s attendance has already been marked for today.'
+                                                    ) {
                                                         icon = 'warning';
-                                                        title = 'Attendance Already Marked';
-                                                    } 
-                                                    
-                                                    if (response.message === 'This student does not belong to the selected class.' ) {
+                                                        title =
+                                                            'Attendance Already Marked';
+                                                    }
+
+                                                    if (response.message ===
+                                                        'This student does not belong to the selected class.'
+                                                    ) {
                                                         icon = 'warning';
                                                         title = 'Attendance Denied';
-                                                    } 
+                                                    }
 
-                                                    if (response.message === 'The Attendance period has ended. <br> <br> Students who did not scan their QR code within the session have been marked <strong> Absent</strong>.' ) {
+                                                    if (response.message ===
+                                                        'The Attendance period has ended. <br> <br> Students who did not scan their QR code within the session have been marked <strong> Absent</strong>.'
+                                                    ) {
                                                         icon = 'warning';
-                                                        title = 'Attendance Session Closed';
+                                                        title =
+                                                            'Attendance Session Closed';
                                                         showOnlyClose = true;
                                                     }
 
@@ -376,7 +431,8 @@
                                                                     ${response.message}
                                                                 </div>
                                                                 `,
-                                                        showConfirmButton: !showOnlyClose,
+                                                        showConfirmButton: !
+                                                            showOnlyClose,
                                                         showCancelButton: true,
                                                         confirmButtonText: 'Scan Another',
                                                         cancelButtonText: 'Close',
@@ -492,6 +548,8 @@
             // Update Class Information
             $('#class_id').on('change', function() {
 
+                loadAttendanceCount();
+
                 let selected = $(this).find(':selected');
 
                 let semester = selected.data('semester') || '-';
@@ -506,14 +564,16 @@
 
                 $('#totalStudents').text(students);
 
-                $('#presentCount').text(0);
-                $('#absentCount').text(0);
-
                 if ($('#scannedCount').length) {
                     $('#scannedCount').text(0);
                 }
 
             });
+
+            // Load today's attendance when page loads
+            if ($('#class_id').val() != "") {
+                loadAttendanceCount();
+            }
         });
     </script>
 </body>

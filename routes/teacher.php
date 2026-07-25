@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Models\Admin\AttendanceSession;
 use App\Http\Controllers\Teacher\LoginController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\StudentsController;
@@ -27,8 +28,14 @@ Route::prefix('/teacher')->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'attendance'])
         ->name('teacher.attendance');
 
+    Route::post('/attendance/start-session', [AttendanceController::class, 'startSession'])
+    ->name('teacher.attendance.startSession');
+
     Route::post('/attendance/scan', [AttendanceController::class, 'scanAttendance'])
     ->name('teacher.attendance.scan');
+
+    Route::post('/attendance/count', [AttendanceController::class, 'getAttendanceCount'])
+    ->name('teacher.attendance.count');
 
     Route::get('/attendance-records', [AttendanceRecordsController::class, 'attendancerecords'])
         ->name('teacher.attendancerecords');

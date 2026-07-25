@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Assignclass;
 use App\Models\Admin\Attendance;
+use App\Models\Admin\AttendanceSession;
 use App\Models\Admin\Students;
 use App\Models\Admin\Teachers;
 use Illuminate\Http\Request;
@@ -53,7 +54,37 @@ class AttendanceController extends Controller
         if (! $assignClass) {
             return response()->json([
                 'success' => false,
-                'message' => '',
+                'message' => 'The selected class could not be found. Please select a class and try again.',
+            ]);
+        }
+
+        $session = AttendanceSession::where('assign_class_id', $assignClass->id)
+            ->where('teacher_id', $teacher->id)
+            ->whereDate('date', today())
+            ->where('status', 'Open')
+            ->first();
+
+        if (! $session) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Attendance session has not been started.',
+            ]);
+        }
+
+        // Session time expired
+        if (now()->greaterThanOrEqualTo($session->end_time)) {
+
+            // Mark remaining students absent
+            $this->markAbsentStudents($assignClass);
+
+            // Close the session
+            $session->update([
+                'status' => 'Closed',
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'The Attendance period has ended. <br><br>Students who did not scan their QR code within the session have been marked <strong>Absent</strong>.',
             ]);
         }
 
@@ -75,7 +106,7 @@ class AttendanceController extends Controller
         if (! $student) {
             return response()->json([
                 'success' => false,
-                'message' => '',
+                'message' => 'The scanned student could not be found.',
             ]);
         }
 
@@ -139,6 +170,73 @@ class AttendanceController extends Controller
         ]);
     }
 
+    public function startSession(Request $request)
+    {
+        $teacher = Teachers::find(session('teacher_id'));
+
+        if (! $teacher) {
+            return response()->json([
+                'success' => false,
+            ]);
+        }
+
+        $assignClass = Assignclass::with('subjects')
+            ->find($request->assign_class_id);
+
+        if (! $assignClass) {
+            return response()->json([
+                'success' => false,
+            ]);
+        }
+
+        $subject = $assignClass->subjects->first();
+
+        if (! $subject) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No subject is assigned to this class.',
+            ]);
+        }
+
+        // Check if today's session is already open
+        // Check if today's session already exists
+        $session = AttendanceSession::where('assign_class_id', $assignClass->id)
+            ->where('teacher_id', $teacher->id)
+            ->whereDate('date', today())
+            ->first();
+
+        if ($session) {
+
+            // Already closed today
+            if ($session->status == 'Closed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attendance has already been completed for this class today.',
+                ]);
+            }
+
+            // Already open
+            return response()->json([
+                'success' => true,
+            ]);
+        }
+
+        // Create today's first session
+        AttendanceSession::create([
+            'assign_class_id' => $assignClass->id,
+            'teacher_id' => $teacher->id,
+            'subject_id' => $subject->id,
+            'date' => today(),
+            'start_time' => now(),
+            'end_time' => now()->addMinutes(30),
+            'status' => 'Open',
+        ]);
+
+        return response()->json([
+            'success' => true,
+        ]);
+    }
+
     public function markAbsentStudents($assignClass)
     {
         $students = Students::where(
@@ -168,5 +266,33 @@ class AttendanceController extends Controller
 
             }
         }
+    }
+
+    public function getAttendanceCount(Request $request)
+    {
+        $teacher = Teachers::find(session('teacher_id'));
+
+        $assignClass = Assignclass::with('subjects')
+            ->find($request->assign_class_id);
+
+        $subject = $assignClass->subjects->first();
+
+        $present = Attendance::where('teacher_id', $teacher->id)
+            ->where('subject_id', $subject->id)
+            ->whereDate('date', today())
+            ->where('status', 'Present')
+            ->count();
+
+        $absent = Attendance::where('teacher_id', $teacher->id)
+            ->where('subject_id', $subject->id)
+            ->whereDate('date', today())
+            ->where('status', 'Absent')
+            ->count();
+
+        return response()->json([
+            'present' => $present,
+            'absent' => $absent,
+            'total' => Students::where('current_semester', $assignClass->semester)->count(),
+        ]);
     }
 }
