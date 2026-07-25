@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Teachers;
-use App\Models\Admin\Attendance;
 use App\Models\Admin\Assignclass;
+use App\Models\Admin\Attendance;
+use App\Models\Admin\Teachers;
 use Illuminate\Http\Request;
 
 class AttendanceRecordsController extends Controller
@@ -14,16 +14,16 @@ class AttendanceRecordsController extends Controller
     {
         $teacher = Teachers::find(session('teacher_id'));
 
-        if (!$teacher) {
+        if (! $teacher) {
             return redirect('/home');
         }
 
         $request->validate([
-            'semester'  => 'nullable|integer|between:1,8',
+            'semester' => 'nullable|integer|between:1,8',
             'subject_id' => 'nullable|exists:subjects,id',
-            'status'    => 'nullable|in:present,absent',
-            'date'      => 'nullable|date',
-            'search'    => 'nullable|string|max:100',
+            'status' => 'nullable|in:present,absent',
+            'date' => 'nullable|date',
+            'search' => 'nullable|string|max:100',
         ]);
 
         // Teacher assigned semesters
@@ -88,16 +88,19 @@ class AttendanceRecordsController extends Controller
             })
 
             ->orderByDesc('date')
+            ->orderBy('semester')
+            ->orderBy('subject_id')
+            ->orderByRaw("FIELD(status,'Present','Absent')")
             ->orderByDesc('time')
             ->paginate(10)
             ->withQueryString();
 
         return view('teacher.attendancerecords', [
-            'pageTitle'          => 'Attendance Records',
-            'teacher'            => $teacher,
-            'attendances'        => $attendances,
-            'assignedSemesters'  => $assignedSemesters,
-            'subjects'           => $subjects,
+            'pageTitle' => 'Attendance Records',
+            'teacher' => $teacher,
+            'attendances' => $attendances,
+            'assignedSemesters' => $assignedSemesters,
+            'subjects' => $subjects,
         ]);
     }
 }

@@ -44,7 +44,7 @@ class AttendanceController extends Controller
         if (! $teacher) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid QR Code..',
+                'message' => 'Your session has expired. Please log in again.',
             ]);
         }
 
@@ -53,7 +53,7 @@ class AttendanceController extends Controller
         if (! $assignClass) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid QR Code..',
+                'message' => '',
             ]);
         }
 
@@ -66,7 +66,7 @@ class AttendanceController extends Controller
         ) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid QR Code.',
+                'message' => 'The scanned QR code does not belong to any student in the system. <br> Please scan a student\'s attendance QR code.',
             ]);
         }
 
@@ -75,7 +75,7 @@ class AttendanceController extends Controller
         if (! $student) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid QR Code.',
+                'message' => '',
             ]);
         }
 
@@ -87,18 +87,28 @@ class AttendanceController extends Controller
             ]);
         }
 
-        // Check if attendance already marked today
-        $alreadyMarked = Attendance::where('student_id', $student->id)
+        // Check if attendance marked for today
+        $attendance = Attendance::where('student_id', $student->id)
             ->where('teacher_id', $teacher->id)
             ->where('subject_id', $assignClass->subjects->first()->id)
-            ->whereDate('date', now()->toDateString())
-            ->exists();
+            ->whereDate('date', today())
+            ->first();
 
-        if ($alreadyMarked) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This student\'s attendance has already been marked for today.',
-            ]);
+        if ($attendance) {
+
+            if ($attendance->status == 'Present') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This student\'s attendance has already been marked for today.',
+                ]);
+            }
+
+            if ($attendance->status == 'Absent') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The Attendance period has ended. <br> <br> Students who did not scan their QR code within the session have been marked <strong> Absent</strong>.',
+                ]);
+            }
         }
 
         Attendance::create([
@@ -127,5 +137,36 @@ class AttendanceController extends Controller
 
             'time' => now()->format('h:i A'),
         ]);
+    }
+
+    public function markAbsentStudents($assignClass)
+    {
+        $students = Students::where(
+            'current_semester',
+            $assignClass->semester
+        )->get();
+
+        foreach ($students as $student) {
+
+            $exists = Attendance::where('student_id', $student->id)
+                ->where('teacher_id', session('teacher_id'))
+                ->where('subject_id', $assignClass->subjects->first()->id)
+                ->whereDate('date', today())
+                ->exists();
+
+            if (! $exists) {
+
+                Attendance::create([
+                    'semester' => $student->current_semester,
+                    'student_id' => $student->id,
+                    'teacher_id' => session('teacher_id'),
+                    'subject_id' => $assignClass->subjects->first()->id,
+                    'date' => today(),
+                    'time' => now()->format('H:i:s'),
+                    'status' => 'Absent',
+                ]);
+
+            }
+        }
     }
 }

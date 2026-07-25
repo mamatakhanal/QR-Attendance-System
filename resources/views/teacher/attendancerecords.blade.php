@@ -121,7 +121,7 @@
                                                 {{ $attendance->time ? \Carbon\Carbon::parse($attendance->time)->format('h:i A') : '-' }}
                                             </td>
                                             <td>
-                                                @if ($attendance->status == 'present')
+                                                @if ($attendance->status == 'Present')
                                                     <button class="btn btn-success btn-sm fw-bold rounded-3 action-btn"
                                                         style="font-size:10px; cursor:default;" disabled>
                                                         <i class="bi bi-check-circle"></i> &nbsp; Present

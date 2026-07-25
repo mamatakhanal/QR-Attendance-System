@@ -115,8 +115,7 @@
                             popup: 'animate__animated animate__fadeOutRight'
                         },
                     });
-
-                    $('#studentForm')[0].reset();
+         $('#studentForm')[0].reset();
 
                 const modal = bootstrap.Modal.getInstance(
                     document.getElementById('addStudentModal')

@@ -2,23 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Mail\StudentMail;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Students;
+use App\Mail\StudentMail;
 use App\Models\Admin\Admin;
-
-use Illuminate\Support\Facades\Mail;
+use App\Models\Admin\Students;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
-
 
 class StudentsController extends Controller
 {
-
     public function students(Request $request)
     {
         $search = $request->search;
@@ -47,7 +44,7 @@ class StudentsController extends Controller
             ->withQueryString();
 
         $admin = Admin::find(session('admin_id'));
-        if (!$admin) {
+        if (! $admin) {
             return redirect('/admin/login');
         }
 
@@ -55,14 +52,14 @@ class StudentsController extends Controller
         if ($request->ajax()) {
             return view('admin.students', [
                 'students' => $students,
-                'pageTitle' => 'Students'
+                'pageTitle' => 'Students',
             ])->render();
         }
 
         return view('admin.students', [
             'pageTitle' => 'Students',
             'students' => $students,
-            'admin' => $admin
+            'admin' => $admin,
         ]);
     }
 
@@ -71,82 +68,87 @@ class StudentsController extends Controller
     {
         try {
 
-        // Validation
-        $request->validate([
-            'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
-            'roll_no' => [
-                'required',
-                'integer',
-                Rule::unique('students')
-                    ->where(
-                        fn($query) =>
-                        $query->where('admission_year', $request->admission_year)
-                    ),
-            ],
-            'email' => 'required|email|unique:students,email',
-            'password' => 'required|min:8',
-            'admission_year' => [
-                'required',
-                'integer',
-                'min:2000',
-                'max:' . now()->year,
-                function ($attribute, $value, $fail) {
-                    $semester = (now()->year - $value) + 1;
+            // Validation
+            $request->validate([
+                'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
+                'roll_no' => [
+                    'required',
+                    'integer',
+                    Rule::unique('students')
+                        ->where(
+                            fn ($query) => $query->where('admission_year', $request->admission_year)
+                        ),
+                ],
+                'email' => 'required|email|unique:students,email',
+                'password' => 'required|min:8',
+                'admission_year' => [
+                    'required',
+                    'integer',
+                    'min:2000',
+                    'max:'.now()->year,
+                    function ($attribute, $value, $fail) {
+                        $semester = (now()->year - $value) + 1;
 
-                    if ($semester > 8) {
-                        $fail('This batch has already graduated.');
-                    }
-                }
-            ],
-        ], [
-            'name.regex' => 'Name must contain only letters.',
-            'roll_no.unique' => 'This roll number already exists in the selected batch.',
-            'email.unique' => 'Email already exists.',
-            'password.min' => 'Password must be at least 8 characters.'
-        ]);
+                        if ($semester > 8) {
+                            $fail('This batch has already graduated.');
+                        }
+                    },
+                ],
+            ], [
+                'name.regex' => 'Name must contain only letters.',
+                'roll_no.unique' => 'This roll number already exists in the selected batch.',
+                'email.unique' => 'Email already exists.',
+                'password.min' => 'Password must be at least 8 characters.',
+            ]);
 
-        // Student Code Calculate
-        $year = substr($request->admission_year, -2);
-        $studentCode = 'STU-' . $year . '-' . str_pad($request->roll_no, 3, '0', STR_PAD_LEFT);
+            // Student Code Calculate
+            $year = substr($request->admission_year, -2);
+            $studentCode = 'STU-'.$year.'-'.str_pad($request->roll_no, 3, '0', STR_PAD_LEFT);
 
-        // Semester Calculate
-        $currentYear = now()->year;
-        $semester = ($currentYear - $request->admission_year) + 1;
+            // Semester Calculate
+            $currentYear = now()->year;
+            $semester = ($currentYear - $request->admission_year) + 1;
 
-        // Student Create
-        $student =  Students::create([
-            'name' => $request->name,
-            'roll_no' => $request->roll_no,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'current_semester' => $semester,
-            'admission_year' => $request->admission_year,
-            'student_code' => $studentCode,
-        ]);
+            // Student Create
+            $student = Students::create([
+                'name' => $request->name,
+                'roll_no' => $request->roll_no,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'current_semester' => $semester,
+                'admission_year' => $request->admission_year,
+                'student_code' => $studentCode,
+            ]);
 
-        // GENERATE QR CODE AND SAVE TO STORAGE
-        $qrImage = QrCode::format('png')
-            ->size(300)
-            ->generate($studentCode);
+            // QR Data
+            $data = json_encode([
+                'student_id' => $student->id,
+                'student_code' => $studentCode,
+            ]);
 
-        Storage::disk('public')->put(
-            "qr/{$studentCode}.png",
-            $qrImage
-        );
+            // GENERATE QR CODE AND SAVE TO STORAGE
+            $qrImage = QrCode::format('png')
+                ->size(300)
+                ->generate($data);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Student added successfully'
-        ]);
+            Storage::disk('public')->put(
+                "qr/{$studentCode}.png",
+                $qrImage
+            );
 
-         } catch (\Exception $e) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Student added successfully',
+            ]);
 
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ],500);
+        } catch (\Exception $e) {
 
-    }
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+
+        }
     }
 
     // Edit Student
@@ -154,106 +156,114 @@ class StudentsController extends Controller
     {
         try {
 
-        $student = Students::findOrFail($id);
+            $student = Students::findOrFail($id);
 
-        // Validation
-        $request->validate([
-            'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
-            'roll_no' => [
-                'required',
-                'integer',
-                Rule::unique('students')
-                    ->where(
-                        fn($query) =>
-                        $query->where('admission_year', $request->admission_year)
-                    )
-                    ->ignore($id),
-            ],
-            'phone' => 'nullable|numeric|regex:/^[9][0-9]{9}$/',
-            'dob' => 'nullable|date|before:-15 years',
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('students')->ignore($id)
-            ],
-            'password' => 'nullable|min:8',
-            'admission_year' => [
-                'required',
-                'integer',
-                'min:2000',
-                'max:' . now()->year,
-                function ($attribute, $value, $fail) {
-                    $semester = (now()->year - $value) + 1;
+            // Validation
+            $request->validate([
+                'name' => 'required|string|max:100|regex:/^[A-Za-z\s]+$/',
+                'roll_no' => [
+                    'required',
+                    'integer',
+                    Rule::unique('students')
+                        ->where(
+                            fn ($query) => $query->where('admission_year', $request->admission_year)
+                        )
+                        ->ignore($id),
+                ],
+                'phone' => 'nullable|numeric|regex:/^[9][0-9]{9}$/',
+                'dob' => 'nullable|date|before:-15 years',
+                'email' => [
+                    'required',
+                    'email',
+                    Rule::unique('students')->ignore($id),
+                ],
+                'password' => 'nullable|min:8',
+                'admission_year' => [
+                    'required',
+                    'integer',
+                    'min:2000',
+                    'max:'.now()->year,
+                    function ($attribute, $value, $fail) {
+                        $semester = (now()->year - $value) + 1;
 
-                    if ($semester > 8) {
-                        $fail('This batch has already graduated.');
-                    }
-                }
-            ],
-        ], [
-            'name.regex' => 'Name must contain only letters.',
-            'roll_no.unique' => 'This roll number already exists in the selected batch.',
-            'phone.numeric' => 'Phone number must contain numbers only.',
-            'phone.regex' => 'Phone number must start with 9 and be exactly 10 digits.',
-            'dob.before' => 'Student must be at least 15 years old.',
-            'email.unique' => 'Email already exists.',
-            'password.min' => 'Password must be at least 8 characters.',
-        ]);
-
-        // Student Code Calculate
-        $year = substr($request->admission_year, -2);
-        $studentCode = 'STU-' . $year . '-' . str_pad($request->roll_no, 3, '0', STR_PAD_LEFT);
-
-        // Semester Calculate
-        $currentYear = now()->year;
-        $semester = ($currentYear - $request->admission_year) + 1;
-
-        $student->update([
-            'name' => $request->name,
-            'roll_no' => $request->roll_no,
-            'phone' => $request->phone,
-            'gender' => $request->gender,
-            'dob' => $request->dob,
-            'address' => $request->address,
-            'email' => $request->email,
-            'current_semester' => $semester,
-            'admission_year' => $request->admission_year,
-            'student_code' => $studentCode,
-        ]);
-
-        if ($request->filled('password')) {
-            $student->update([
-                'password' => Hash::make($request->password)
+                        if ($semester > 8) {
+                            $fail('This batch has already graduated.');
+                        }
+                    },
+                ],
+            ], [
+                'name.regex' => 'Name must contain only letters.',
+                'roll_no.unique' => 'This roll number already exists in the selected batch.',
+                'phone.numeric' => 'Phone number must contain numbers only.',
+                'phone.regex' => 'Phone number must start with 9 and be exactly 10 digits.',
+                'dob.before' => 'Student must be at least 15 years old.',
+                'email.unique' => 'Email already exists.',
+                'password.min' => 'Password must be at least 8 characters.',
             ]);
+
+            // Student Code Calculate
+            $year = substr($request->admission_year, -2);
+            $studentCode = 'STU-'.$year.'-'.str_pad($request->roll_no, 3, '0', STR_PAD_LEFT);
+
+            // Semester Calculate
+            $currentYear = now()->year;
+            $semester = ($currentYear - $request->admission_year) + 1;
+
+            $student->update([
+                'name' => $request->name,
+                'roll_no' => $request->roll_no,
+                'phone' => $request->phone,
+                'gender' => $request->gender,
+                'dob' => $request->dob,
+                'address' => $request->address,
+                'email' => $request->email,
+                'current_semester' => $semester,
+                'admission_year' => $request->admission_year,
+                'student_code' => $studentCode,
+            ]);
+
+            if ($request->filled('password')) {
+                $student->update([
+                    'password' => Hash::make($request->password),
+                ]);
+            }
+
+            $data = json_encode([
+                'student_id' => $student->id,
+                'student_code' => $student->student_code,
+            ]);
+
+            $qrImage = QrCode::format('png')
+                ->size(300)
+                ->generate($data);
+
+            Storage::disk('public')->put(
+                "qr/{$studentCode}.png",
+                $qrImage
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student updated successfully',
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+
         }
-
-        Storage::disk('public')->put(
-            "qr/{$studentCode}.png",
-            QrCode::format('png')->size(300)->generate($studentCode)
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Student updated successfully'
-        ]);
-
-         } catch (\Exception $e) {
-
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ],500);
-
-    }
     }
 
     // Delete Student
     public function delete($id)
     {
         Students::findOrFail($id)->delete();
+
         return redirect()->back()->with('success', 'Student deleted successfully');
     }
-
 
     public function sendEmail($id)
     {
@@ -262,7 +272,7 @@ class StudentsController extends Controller
 
             $plainPassword = Str::random(8);
             $student->update([
-                'password' => Hash::make($plainPassword)
+                'password' => Hash::make($plainPassword),
             ]);
 
             Mail::to($student->email)
@@ -270,13 +280,13 @@ class StudentsController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Email sent successfully'
+                'message' => 'Email sent successfully',
             ]);
         } catch (\Exception $e) {
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ]);
         }
     }
