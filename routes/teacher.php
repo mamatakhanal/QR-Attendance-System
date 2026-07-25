@@ -27,8 +27,12 @@ Route::prefix('/teacher')->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'attendance'])
         ->name('teacher.attendance');
 
+    Route::post('/attendance/scan', [AttendanceController::class, 'scanAttendance'])
+    ->name('teacher.attendance.scan');
+
     Route::get('/attendance-records', [AttendanceRecordsController::class, 'attendancerecords'])
         ->name('teacher.attendancerecords');
+
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'profile'])

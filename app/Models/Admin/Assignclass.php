@@ -9,15 +9,20 @@ class Assignclass extends Model
     protected $table = 'assign_class';
 
     protected $fillable = [
-        'teacher_id',
         'semester',
+        'student_id',
+        'teacher_id',
+        'assign_class_id',
+        'subject_id',
+        'date',
+        'time',
+        'status',
     ];
 
     public function teacher()
     {
         return $this->belongsTo(Teachers::class, 'teacher_id');
     }
-
 
     public function subjects()
     {

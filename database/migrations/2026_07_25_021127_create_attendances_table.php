@@ -8,20 +8,31 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('assign_class_subject', function (Blueprint $table) {
+        Schema::create('attendance', function (Blueprint $table) {
+
             $table->id();
+
+            $table->unsignedTinyInteger('semester');
+
+            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
 
             $table->foreignId('teacher_id')
                 ->constrained('teachers')
+                ->cascadeOnDelete();
+
+            $table->foreignId('subject_id')
+                ->constrained('subjects')
                 ->cascadeOnDelete();
 
             $table->foreignId('assign_class_id')
                 ->constrained('assign_class')
                 ->cascadeOnDelete();
 
-            $table->foreignId('subject_id')
-                ->constrained('subjects')
-                ->cascadeOnDelete();
+            $table->date('date');
+
+            $table->time('time');
+
+            $table->enum('status', ['Present']);
 
             $table->timestamps();
         });
@@ -29,6 +40,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('assign_class_subject');
+        Schema::dropIfExists('attendance');
     }
 };
