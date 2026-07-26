@@ -38,6 +38,8 @@ class AttendanceController extends Controller
         ]);
     }
 
+
+    // Scan Attendance
     public function scanAttendance(Request $request)
     {
         // Logged in teacher
@@ -170,6 +172,8 @@ class AttendanceController extends Controller
         ]);
     }
 
+
+    // Start Attendance Session
     public function startSession(Request $request)
     {
         $teacher = Teachers::find(session('teacher_id'));
@@ -228,10 +232,51 @@ class AttendanceController extends Controller
             // Session is still active
             return response()->json([
                 'success' => true,
+                'type' => 'open',
             ]);
         }
 
-        // Create today's first session
+        return response()->json([
+            'success' => true,
+            'type' => 'new',
+        ]);
+    }
+
+
+    // Create Attendance Session
+    public function createSession(Request $request)
+    {
+        $teacher = Teachers::find(session('teacher_id'));
+
+        if (! $teacher) {
+            return response()->json([
+                'success' => false,
+            ]);
+        }
+
+        $assignClass = Assignclass::with('subjects')
+            ->find($request->assign_class_id);
+
+        if (! $assignClass) {
+            return response()->json([
+                'success' => false,
+            ]);
+        }
+
+        $subject = $assignClass->subjects->first();
+
+        // Prevent duplicate session
+        $exists = AttendanceSession::where('assign_class_id', $assignClass->id)
+            ->where('teacher_id', $teacher->id)
+            ->whereDate('date', today())
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+            ]);
+        }
+
         AttendanceSession::create([
             'assign_class_id' => $assignClass->id,
             'teacher_id' => $teacher->id,
@@ -246,9 +291,12 @@ class AttendanceController extends Controller
 
         return response()->json([
             'success' => true,
+             'type' => 'new',
         ]);
     }
 
+
+    // Mark Absent Students
     public function markAbsentStudents($assignClass)
     {
         $students = Students::where(
@@ -280,6 +328,8 @@ class AttendanceController extends Controller
         }
     }
 
+
+    // Get Attendance Count
     public function getAttendanceCount(Request $request)
     {
         $teacher = Teachers::find(session('teacher_id'));

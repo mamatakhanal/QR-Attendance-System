@@ -31,6 +31,9 @@ Route::prefix('/teacher')->group(function () {
     Route::post('/attendance/start-session', [AttendanceController::class, 'startSession'])
     ->name('teacher.attendance.startSession');
 
+    Route::post('/attendance/create-session', [AttendanceController::class, 'createSession'])
+    ->name('teacher.attendance.createSession');
+
     Route::post('/attendance/scan', [AttendanceController::class, 'scanAttendance'])
     ->name('teacher.attendance.scan');
 
