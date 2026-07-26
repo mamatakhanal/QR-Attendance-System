@@ -29,11 +29,8 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->date('date');
-
-            $table->time('time');
-
+            $table->time('time')->nullable();
             $table->enum('status', ['Present']);
-
             $table->timestamps();
         });
     }

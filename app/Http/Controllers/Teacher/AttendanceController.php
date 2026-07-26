@@ -198,24 +198,34 @@ class AttendanceController extends Controller
             ]);
         }
 
-        // Check if today's session is already open
         // Check if today's session already exists
         $session = AttendanceSession::where('assign_class_id', $assignClass->id)
             ->where('teacher_id', $teacher->id)
             ->whereDate('date', today())
             ->first();
 
+        // Check if today's session already open
         if ($session) {
+
+            // Session expired but still marked Open
+            if ($session->status == 'Open' && now()->greaterThanOrEqualTo($session->end_time)) {
+
+                $this->markAbsentStudents($assignClass);
+                $session->update([
+                    'status' => 'Closed',
+                ]);
+            }
 
             // Already closed today
             if ($session->status == 'Closed') {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Attendance has already been completed for this class today.',
+                    'success' => true,
+                    'type' => 'closed',
+                    'message' => 'Attendance for this class has already ended.<br> All students who did not scan their QR code have been marked as <strong>Absent</strong>.',
                 ]);
             }
 
-            // Already open
+            // Session is still active
             return response()->json([
                 'success' => true,
             ]);
@@ -228,7 +238,9 @@ class AttendanceController extends Controller
             'subject_id' => $subject->id,
             'date' => today(),
             'start_time' => now(),
-            'end_time' => now()->addMinutes(30),
+            'end_time' => now()->addMinutes(40),
+            // 'end_time' => now()->addMinutes(60),
+            // 'end_time' => now()->addHour(2),
             'status' => 'Open',
         ]);
 

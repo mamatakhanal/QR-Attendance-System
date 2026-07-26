@@ -206,9 +206,32 @@
                     $('#absentCount').text(res.absent);
                 }
             });
-
         }
 
+        // Update Class Information
+        $('#class_id').on('change', function() {
+            loadAttendanceCount();
+            let selected = $(this).find(':selected');
+            let semester = selected.data('semester') || '-';
+            let subject = selected.data('subject') || '-';
+            let students = selected.data('students') || 0;
+            $('#infoSemester').text(
+                semester == '-' ? '-' : 'Semester ' + semester
+            );
+            $('#infoSubject').text(subject);
+            $('#totalStudents').text(students);
+            if ($('#scannedCount').length) {
+                $('#scannedCount').text(0);
+            }
+        });
+        // Load today's attendance when page loads
+        if ($('#class_id').val() != "") {
+            loadAttendanceCount();
+        }
+    </script>
+
+
+    <script>
         $(document).ready(function() {
 
             // QR Scanner Object
@@ -249,81 +272,107 @@
                         assign_class_id: classId
                     },
                     success: function(response) {
-                         // Attendance already closed today
+
+                        // Attendance session expired
                         if (response.success) {
 
-                        //     Swal.fire({
-                        //         icon: 'warning',
-                        //         title: 'Attendance Closed',
-                        //         html: response.message,
-                        //         confirmButtonColor: '#198754',
-                        //         width: 500
-                        //     });
+                            // Confirmation Popup
+                            Swal.fire({
+                                icon: 'question',
+                                title: 'Start Attendance ?',
+                                html: `
+                                    Attendance will remain <strong>Open for 40 Minutes</strong>.<br><br>
+                                    Students who do not scan their QR code within this time will be marked <strong>Absent</strong> automatically.
+                                `,
+                                showCancelButton: true,
+                                confirmButtonText: 'Scan Attendance',
+                                cancelButtonText: 'Cancel',
+                                customClass: {
+                                    confirmButton: 'btn btn-success me-3',
+                                    cancelButton: 'btn btn-secondary ms-3',
+                                },
+                                buttonsStyling: true,
+                                confirmButtonColor: '#198754',
+                                cancelButtonColor: '#6c757d',
+                                width: 550
+                            }).then((result) => {
 
-                        //     return;
-                        // }
+                                if (result.isConfirmed) {
 
-                            const modal = new bootstrap.Modal(document.getElementById(
-                                'scannerModal'));
-                            modal.show();
+                                    const modal = new bootstrap.Modal(document
+                                        .getElementById(
+                                            'scannerModal'));
+                                    modal.show();
 
-                            $('#scannerModal').one('shown.bs.modal', function() {
-                                startScanner();
+                                    $('#scannerModal').one('shown.bs.modal',
+                                        function() {
+                                            startScanner();
+                                        });
+                                }
+                            });
+                        } else {
+
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Attendance Closed',
+                                html: response.message,
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#198754',
+                                width: 500
                             });
                         }
                     }
                 });
-                return;
-            });
 
 
-            // Start Camera
-            function startScanner() {
+                // Start Camera
+                function startScanner() {
 
-                if (html5QrCode.isScanning) {
-                    return;
-                }
+                    if (html5QrCode.isScanning) {
+                        return;
+                    }
 
-                Html5Qrcode.getCameras()
-                    .then(function(devices) {
+                    Html5Qrcode.getCameras()
+                        .then(function(devices) {
 
-                        if (devices.length > 0) {
-                            html5QrCode.start(
-                                devices[0].id, {
-                                    fps: 10,
-                                    qrbox: {
-                                        width: 250,
-                                        height: 250
-                                    }
-                                },
+                            if (devices.length > 0) {
+                                html5QrCode.start(
+                                    devices[0].id, {
+                                        fps: 10,
+                                        qrbox: {
+                                            width: 250,
+                                            height: 250
+                                        }
+                                    },
 
-                                // QR Success
-                                function(decodedText) {
+                                    // QR Success
+                                    function(decodedText) {
 
-                                    html5QrCode.stop().then(() => {
-                                        console.log("QR:", decodedText);
+                                        html5QrCode.stop().then(() => {
+                                            console.log("QR:", decodedText);
 
-                                        $.ajax({
-                                            url: "{{ route('teacher.attendance.scan') }}",
-                                            type: "POST",
+                                            $.ajax({
+                                                url: "{{ route('teacher.attendance.scan') }}",
+                                                type: "POST",
 
-                                            data: {
-                                                _token: "{{ csrf_token() }}",
-                                                qr_data: decodedText,
-                                                assign_class_id: $('#class_id').val()
-                                            },
+                                                data: {
+                                                    _token: "{{ csrf_token() }}",
+                                                    qr_data: decodedText,
+                                                    assign_class_id: $('#class_id')
+                                                        .val()
+                                                },
 
 
-                                            // Attendance Successfully Marked
-                                            success: function(response) {
-                                                if (response.success) {
+                                                // Attendance Successfully Marked
+                                                success: function(response) {
+                                                    if (response.success) {
 
-                                                    loadAttendanceCount();
+                                                        loadAttendanceCount();
 
-                                                    Swal.fire({
-                                                        icon: 'success',
-                                                        title: 'Attendance Marked Successfully',
-                                                        html: `
+                                                        Swal.fire({
+                                                            icon: 'success',
+                                                            title: 'Attendance Marked Successfully',
+                                                            html: `
                                                                         <div style="border:1px solid #dee2e6;
                                                                                     border-radius:10px;
                                                                                     padding:18px;
@@ -363,217 +412,204 @@
 
                                                                         </div>
                                                                         `,
-                                                        showCancelButton: true,
-                                                        confirmButtonText: 'Scan Another',
-                                                        cancelButtonText: 'Close',
-                                                        customClass: {
-                                                            confirmButton: 'btn btn-success me-3',
-                                                            cancelButton: 'btn btn-secondary ms-3',
+                                                            showCancelButton: true,
+                                                            confirmButtonText: 'Scan Another',
+                                                            cancelButtonText: 'Close',
+                                                            customClass: {
+                                                                confirmButton: 'btn btn-success me-3',
+                                                                cancelButton: 'btn btn-secondary ms-3',
 
-                                                        },
-                                                        buttonsStyling: true,
-                                                        confirmButtonColor: '#198754',
-                                                        cancelButtonColor: '#6c757d',
-                                                        width: 550
+                                                            },
+                                                            buttonsStyling: true,
+                                                            confirmButtonColor: '#198754',
+                                                            cancelButtonColor: '#6c757d',
+                                                            width: 550
 
-                                                    }).then((result) => {
+                                                        }).then((
+                                                            result) => {
 
-                                                        if (result
-                                                            .isConfirmed) {
-                                                            html5QrCode.clear();
-                                                            startScanner();
-                                                        } else {
-                                                            bootstrap.Modal
-                                                                .getInstance(
-                                                                    document
-                                                                    .getElementById(
-                                                                        'scannerModal'
+                                                            if (result
+                                                                .isConfirmed
+                                                            ) {
+                                                                html5QrCode
+                                                                    .clear();
+                                                                startScanner
+                                                                    ();
+                                                            } else {
+                                                                bootstrap
+                                                                    .Modal
+                                                                    .getInstance(
+                                                                        document
+                                                                        .getElementById(
+                                                                            'scannerModal'
+                                                                        )
                                                                     )
-                                                                ).hide();
+                                                                    .hide();
+                                                            }
+                                                        });
+
+                                                    } else {
+
+                                                        let icon = 'error';
+                                                        let title =
+                                                            'Invalid QR Code';
+                                                        let showOnlyClose =
+                                                            false;
+
+                                                        if (response.message ===
+                                                            'This student\'s attendance has already been marked for today.'
+                                                        ) {
+                                                            icon = 'warning';
+                                                            title =
+                                                                'Attendance Already Marked';
                                                         }
-                                                    });
 
-                                                } else {
+                                                        if (response.message ===
+                                                            'This student does not belong to the selected class.'
+                                                        ) {
+                                                            icon = 'warning';
+                                                            title =
+                                                                'Attendance Denied';
+                                                        }
 
-                                                    let icon = 'error';
-                                                    let title = 'Invalid QR Code';
-                                                    let showOnlyClose = false;
+                                                        if (response.message ===
+                                                            'The Attendance period has ended. <br> <br> Students who did not scan their QR code within the session have been marked <strong> Absent</strong>.'
+                                                        ) {
+                                                            icon = 'warning';
+                                                            title =
+                                                                'Attendance Session Closed';
+                                                            showOnlyClose =
+                                                                true;
+                                                        }
 
-                                                    if (response.message ===
-                                                        'This student\'s attendance has already been marked for today.'
-                                                    ) {
-                                                        icon = 'warning';
-                                                        title =
-                                                            'Attendance Already Marked';
-                                                    }
-
-                                                    if (response.message ===
-                                                        'This student does not belong to the selected class.'
-                                                    ) {
-                                                        icon = 'warning';
-                                                        title = 'Attendance Denied';
-                                                    }
-
-                                                    if (response.message ===
-                                                        'The Attendance period has ended. <br> <br> Students who did not scan their QR code within the session have been marked <strong> Absent</strong>.'
-                                                    ) {
-                                                        icon = 'warning';
-                                                        title =
-                                                            'Attendance Session Closed';
-                                                        showOnlyClose = true;
-                                                    }
-
-                                                    Swal.fire({
-                                                        icon: icon,
-                                                        title: title,
-                                                        html: `
+                                                        Swal.fire({
+                                                            icon: icon,
+                                                            title: title,
+                                                            html: `
                                                                 <div style="text-align:center;font-size:16px;">
                                                                     ${response.message}
                                                                 </div>
                                                                 `,
-                                                        showConfirmButton: !
-                                                            showOnlyClose,
+                                                            showConfirmButton:
+                                                                !
+                                                                showOnlyClose,
+                                                            showCancelButton: true,
+                                                            confirmButtonText: 'Scan Another',
+                                                            cancelButtonText: 'Close',
+                                                            customClass: {
+                                                                confirmButton: 'btn btn-success me-3',
+                                                                cancelButton: 'btn btn-secondary ms-3',
+                                                            },
+                                                            buttonsStyling: true,
+                                                            confirmButtonColor: '#198754',
+                                                            cancelButtonColor: '#6c757d',
+                                                            width: 550
+                                                        }).then((
+                                                            result) => {
+
+                                                            if (result
+                                                                .isConfirmed
+                                                            ) {
+                                                                html5QrCode
+                                                                    .clear();
+                                                                startScanner
+                                                                    ();
+                                                            } else {
+                                                                bootstrap
+                                                                    .Modal
+                                                                    .getInstance(
+                                                                        document
+                                                                        .getElementById(
+                                                                            'scannerModal'
+                                                                        )
+                                                                    )
+                                                                    .hide();
+                                                            }
+                                                        });
+                                                    }
+                                                },
+
+                                                error: function(xhr) {
+
+                                                    Swal.fire({
+                                                        icon: 'error',
+                                                        title: 'Server Error',
+                                                        text: 'Something went wrong.',
                                                         showCancelButton: true,
-                                                        confirmButtonText: 'Scan Another',
-                                                        cancelButtonText: 'Close',
-                                                        customClass: {
-                                                            confirmButton: 'btn btn-success me-3',
-                                                            cancelButton: 'btn btn-secondary ms-3',
-                                                        },
-                                                        buttonsStyling: true,
+                                                        confirmButtonText: 'Scan Again',
                                                         confirmButtonColor: '#198754',
+                                                        cancelButtonText: 'Close',
                                                         cancelButtonColor: '#6c757d',
                                                         width: 550
                                                     }).then((result) => {
 
                                                         if (result
-                                                            .isConfirmed) {
-                                                            html5QrCode.clear();
-                                                            startScanner();
+                                                            .isConfirmed
+                                                        ) {
+                                                            startScanner
+                                                                ();
                                                         } else {
-                                                            bootstrap.Modal
+                                                            bootstrap
+                                                                .Modal
                                                                 .getInstance(
                                                                     document
                                                                     .getElementById(
                                                                         'scannerModal'
                                                                     )
-                                                                ).hide();
+                                                                )
+                                                                .hide();
                                                         }
                                                     });
+
                                                 }
-                                            },
 
-                                            error: function(xhr) {
-
-                                                // Swal.fire({
-                                                //     icon: 'error',
-                                                //     title: 'Server Error',
-                                                //     text: 'Something went wrong.'
-                                                // });
-
-                                                Swal.fire({
-                                                    icon: 'error',
-                                                    title: 'Server Error',
-                                                    text: 'Something went wrong.',
-                                                    showCancelButton: true,
-                                                    confirmButtonText: 'Scan Again',
-                                                    confirmButtonColor: '#198754',
-                                                    cancelButtonText: 'Close',
-                                                    cancelButtonColor: '#6c757d',
-                                                    width: 550
-                                                }).then((result) => {
-
-                                                    if (result.isConfirmed) {
-                                                        startScanner();
-                                                    } else {
-                                                        bootstrap.Modal
-                                                            .getInstance(
-                                                                document
-                                                                .getElementById(
-                                                                    'scannerModal'
-                                                                )
-                                                            ).hide();
-                                                    }
-                                                });
-
-                                            }
-
+                                            });
                                         });
-                                    });
-                                },
+                                    },
 
-                                // QR Scan Error
-                                function(errorMessage) {}
+                                    // QR Scan Error
+                                    function(errorMessage) {}
 
-                            );
+                                );
 
-                        } else {
+                            } else {
+
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'No camera found.'
+                                });
+
+                            }
+
+                        })
+                        .catch(function(err) {
 
                             Swal.fire({
                                 icon: 'error',
-                                title: 'No camera found.'
+                                title: 'Camera Error',
+                                text: err
                             });
 
-                        }
-
-                    })
-                    .catch(function(err) {
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Camera Error',
-                            text: err
                         });
-
-                    });
-            }
-
-            // Stop Camera
-            $('#scannerModal').on('hidden.bs.modal', function() {
-
-                if (html5QrCode.isScanning) {
-
-                    html5QrCode.stop()
-                        .then(() => {
-                            html5QrCode.clear();
-                        })
-                        .catch(err => {
-                            console.log(err);
-                        });
-
                 }
 
+                // Stop Camera
+                $('#scannerModal').on('hidden.bs.modal', function() {
+
+                    if (html5QrCode.isScanning) {
+
+                        html5QrCode.stop()
+                            .then(() => {
+                                html5QrCode.clear();
+                            })
+                            .catch(err => {
+                                console.log(err);
+                            });
+
+                    }
+
+                });
             });
-
-            // Update Class Information
-            $('#class_id').on('change', function() {
-
-                loadAttendanceCount();
-
-                let selected = $(this).find(':selected');
-
-                let semester = selected.data('semester') || '-';
-                let subject = selected.data('subject') || '-';
-                let students = selected.data('students') || 0;
-
-                $('#infoSemester').text(
-                    semester == '-' ? '-' : 'Semester ' + semester
-                );
-
-                $('#infoSubject').text(subject);
-
-                $('#totalStudents').text(students);
-
-                if ($('#scannedCount').length) {
-                    $('#scannedCount').text(0);
-                }
-
-            });
-
-            // Load today's attendance when page loads
-            if ($('#class_id').val() != "") {
-                loadAttendanceCount();
-            }
         });
     </script>
 </body>
