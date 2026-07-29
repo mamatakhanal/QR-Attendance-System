@@ -54,11 +54,11 @@
                                 <select class="form-select" name="status">
                                     <option value="all">All Status</option>
 
-                                    <option value="present" {{ request('status') == 'present' ? 'selected' : '' }}>
+                                    <option value="present" {{ request('status') == 'Present' ? 'selected' : '' }}>
                                         Present
                                     </option>
 
-                                    <option value="absent" {{ request('status') == 'absent' ? 'selected' : '' }}>
+                                    <option value="absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>
                                         Absent
                                     </option>
                                 </select>
@@ -80,7 +80,7 @@
 
 
                     <div class="table-responsive rounded-3">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover mb-0 align-middle">
                             <thead class="table-secondary">
                                 <tr>
                                     <th class="py-3">S.N</th>
@@ -102,7 +102,7 @@
                                             {{ $attendance->time ? \Carbon\Carbon::parse($attendance->time)->format('h:i A') : '-' }}
                                         </td>
                                         <td>
-                                            @if ($attendance->status == 'present')
+                                            @if ($attendance->status == 'Present')
                                                 <button class="btn btn-success btn-sm fw-bold rounded-3 action-btn"
                                                     style="font-size:10px; cursor:default;" disabled>
                                                     <i class="bi bi-check-circle"></i> &nbsp; Present

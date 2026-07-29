@@ -93,8 +93,8 @@
 
 
                     <div class="table-responsive rounded-2">
-                        <table class="table table-hover border-3 mb-0">
-                            <thead class="table-secondary">
+                        <table class="table table-hover border-3 mb-0 align-middle">
+                            <thead class="table-secondary"> 
                                 <tr>
                                     <th class="py-3">S.N</th>
                                     <th class="py-3">Date</th>

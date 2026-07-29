@@ -19,7 +19,7 @@
                     Assigned Classes List
                 </h5>
                 <div class="table-responsive rounded-2">
-                    <table class="table table-hover border-3 mb-0">
+                    <table class="table table-hover border-3 mb-0 align-middle">
                         <thead class="table-secondary">
                             <tr>
                                 <th class="py-3">S.N</th>
@@ -52,13 +52,15 @@
                                         {{ $subject->subject_code }}
                                     </td>
                                     <td>
-                                        {{ $assignclass->student_count }} Students
+                                        <a href="{{ route('teacher.students', ['semester' => $assignclass->semester]) }}"
+                                            class="text-decoration-none text-dark fw-semibold">
+                                            {{ $assignclass->student_count }} Students
+                                        </a>
                                     </td>
                                     <td>
-                                        <a href="{{ route('teacher.attendance', $assignclass->id) }}"
+                                        <a href="{{ route('teacher.attendance', ['assign_class_id' => $assignclass->id]) }}"
                                             class="btn btn-sm btn-primary rounded-3">
-                                            <i class="bi bi-qr-code-scan"></i>
-                                            Attendance
+                                            <i class="bi bi-qr-code-scan"></i> Attendance
                                         </a>
                                     </td>
                                 </tr>

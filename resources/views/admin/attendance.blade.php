@@ -79,7 +79,7 @@
                     </form>
 
                     <div class="table-responsive rounded-2">
-                        <table class="table table-hover border-3 mb-0">
+                        <table class="table table-hover border-3 mb-0 align-middle">
                             <thead class="table-secondary">
                                 <tr>
                                     <th class="py-3">S.N</th>
@@ -120,7 +120,7 @@
                                             {{ $attendance->time ? \Carbon\Carbon::parse($attendance->time)->format('h:i A') : '-' }}
                                         </td>
                                         <td>
-                                            @if ($attendance->status == 'present')
+                                            @if ($attendance->status == 'Present')
                                                 <button class="btn btn-success btn-sm fw-bold rounded-3"
                                                     style="font-size:10px;" disabled>
                                                     <i class="bi bi-check-circle"></i>

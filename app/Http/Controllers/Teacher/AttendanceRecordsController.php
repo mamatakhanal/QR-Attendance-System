@@ -91,7 +91,7 @@ class AttendanceRecordsController extends Controller
             ->orderBy('semester')
             ->orderBy('subject_id')
             ->orderByRaw("FIELD(status,'Present','Absent')")
-            ->orderByDesc('time')
+            ->orderBy('time', 'asc')
             ->paginate(10)
             ->withQueryString();
 

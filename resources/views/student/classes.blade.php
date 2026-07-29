@@ -28,7 +28,7 @@
                         </div>
 
                         <div class="table-responsive rounded-2">
-                            <table class="table table-hover mb-0">
+                            <table class="table table-hover mb-0 ">
                                 <thead class="table-secondary">
                                     <tr>
                                         <th class="py-3">S.N</th>
@@ -48,7 +48,7 @@
                                             <td class="pt-3"> {{ $loop->iteration }}</td>
                                             <td class="pt-3"> {{ $subject->subject_code }} </td>
                                             <td class="pt-3"> {{ $subject->subject_name }} </td>
-                                            <td>
+                                            <td class="pt-3">
                                                 @if (isset($teacherBySubject[$subject->id]))
                                                     {{ $teacherBySubject[$subject->id]->name }}
                                                 @else

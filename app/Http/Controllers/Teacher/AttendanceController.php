@@ -12,9 +12,34 @@ use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
-    public function attendance()
+    public function attendance(Request $request)
     {
+
+        $oldSessions = AttendanceSession::where('status', 'Open')
+            ->where('end_time', '<=', now())
+            ->get();
+
+        foreach ($oldSessions as $oldSession) {
+
+            // Get assign class
+            $assignClass = Assignclass::with('subjects')
+                ->find($oldSession->assign_class_id);
+
+            if ($assignClass) {
+
+                // Mark remaining students absent
+                $this->markAbsentStudents($assignClass);
+
+            }
+
+            // Close expired session
+            $oldSession->update([
+                'status' => 'Closed',
+            ]);
+        }
+
         $teacher = Teachers::find(session('teacher_id'));
+
         if (! $teacher) {
             return redirect('/home');
         }
@@ -25,19 +50,23 @@ class AttendanceController extends Controller
             ->get();
 
         foreach ($assignclasses as $assignclass) {
+
             $assignclass->student_count = Students::where(
                 'current_semester',
                 $assignclass->semester
             )->count();
+
         }
+
+        $selectedClass = $request->assign_class_id;
 
         return view('teacher.attendance', [
             'pageTitle' => 'Attendance',
             'teacher' => $teacher,
             'assignclasses' => $assignclasses,
+             'selectedClass' => $selectedClass,
         ]);
     }
-
 
     // Scan Attendance
     public function scanAttendance(Request $request)
@@ -149,8 +178,9 @@ class AttendanceController extends Controller
             'student_id' => $student->id,
             'teacher_id' => $teacher->id,
             'subject_id' => $assignClass->subjects->first()->id,
-            'date' => now()->toDateString(),
-            'time' => now()->format('H:i:s'),
+            'assign_class_id' => $assignClass->id,
+            'date' => $session->date,
+            'time' => $session->end_time->format('H:i:s'),
             'status' => 'Present',
         ]);
 
@@ -171,7 +201,6 @@ class AttendanceController extends Controller
             'time' => now()->format('h:i A'),
         ]);
     }
-
 
     // Start Attendance Session
     public function startSession(Request $request)
@@ -211,12 +240,11 @@ class AttendanceController extends Controller
         // Check if today's session already open
         if ($session) {
 
-            // Session expired but still marked Open
-            if ($session->status == 'Open' && now()->greaterThanOrEqualTo($session->end_time)) {
-
-                $this->markAbsentStudents($assignClass);
-                $session->update([
-                    'status' => 'Closed',
+            // Session is still active
+            if ($session->status == 'Open') {
+                return response()->json([
+                    'success' => true,
+                    'type' => 'open',
                 ]);
             }
 
@@ -241,7 +269,6 @@ class AttendanceController extends Controller
             'type' => 'new',
         ]);
     }
-
 
     // Create Attendance Session
     public function createSession(Request $request)
@@ -291,10 +318,9 @@ class AttendanceController extends Controller
 
         return response()->json([
             'success' => true,
-             'type' => 'new',
+            'type' => 'new',
         ]);
     }
-
 
     // Mark Absent Students
     public function markAbsentStudents($assignClass)
@@ -319,15 +345,15 @@ class AttendanceController extends Controller
                     'student_id' => $student->id,
                     'teacher_id' => session('teacher_id'),
                     'subject_id' => $assignClass->subjects->first()->id,
+                    'assign_class_id' => $assignClass->id,
                     'date' => today(),
-                    'time' => now()->format('H:i:s'),
+                    'time' => null,
                     'status' => 'Absent',
                 ]);
 
             }
         }
     }
-
 
     // Get Attendance Count
     public function getAttendanceCount(Request $request)

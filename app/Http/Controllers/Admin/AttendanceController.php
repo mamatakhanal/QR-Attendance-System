@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Attendance;
-use App\Models\Admin\Teachers;
-use App\Models\Admin\Subjects;
-use Illuminate\Http\Request;
 use App\Models\Admin\Admin;
+use App\Models\Admin\Attendance;
+use App\Models\Admin\Subjects;
+use App\Models\Admin\Teachers;
+use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
@@ -15,14 +15,14 @@ class AttendanceController extends Controller
     {
         $admin = Admin::find(session('admin_id'));
 
-        if (!$admin) {
+        if (! $admin) {
             return redirect('/admin/login');
         }
 
         $attendances = Attendance::with([
             'teacher',
             'student',
-            'subject'
+            'subject',
         ])
             ->when($request->teacher_id, function ($q) use ($request) {
                 $q->where('teacher_id', $request->teacher_id);
@@ -48,7 +48,9 @@ class AttendanceController extends Controller
                         ->orWhere('student_code', 'like', "%{$request->search}%");
                 });
             })
-            ->latest('date')
+            ->orderBy('date', 'desc')
+            ->orderBy('semester', 'asc')
+            ->orderBy('status', 'desc')
             ->paginate(10)
             ->withQueryString();
 

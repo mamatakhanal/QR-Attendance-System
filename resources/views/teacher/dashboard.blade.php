@@ -79,21 +79,21 @@
                     <div class="row text-center  px-3">
 
                         <div class="col-md-4 border-end pt-2">
-                            <h6 class="text-muted">Classes Today</h6>
+                            <h6 class="text-muted"> Today Classes</h6>
                             <h2 class="fw-bold text-primary">
                                 {{ $totalClasses }}
                             </h2>
                         </div>
 
                         <div class="col-md-4 border-end pt-2">
-                            <h6 class="text-muted">Attendance Taken</h6>
+                            <h6 class="text-muted"> Classes Completed</h6>
                             <h2 class="fw-bold text-success">
                                 {{ $attendanceTaken }}
                             </h2>
                         </div>
 
                         <div class="col-md-4 pt-2">
-                            <h6 class="text-muted">Remaining</h6>
+                            <h6 class="text-muted"> Classes Remaining </h6>
                             <h2 class="fw-bold text-danger">
                                 {{ $remaining }}
                             </h2>

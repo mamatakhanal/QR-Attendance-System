@@ -47,4 +47,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('attendance_sessions');
     }
+    
 };

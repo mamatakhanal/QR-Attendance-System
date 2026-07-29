@@ -2,4 +2,5 @@
 
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('attendance:close')->everyMinute();
+Schedule::command('attendance:close')
+    ->everyMinute();

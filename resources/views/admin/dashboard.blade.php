@@ -72,18 +72,6 @@
 
                     <div class="row g-3">
 
-                        <!-- Student Management -->
-                        <div class="col-lg-3 col-md-6">
-                            <a href="{{ route('admin.students') }}" class="text-decoration-none">
-                                <div class="quick-card h-100">
-                                    <i class="bi bi-people-fill quick-icon fs-2"></i>
-                                    <h6 class="fw-bold mt-3 mb-2 text-dark"> Student Management </h6>
-                                    <p class="text-muted small mb-3"> Add, edit and manage student records. </p>
-                                    <span class="quick-link"> Manage Students → </span>
-                                </div>
-                            </a>
-                        </div>
-
                         <!-- Teacher Management -->
                         <div class="col-lg-3 col-md-6">
                             <a href="{{ route('admin.teachers') }}" class="text-decoration-none">
@@ -92,6 +80,18 @@
                                     <h6 class="fw-bold mt-3 mb-2 text-dark"> Teacher Management </h6>
                                     <p class="text-muted small mb-3"> Manage teacher profiles and assignments. </p>
                                     <span class="quick-link"> Manage Teachers → </span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Student Management -->
+                        <div class="col-lg-3 col-md-6">
+                            <a href="{{ route('admin.students') }}" class="text-decoration-none">
+                                <div class="quick-card h-100">
+                                    <i class="bi bi-people-fill quick-icon fs-2"></i>
+                                    <h6 class="fw-bold mt-3 mb-2 text-dark"> Student Management </h6>
+                                    <p class="text-muted small mb-3"> Add, edit and manage student records. </p>
+                                    <span class="quick-link"> Manage Students → </span>
                                 </div>
                             </a>
                         </div>

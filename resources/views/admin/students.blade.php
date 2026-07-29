@@ -16,13 +16,15 @@
             @include('admin.navbar')
 
             <!-- CONTENT -->
-            <div @class(['card', 'shadow-sm', 'border-0', 'mx-2', 'my-2', 'p-4', 'rounded-4'])>
-                <div @class(['d-flex', 'justify-content-between', 'align-items-center', 'flex-wrap', 'gap-3', 'mb-3'])>
-                    <h5 @class(['fw-semibold', 'mb-0'])>Student List</h5>
-                    <div @class(['d-flex', 'align-items-center'])>
-                        <button @class(['btn', 'btn-primary', 'btn-sm', 'rounded-3']) data-bs-toggle="modal"
+            <div class="card shadow-sm border-0 mx-2 my-2 p-4 rounded-4">             
+             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+
+                    <h5 class ="fw-semiboldmb-0">Student List</h5>
+
+                    <div class ="d-flex align-items-center">
+                        <button class ="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
                             data-bs-target="#addStudentModal">
-                            New Student
+                            + New Student
                         </button>
                     </div>
                 </div>
@@ -40,7 +42,7 @@
                 </div>
 
                 <div @class(['table-responsive', 'rounded-2'])>
-                    <table @class(['table', 'table-hover', 'border-3', 'mb-0'])>
+                    <table class="table table-hover border-3 mb-0 align-middle">
                         <thead @class(['table-secondary'])>
                             <tr>
                                 <th @class(['py-3'])>S.N</th>

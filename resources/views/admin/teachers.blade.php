@@ -24,13 +24,13 @@
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
                             data-bs-target="#addTeacherModal">
-                            New Teacher
+                            + New Teacher
                         </button>
                     </div>
                 </div>
 
                 <div class="table-responsive rounded-2">
-                    <table class="table table-hover border-3 mb-0">
+                    <table class="table table-hover border-3 mb-0 align-middle">
                         <thead class="table-secondary">
                             <tr>
                                 <th class="py-3">S.N</th>

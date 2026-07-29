@@ -21,7 +21,7 @@
                     <h5 class="fw-semibold mb-0">Assign Classes List</h5>
                      <div class="d-flex align-items-center">
                     <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
-                        data-bs-target="#addAssignclassModal"> Assign Class
+                        data-bs-target="#addAssignclassModal"> + Assign Class
                     </button>
                      </div>
                 </div>
@@ -39,7 +39,7 @@
                 </div>
 
                 <div class="table-responsive rounded-2">
-                    <table class="table table-hover border-3 mb-0">
+                    <table class="table table-hover border-3 mb-0 align-middle">
                         <thead class="table-secondary">
                             <tr>
                                 <th class="py-3">S.N</th>

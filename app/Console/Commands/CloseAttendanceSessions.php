@@ -2,11 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\Admin\AttendanceSession;
 use App\Models\Admin\Assignclass;
 use App\Models\Admin\Attendance;
+use App\Models\Admin\AttendanceSession;
 use App\Models\Admin\Students;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class CloseAttendanceSessions extends Command
 {
@@ -16,25 +17,37 @@ class CloseAttendanceSessions extends Command
 
     public function handle()
     {
+        Log::info('Attendance scheduler started');
+
         $sessions = AttendanceSession::where('status', 'Open')
-            ->where('end_time', '<=', now())
+        ->where('end_time', '<=', now())
             ->get();
+
+            
+        Log::info('Expired sessions: '.$sessions->count());
 
         foreach ($sessions as $session) {
 
-            $assignClass = Assignclass::with('subjects')->find($session->assign_class_id);
+            Log::info(
+                'Session ID: '.$session->id.
+                ' | End Time: '.$session->end_time.
+                ' | Current Time: '.now()
+            );
 
-            if (!$assignClass) {
+            $assignClass = Assignclass::with('subjects')
+                ->find($session->assign_class_id);
+
+            if (! $assignClass) {
+                Log::info('Assign class not found');
                 continue;
             }
 
             $this->markAbsentStudents($assignClass, $session);
-
             $session->update([
-                'status' => 'Closed'
+                'status' => 'Closed',
             ]);
+            Log::info('Session closed successfully');
         }
-
         return self::SUCCESS;
     }
 
@@ -42,7 +55,7 @@ class CloseAttendanceSessions extends Command
     {
         $subject = $assignClass->subjects->first();
 
-        if (!$subject) {
+        if (! $subject) {
             return;
         }
 
@@ -56,15 +69,16 @@ class CloseAttendanceSessions extends Command
                 ->whereDate('date', $session->date)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
 
                 Attendance::create([
                     'semester' => $student->current_semester,
                     'student_id' => $student->id,
                     'teacher_id' => $session->teacher_id,
+                    'assign_class_id' => $assignClass->id,
                     'subject_id' => $subject->id,
                     'date' => $session->date,
-                    'time' => $session->end_time->format('H:i:s'),
+                    'time' => null,
                     'status' => 'Absent',
                 ]);
             }
