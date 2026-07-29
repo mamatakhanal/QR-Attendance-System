@@ -7,6 +7,7 @@ use App\Models\Admin\Assignclass;
 use App\Models\Admin\Attendance;
 use App\Models\Admin\Teachers;
 use Illuminate\Http\Request;
+use PDF;
 
 class AttendanceRecordsController extends Controller
 {
@@ -102,5 +103,72 @@ class AttendanceRecordsController extends Controller
             'assignedSemesters' => $assignedSemesters,
             'subjects' => $subjects,
         ]);
+    }
+
+    public function downloadPdf(Request $request)
+    {
+        $teacher = Teachers::find(session('teacher_id'));
+
+        if (! $teacher) {
+            return redirect('/home');
+        }
+
+        $attendances = Attendance::with(['student', 'subject'])
+            ->where('teacher_id', $teacher->id)
+
+    // Semester Filter
+            ->when($request->filled('semester'), function ($q) use ($request) {
+                $q->where('semester', $request->semester);
+            })
+
+    // Subject Filter
+            ->when($request->filled('subject_id'), function ($q) use ($request) {
+                $q->where('subject_id', $request->subject_id);
+            })
+
+    // Status Filter
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->status);
+            })
+
+    // Date Filter
+            ->when($request->filled('date'), function ($q) use ($request) {
+                $q->whereDate('date', $request->date);
+            })
+
+    // Search Filter
+            ->when($request->filled('search'), function ($q) use ($request) {
+
+                $search = trim($request->search);
+
+                $q->where(function ($query) use ($search) {
+
+                    $query->whereHas('student', function ($student) use ($search) {
+                        $student->where('name', 'like', "%{$search}%")
+                            ->orWhere('roll_no', 'like', "%{$search}%")
+                            ->orWhere('student_code', 'like', "%{$search}%");
+                    })
+                        ->orWhereHas('subject', function ($subject) use ($search) {
+                            $subject->where('subject_name', 'like', "%{$search}%");
+                        });
+
+                });
+            })
+            ->orderByDesc('date')
+            ->orderBy('semester')
+            ->orderBy('subject_id')
+            ->orderByRaw("FIELD(status,'Present','Absent')")
+            ->orderBy('time', 'asc')
+            ->get();
+
+        $pdf = PDF::loadView(
+            'teacher.attendance-pdf',
+            [
+                'teacher' => $teacher,
+                'attendances' => $attendances,
+            ]
+        );
+
+        return $pdf->download('teacher-attendance-report.pdf');
     }
 }

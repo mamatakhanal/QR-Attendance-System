@@ -6,7 +6,6 @@
 
 
 <body>
-
     <div @class(['main-wrapper'])>
         @include('teacher.sidebar')
         <div @class(['main-area'])>
@@ -35,13 +34,13 @@
                                     Select Class
                                 </label>
 
-                                <select @class(['form-select']) id="class_id">
+                                <select class="form-select" id="class_id">
                                     <option value=""> Select Class </option>
 
                                     @foreach ($assignclasses as $assignclass)
                                         @foreach ($assignclass->subjects as $subject)
                                             <option value="{{ $assignclass->id }}"
-                                                {{ $selectedClass == $assignclass->id ? 'selected' : '' }}
+                                                {{ isset($selectedClass) && $selectedClass == $assignclass->id ? 'selected' : '' }}
                                                 data-semester="{{ $assignclass->semester }}"
                                                 data-subject="{{ $subject->subject_name }}"
                                                 data-students="{{ $assignclass->student_count }}">
@@ -52,6 +51,23 @@
                                         @endforeach
                                     @endforeach
                                 </select>
+                                @if ($currentClass)
+                                    <script>
+                                        document.addEventListener("DOMContentLoaded", function() {
+
+                                            document.getElementById('infoSemester').innerText =
+                                                "Semester {{ $currentClass->semester }}";
+
+                                            document.getElementById('infoSubject').innerText =
+                                                "{{ $currentClass->subjects->first()->subject_name ?? '-' }}";
+
+
+                                            document.getElementById('totalStudents').innerText =
+                                                "{{ $currentClass->student_count ?? 0 }}";
+
+                                        });
+                                    </script>
+                                @endif
                             </div>
 
                             <!-- Button -->

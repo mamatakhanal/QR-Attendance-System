@@ -32,7 +32,7 @@
                 </div>
 
                 <!-- Semester   Filter -->
-                <div class="d-flex gap-2 mb-4 flex-wrap">
+                <div class="d-flex gap-2 mb-3 flex-wrap">
                     <button
                         class="btn btn-primary btn-sm semester-btn  {{ request('semester', 'all') == 'all' ? 'btn-primary active' : 'btn-outline-primary' }}"
                         data-semester="all">

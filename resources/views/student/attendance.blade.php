@@ -20,10 +20,12 @@
                     </h5>
 
                     <form method="GET" action="{{ route('student.attendance') }}">
-                        <div class="row g-3">
+                        <div class="row g-2 align-items-end">
 
-                            <div class="col-md-3">
-                                <select class="form-select" name="teacher_id">
+                            {{-- Semester --}}
+
+                            <div class="col" style="flex: 0 0 21%; max-width: 21%;">
+                                <select class="form-select form-select-sm" name="teacher_id">
                                     <option value="">All Teachers</option>
                                     @foreach ($teachers as $teacher)
                                         <option value="{{ $teacher->id }}"
@@ -34,8 +36,8 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-3">
-                                <select class="form-select" name="subject_id">
+                            <div  class="col" style="flex: 0 0 20%; max-width: 21%;">
+                                <select class="form-select form-select-sm" name="subject_id">
                                     <option value="">All Subjects</option>
                                     @foreach ($subjects as $subject)
                                         <option value="{{ $subject->id }}"
@@ -46,12 +48,12 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-2">
-                                <input type="date" class="form-control" name="date" value="{{ request('date') }}">
+                            <div class="col" style="flex: 0 0 17%; max-width: 17%;">
+                                <input type="date" class="form-control form-control-sm" name="date" value="{{ request('date') }}">
                             </div>
 
                             <div class="col-md-2">
-                                <select class="form-select" name="status">
+                                <select class="form-select form-select-sm" name="status">
                                     <option value="all">All Status</option>
 
                                     <option value="present" {{ request('status') == 'Present' ? 'selected' : '' }}>
@@ -65,19 +67,26 @@
                             </div>
 
                             <div class="col-md-1 d-grid">
-                                <button class="btn btn-primary">
+                                <button class="btn btn-primary btn-sm">
                                     Search
                                 </button>
                             </div>
 
                             <div class="col-md-1 d-grid">
-                                <a href="{{ route('student.attendance') }}" class="btn btn-outline-secondary">
+                                <a href="{{ route('student.attendance') }}" class="btn btn-outline-secondary btn-sm">
                                     Reset
+                                </a>
+                            </div>
+
+                            <div class="col-md-1 d-grid">
+                                <a href="{{ route('student.attendance.pdf', request()->query()) }}"
+                                    class="btn btn-danger btn-sm">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                     PDF
                                 </a>
                             </div>
                         </div>
                     </form>
-
 
                     <div class="table-responsive rounded-3">
                         <table class="table table-hover mb-0 align-middle">
@@ -136,9 +145,3 @@
     </div>
     </div>
 </body>
-
-
-{{-- Basanta Sir 
-INSERT INTO `attendance` (`id`, `semester`, `student_id`, `subject_id`, `teacher_id`, `date`, 
-`time`, `status`, `created_at`, `updated_at`) VALUES ('1', '4', '11', '41', '4', '2026/7/16', '01:00',
- 'present', current_timestamp(), current_timestamp()); --}}

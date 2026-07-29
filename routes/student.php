@@ -1,13 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Student\LoginController;
-use App\Http\Controllers\Student\DashboardController;
-use App\Http\Controllers\Student\ClassesController;
 use App\Http\Controllers\Student\AttendanceController;
+use App\Http\Controllers\Student\ClassesController;
+use App\Http\Controllers\Student\DashboardController;
+use App\Http\Controllers\Student\LoginController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\QrCodeController;
 use App\Http\Controllers\Student\ReportsController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('/student')->group(function () {
 
@@ -24,10 +24,11 @@ Route::prefix('/student')->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'attendance'])
         ->name('student.attendance');
 
+    Route::get('/student/attendance/pdf', [AttendanceController::class, 'downloadPdf'])
+        ->name('student.attendance.pdf');
+
     Route::get('/reports', [ReportsController::class, 'reports'])
         ->name('student.reports');
-
-
 
     Route::get('/profile', [ProfileController::class, 'profile'])
         ->name('student.profile');

@@ -40,6 +40,9 @@ Route::prefix('/teacher')->group(function () {
     Route::post('/attendance/count', [AttendanceController::class, 'getAttendanceCount'])
     ->name('teacher.attendance.count');
 
+    Route::get('/teacher/attendance/pdf', [AttendanceRecordsController::class,'downloadPdf'])       
+        ->name('teacher.attendance.pdf');
+
     Route::get('/attendance-records', [AttendanceRecordsController::class, 'attendancerecords'])
         ->name('teacher.attendancerecords');
 

@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\StudentsController;
 use App\Http\Controllers\Admin\SubjectsController;
 use App\Http\Controllers\Admin\TeachersController;
+use App\Models\Admin\Students;
 use Illuminate\Support\Facades\Route;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -63,7 +64,7 @@ Route::prefix('/admin')->group(function () {
         ->name('students.delete');
 
     Route::get('/student-qr/{code}', function ($code) {
-        $student =  \App\Models\Admin\Students::where('student_code', $code)->firstOrFail();
+        $student = Students::where('student_code', $code)->firstOrFail();
 
         $data = json_encode([
             'student_id' => $student->id,
@@ -116,6 +117,9 @@ Route::prefix('/admin')->group(function () {
 
     Route::get('/attendance', [AttendanceController::class, 'attendance'])
         ->name('admin.attendance');
+
+    Route::get('/admin/attendance/pdf',[AttendanceController::class, 'downloadPdf'])
+        ->name('admin.attendance.pdf');
 
     Route::get('/profile', [ProfileController::class, 'profile'])
         ->name('admin.profile');

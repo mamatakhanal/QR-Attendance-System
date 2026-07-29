@@ -18,17 +18,17 @@
 
                     {{-- Filter --}}
                     <form method="GET" action="{{ route('teacher.attendancerecords') }}">
-                        <div class="row g-3">
+                        <div class="row g-2 align-items-end">
 
                             {{-- Search --}}
-                            <div class="col-md-2">
-                                <input type="text" name="search" class="form-control" placeholder="Search Student..."
+                            <div class="col" style="flex: 0 0 18%; max-width: 18%;">
+                                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search Student..."
                                     value="{{ request('search') }}">
                             </div>
 
                             {{-- Semester --}}
-                            <div class="col-md-2">
-                                <select name="semester" class="form-select">
+                            <div class="col" style="flex: 0 0 15%; max-width: 15%;">
+                                <select name="semester" class="form-select form-select-sm">
                                     <option value="">All Semester</option>
 
                                     @foreach ($assignedSemesters as $semester)
@@ -41,8 +41,8 @@
                             </div>
 
                             {{-- Subject --}}
-                            <div class="col-md-2">
-                                <select name="subject_id" class="form-select">
+                            <div class="col" style="flex: 0 0 15%; max-width: 15%;">
+                                <select name="subject_id" class="form-select form-select-sm">
                                     <option value="">All Subjects</option>
 
                                     @foreach ($subjects as $subject)
@@ -55,13 +55,13 @@
                             </div>
 
                             {{-- Date --}}
-                            <div class="col-md-2">
-                                <input type="date" name="date" class="form-control" value="{{ request('date') }}">
+                            <div class="col" style="flex: 0 0 15%; max-width: 15%;">
+                                <input type="date" name="date" class="form-control form-control-sm" value="{{ request('date') }}">
                             </div>
 
                             {{-- Status --}}
-                            <div class="col-md-2">
-                                <select name="status" class="form-select">
+                            <div class="col" style="flex: 0 0 12%; max-width: 12%;">
+                                <select name="status" class="form-select form-select-sm">
                                     <option value="">All Status</option>
 
                                     <option value="present" {{ request('status') == 'present' ? 'selected' : '' }}>
@@ -76,25 +76,39 @@
 
                             {{-- Search Button --}}
                             <div class="col-md-1 d-grid">
-                                <button class="btn btn-primary">
+                                <button class="btn btn-primary btn-sm">
                                     Search
                                 </button>
                             </div>
 
                             {{-- Reset Button --}}
                             <div class="col-md-1 d-grid">
-                                <a href="{{ route('teacher.attendancerecords') }}" class="btn btn-outline-secondary">
+                                <a href="{{ route('teacher.attendancerecords') }}" class="btn btn-outline-secondary btn-sm">
                                     Reset
                                 </a>
                             </div>
 
+                            <div class="col-md-1 d-grid">
+                                <a href="{{ route('teacher.attendance.pdf', request()->query()) }}"
+                                    class="btn btn-sm btn-danger">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                    PDF
+                                </a>
+                            </div>
                         </div>
                     </form>
 
+                    {{-- <div class="mt-3">
+                        <a href="{{ route('teacher.attendance.pdf', request()->query()) }}"
+                            class="btn btn-danger rounded-3">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                            Download PDF
+                        </a>
+                    </div> --}}
 
                     <div class="table-responsive rounded-2">
                         <table class="table table-hover border-3 mb-0 align-middle">
-                            <thead class="table-secondary"> 
+                            <thead class="table-secondary">
                                 <tr>
                                     <th class="py-3">S.N</th>
                                     <th class="py-3">Date</th>

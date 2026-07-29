@@ -14,8 +14,12 @@ class AttendanceController extends Controller
 {
     public function attendance(Request $request)
     {
-
-        $oldSessions = AttendanceSession::where('status', 'Open')
+        $teacher = Teachers::find(session('teacher_id'));
+        if (! $teacher) {
+            return redirect('/home');
+        }
+        $oldSessions = AttendanceSession::where('teacher_id', $teacher->id)
+            ->where('status', 'Open')
             ->where('end_time', '<=', now())
             ->get();
 
@@ -26,22 +30,18 @@ class AttendanceController extends Controller
                 ->find($oldSession->assign_class_id);
 
             if ($assignClass) {
-
                 // Mark remaining students absent
-                $this->markAbsentStudents($assignClass);
-
+                $this->markAbsentStudents(
+                    $assignClass,
+                    $oldSession->teacher_id,
+                    $oldSession->date
+                );
             }
 
             // Close expired session
             $oldSession->update([
                 'status' => 'Closed',
             ]);
-        }
-
-        $teacher = Teachers::find(session('teacher_id'));
-
-        if (! $teacher) {
-            return redirect('/home');
         }
 
         $assignclasses = Assignclass::with('subjects')
@@ -60,11 +60,29 @@ class AttendanceController extends Controller
 
         $selectedClass = $request->assign_class_id;
 
+        $currentClass = null;
+
+        if ($selectedClass) {
+
+            $currentClass = Assignclass::with(['subjects', 'teacher'])
+                ->find($selectedClass);
+
+            if ($currentClass) {
+
+                $currentClass->student_count = Students::where(
+                    'current_semester',
+                    $currentClass->semester
+                )->count();
+
+            }
+        }
+
         return view('teacher.attendance', [
             'pageTitle' => 'Attendance',
             'teacher' => $teacher,
             'assignclasses' => $assignclasses,
-             'selectedClass' => $selectedClass,
+            'selectedClass' => $selectedClass,
+            'currentClass' => $currentClass,
         ]);
     }
 
@@ -106,8 +124,11 @@ class AttendanceController extends Controller
         if (now()->greaterThanOrEqualTo($session->end_time)) {
 
             // Mark remaining students absent
-            $this->markAbsentStudents($assignClass);
-
+            $this->markAbsentStudents(
+                $assignClass,
+                $teacher->id,
+                $session->date
+            );
             // Close the session
             $session->update([
                 'status' => 'Closed',
@@ -153,7 +174,7 @@ class AttendanceController extends Controller
         $attendance = Attendance::where('student_id', $student->id)
             ->where('teacher_id', $teacher->id)
             ->where('subject_id', $assignClass->subjects->first()->id)
-            ->whereDate('date', today())
+            ->whereDate('date', $session->date)
             ->first();
 
         if ($attendance) {
@@ -180,7 +201,7 @@ class AttendanceController extends Controller
             'subject_id' => $assignClass->subjects->first()->id,
             'assign_class_id' => $assignClass->id,
             'date' => $session->date,
-            'time' => $session->end_time->format('H:i:s'),
+            'time' => now()->format('H:i:s'),
             'status' => 'Present',
         ]);
 
@@ -240,8 +261,27 @@ class AttendanceController extends Controller
         // Check if today's session already open
         if ($session) {
 
-            // Session is still active
             if ($session->status == 'Open') {
+
+                if (now()->greaterThanOrEqualTo($session->end_time)) {
+
+                    $this->markAbsentStudents(
+                        $assignClass,
+                        $teacher->id,
+                        $session->date
+                    );
+
+                    $session->update([
+                        'status' => 'Closed',
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'type' => 'closed',
+                        'message' => 'Attendance session has expired. Remaining students have been marked Absent.',
+                    ]);
+                }
+
                 return response()->json([
                     'success' => true,
                     'type' => 'open',
@@ -310,7 +350,7 @@ class AttendanceController extends Controller
             'subject_id' => $subject->id,
             'date' => today(),
             'start_time' => now(),
-            'end_time' => now()->addMinutes(40),
+            'end_time' => now()->addMinutes(1),
             // 'end_time' => now()->addMinutes(60),
             // 'end_time' => now()->addHour(2),
             'status' => 'Open',
@@ -323,7 +363,7 @@ class AttendanceController extends Controller
     }
 
     // Mark Absent Students
-    public function markAbsentStudents($assignClass)
+    public function markAbsentStudents($assignClass, $teacherId, $date)
     {
         $students = Students::where(
             'current_semester',
@@ -333,9 +373,9 @@ class AttendanceController extends Controller
         foreach ($students as $student) {
 
             $exists = Attendance::where('student_id', $student->id)
-                ->where('teacher_id', session('teacher_id'))
+                ->where('teacher_id', $teacherId)
                 ->where('subject_id', $assignClass->subjects->first()->id)
-                ->whereDate('date', today())
+                ->whereDate('date', $date)
                 ->exists();
 
             if (! $exists) {
@@ -343,10 +383,10 @@ class AttendanceController extends Controller
                 Attendance::create([
                     'semester' => $student->current_semester,
                     'student_id' => $student->id,
-                    'teacher_id' => session('teacher_id'),
+                    'teacher_id' => $teacherId,
                     'subject_id' => $assignClass->subjects->first()->id,
                     'assign_class_id' => $assignClass->id,
-                    'date' => today(),
+                    'date' => $date,
                     'time' => null,
                     'status' => 'Absent',
                 ]);

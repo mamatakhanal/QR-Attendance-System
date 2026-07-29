@@ -18,12 +18,13 @@ class CloseAttendanceSessions extends Command
     public function handle()
     {
         Log::info('Attendance scheduler started');
+        Log::info('Current time: '.now());
 
         $sessions = AttendanceSession::where('status', 'Open')
-        ->where('end_time', '<=', now())
+            ->where('end_time', '<=', now())
             ->get();
 
-            
+        Log::info($sessions->toArray());
         Log::info('Expired sessions: '.$sessions->count());
 
         foreach ($sessions as $session) {
@@ -39,6 +40,7 @@ class CloseAttendanceSessions extends Command
 
             if (! $assignClass) {
                 Log::info('Assign class not found');
+
                 continue;
             }
 
@@ -48,6 +50,7 @@ class CloseAttendanceSessions extends Command
             ]);
             Log::info('Session closed successfully');
         }
+
         return self::SUCCESS;
     }
 

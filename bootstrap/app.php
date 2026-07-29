@@ -27,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (Schedule $schedule) {
 
-        $schedule->command('attendance:close-sessions')
+        $schedule->command('attendance:close')
             ->everyMinute();
 
     })

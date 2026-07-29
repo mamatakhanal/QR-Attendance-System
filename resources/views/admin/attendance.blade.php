@@ -19,29 +19,27 @@
                     </h5>
 
                     {{-- Fliter --}}
-                    <form method="GET">
-                        <div class="row g-3">
-                            <div class="col-md-2">
-                                <input type="text" name="search" class="form-control" placeholder="Search Student..."
+                    <form method="GET" action="{{ route('admin.attendance') }}">
+                        <div class="row g-2 align-items-end">
+                            <div  class="col" style="flex: 0 0 18%; max-width: 18%;">
+                                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search Student..."
                                     value="{{ request('search') }}">
                             </div>
 
-                            <div class="col-md-2">
-                                <select name="teacher_id" class="form-select">
+                            <div  class="col" style="flex: 0 0 15%; max-width: 15%;">
+                                <select name="teacher_id" class="form-select form-select-sm">
                                     <option value="">All Teachers</option>
                                     @foreach ($teachers as $teacher)
                                         <option value="{{ $teacher->id }}"
                                             {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
-
                                             {{ $teacher->name }}
-
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            <div class="col-md-2">
-                                <select name="semester" class="form-select">
+                            <div  class="col" style="flex: 0 0 15%; max-width: 15%;">
+                                <select name="semester" class="form-select form-select-sm">
                                     <option value="">All Semester</option>
                                     @for ($i = 1; $i <= 8; $i++)
                                         <option value="{{ $i }}"
@@ -52,12 +50,12 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-2">
-                                <input type="date" name="date" class="form-control" value="{{ request('date') }}">
+                            <div class="col" style="flex: 0 0 15%; max-width: 15%;">
+                                <input type="date" name="date" class="form-control form-control-sm" value="{{ request('date') }}">
                             </div>
 
-                            <div class="col-md-2">
-                                <select name="status" class="form-select">
+                            <div class="col" style="flex: 0 0 12%; max-width: 12%;">
+                                <select name="status" class="form-select form-select-sm">
                                     <option value="">All Status</option>
                                     <option value="present">Present</option>
                                     <option value="absent">Absent</option>
@@ -65,18 +63,27 @@
                             </div>
 
                             <div class="col-md-1 d-grid">
-                                <button class="btn btn-primary">
+                                <button class="btn btn-primary btn-sm">
                                     Search
                                 </button>
                             </div>
+
                             <div class="col-md-1 d-grid">
-                                <a href="{{ route('admin.attendance') }}" class="btn btn-outline-secondary">
+                                <a href="{{ route('admin.attendance') }}" class="btn btn-outline-secondary btn-sm">
                                     Reset
                                 </a>
                             </div>
-                        </div>
 
+                            <div class="col-md-1 d-grid">
+                                <a href="{{ route('admin.attendance.pdf', request()->query()) }}"
+                                    class="btn btn-sm btn-danger">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                    PDF
+                                </a>
+                            </div>
+                        </div>
                     </form>
+
 
                     <div class="table-responsive rounded-2">
                         <table class="table table-hover border-3 mb-0 align-middle">
