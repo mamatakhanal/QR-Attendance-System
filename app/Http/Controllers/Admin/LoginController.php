@@ -24,7 +24,7 @@ class LoginController extends Controller
         $admin = Admin::where('email', $request->email)->first();
 
         if (!$admin) {
-            return back()->with('error', 'Invalid email or password');
+            return back()->with('error', 'Invalid credentials');
         }
 
         if (!Hash::check($request->password, $admin->password)) {

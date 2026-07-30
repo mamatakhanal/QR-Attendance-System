@@ -19,7 +19,8 @@
                         <div class="mb-4">
                             <label class="form-label"> Email <span class="text-danger">*</span> </label>
                             <input type="email" name="teacher_email" class="form-control"
-                                value="{{ old('teacher_email') }}" placeholder="Enter Email" required>
+                                value="" placeholder="Enter Email" required> 
+                                {{-- value="{{ old('teacher_email') }}" --}}
                         </div>
                         <div class="mb-4">
                             <label class="form-label">Password <span class="text-danger">*</span> </label>
@@ -59,7 +60,7 @@
                         <div class="mb-4">
                             <label class="form-label"> Email <span class="text-danger">*</span> </label>
                             <input type="email" name="student_email" class="form-control"
-                                value="{{ old('student_email') }}" placeholder="Enter Email" required>
+                                value="" placeholder="Enter Email" required>
                         </div>
                         <div class="mb-4">
                             <label class="form-label">Password <span class="text-danger">*</span> </label>
