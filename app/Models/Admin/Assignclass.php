@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models\Admin;
-
+use App\Models\Admin\Teachers;
 use Illuminate\Database\Eloquent\Model;
 
 class Assignclass extends Model

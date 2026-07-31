@@ -71,6 +71,90 @@
                     </div>
                 </div>
 
+                <!-- Today's Classes -->
+                <div class="card shadow-sm border-0 rounded-4 my-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center my-1 mb-2">
+                            <h5 class="fw-semibold">
+                                <i class="bi bi-calendar-check text-primary me-2"></i>
+                                Today's Classes
+                            </h5>
+                            <span class="badge bg-light text-dark fs-6 px-3 py-2">
+                                {{ now()->format('d M Y') }}
+                            </span>
+                        </div>
+
+
+                        @if (count($todayClasses) > 0)
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Teacher</th>
+                                            <th>Time</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        @foreach ($todayClasses as $class)
+                                            <tr>
+                                                <td>
+                                                    <span class="fw-semibold">
+                                                        {{ $class['subject'] }}
+                                                    </span>
+                                                </td>
+
+                                                <td>
+                                                    {{ $class['teacher'] }}
+                                                </td>
+
+                                                <td>
+                                                    @if ($class['time'] != '-')
+                                                        <i class="bi bi-clock me-1 text-muted"></i>
+                                                        {{ $class['time'] }}
+                                                    @else
+                                                        <span class="text-muted">
+                                                            -
+                                                        </span>
+                                                    @endif
+                                                </td>
+
+                                                <td>
+                                                    @if ($class['status'] === 'Taken')
+                                                        <span class="badge bg-success rounded-3 px-3 py-2">
+                                                            <i class="bi bi-check-circle-fill me-1"></i>
+                                                            Taken
+                                                        </span>
+                                                    @elseif ($class['status'] === 'Open')
+                                                        <span class="badge bg-warning text-dark rounded-3 px-3 py-2">
+                                                            <i class="bi bi-hourglass-split me-1"></i>
+                                                            Attendance Open
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-secondary rounded-3 px-3 py-2">
+                                                            <i class="bi bi-dash-circle me-1"></i>
+                                                            Not Taken
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                                <p class="mb-0">
+                                    No classes available for today.
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
 
                 <!-- Attendance Summary -->
                 <div class="card shadow-sm border-0 rounded-4 my-3">
@@ -85,7 +169,7 @@
 
 
                 <!-- Subject Attendance Status -->
-                <div class="card shadow-sm border-0 rounded-4 my-3 mb-0">
+                {{-- <div class="card shadow-sm border-0 rounded-4 my-2 mb-0">
                     <div class="card-body">
                         <h5 class="fw-bold mb-3">
                             <i class="bi bi-award-fill text-success me-2"></i>
@@ -111,7 +195,7 @@
                             </div>
                         @endforeach
                     </div>
-                </div>
+                </div> --}}
 
             </div>
         </div>
@@ -140,7 +224,7 @@
             options: {
                 indexAxis: 'y',
                 responsive: true,
-                
+
 
                 plugins: {
                     legend: {
