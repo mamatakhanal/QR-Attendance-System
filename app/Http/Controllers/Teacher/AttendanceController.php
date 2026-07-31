@@ -350,7 +350,7 @@ class AttendanceController extends Controller
             'subject_id' => $subject->id,
             'date' => today(),
             'start_time' => now(),
-            'end_time' => now()->addMinutes(40),
+            'end_time' => now()->addMinutes(),
             // 'end_time' => now()->addMinutes(60),
             // 'end_time' => now()->addHour(2),
             'status' => 'Open',

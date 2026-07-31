@@ -17,14 +17,15 @@ class CloseAttendanceSessions extends Command
 
     public function handle()
     {
+        $now = now();
+
         Log::info('Attendance scheduler started');
-        Log::info('Current time: '.now());
+        Log::info('Current time: '.$now);
 
         $sessions = AttendanceSession::where('status', 'Open')
-            ->where('end_time', '<=', now())
+            ->where('end_time', '<=', $now)
             ->get();
 
-        Log::info($sessions->toArray());
         Log::info('Expired sessions: '.$sessions->count());
 
         foreach ($sessions as $session) {
@@ -32,23 +33,27 @@ class CloseAttendanceSessions extends Command
             Log::info(
                 'Session ID: '.$session->id.
                 ' | End Time: '.$session->end_time.
-                ' | Current Time: '.now()
+                ' | Current Time: '.$now
             );
 
             $assignClass = Assignclass::with('subjects')
                 ->find($session->assign_class_id);
 
-            if (! $assignClass) {
-                Log::info('Assign class not found');
-
-                continue;
+            if ($assignClass) {
+                $this->markAbsentStudents($assignClass, $session);
+            } else {
+                Log::warning(
+                    'Assign class not found for session ID: '.$session->id
+                );
             }
 
-            $this->markAbsentStudents($assignClass, $session);
             $session->update([
                 'status' => 'Closed',
             ]);
-            Log::info('Session closed successfully');
+
+            Log::info(
+                'Session '.$session->id.' closed successfully'
+            );
         }
 
         return self::SUCCESS;
