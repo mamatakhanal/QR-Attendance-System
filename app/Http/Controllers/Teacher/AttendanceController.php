@@ -350,7 +350,7 @@ class AttendanceController extends Controller
             'subject_id' => $subject->id,
             'date' => today(),
             'start_time' => now(),
-            'end_time' => now()->addMinutes(40),
+            'end_time' => now()->addMinutes(2),
             // 'end_time' => now()->addMinutes(60),
             // 'end_time' => now()->addHour(2),
             'status' => 'Open',
@@ -365,6 +365,12 @@ class AttendanceController extends Controller
     // Mark Absent Students
     public function markAbsentStudents($assignClass, $teacherId, $date)
     {
+        // Get the subject once
+        $subject = $assignClass->subjects->first();
+        if (! $subject) {
+            return;
+        }
+
         $students = Students::where(
             'current_semester',
             $assignClass->semester
@@ -374,7 +380,8 @@ class AttendanceController extends Controller
 
             $exists = Attendance::where('student_id', $student->id)
                 ->where('teacher_id', $teacherId)
-                ->where('subject_id', $assignClass->subjects->first()->id)
+                ->where('subject_id', $subject->id)
+                ->where('assign_class_id', $assignClass->id)
                 ->whereDate('date', $date)
                 ->exists();
 
@@ -384,13 +391,12 @@ class AttendanceController extends Controller
                     'semester' => $student->current_semester,
                     'student_id' => $student->id,
                     'teacher_id' => $teacherId,
-                    'subject_id' => $assignClass->subjects->first()->id,
+                    'subject_id' => $subject->id,
                     'assign_class_id' => $assignClass->id,
                     'date' => $date,
                     'time' => null,
                     'status' => 'Absent',
                 ]);
-
             }
         }
     }
