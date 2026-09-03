@@ -52,6 +52,15 @@
     <p><strong>Generated Date:</strong> {{ now()->format('d M Y') }}</p>
     <p><strong>Generated Time:</strong> {{ now()->format('h:i A') }}</p>
 
+    @if (request('from_date') || request('to_date'))
+        <p>
+            <strong>Date Range:</strong>
+            {{ request('from_date') ? \Carbon\Carbon::parse(request('from_date'))->format('d M Y') : 'All' }}
+            -
+            {{ request('to_date') ? \Carbon\Carbon::parse(request('to_date'))->format('d M Y') : 'All' }}
+        </p>
+    @endif
+
     <table>
 
         <thead>

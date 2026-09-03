@@ -23,7 +23,8 @@ class AttendanceRecordsController extends Controller
             'semester' => 'nullable|integer|between:1,8',
             'subject_id' => 'nullable|exists:subjects,id',
             'status' => 'nullable|in:present,absent',
-            'date' => 'nullable|date',
+            'from_date' => ['nullable', 'date', 'before_or_equal:today'],
+            'to_date' => ['nullable', 'date', 'before_or_equal:today', 'after_or_equal:from_date'],
             'search' => 'nullable|string|max:100',
         ]);
 
@@ -63,8 +64,11 @@ class AttendanceRecordsController extends Controller
             })
 
             // Date Filter
-            ->when($request->filled('date'), function ($q) use ($request) {
-                $q->whereDate('date', $request->date);
+            ->when($request->filled('from_date'), function ($q) use ($request) {
+                $q->whereDate('date', '>=', $request->from_date);
+            })
+            ->when($request->filled('to_date'), function ($q) use ($request) {
+                $q->whereDate('date', '<=', $request->to_date);
             })
 
             // Search
@@ -132,8 +136,12 @@ class AttendanceRecordsController extends Controller
             })
 
     // Date Filter
-            ->when($request->filled('date'), function ($q) use ($request) {
-                $q->whereDate('date', $request->date);
+            ->when($request->filled('from_date'), function ($q) use ($request) {
+                $q->whereDate('date', '>=', $request->from_date);
+            })
+
+            ->when($request->filled('to_date'), function ($q) use ($request) {
+                $q->whereDate('date', '<=', $request->to_date);
             })
 
     // Search Filter

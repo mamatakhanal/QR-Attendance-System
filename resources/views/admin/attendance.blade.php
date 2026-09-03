@@ -1,5 +1,5 @@
 <head>
-    <title>Attendance - Admin</title>
+    <title>Attendance Records - Admin</title>
     @include('layouts.link')
     @include('layouts.style')
 </head>
@@ -19,14 +19,14 @@
                     </h5>
 
                     {{-- Fliter --}}
-                    <form method="GET" action="{{ route('admin.attendance') }}">
+                    <form id="attendanceFilterForm" method="GET" action="{{ route('admin.attendance') }}">
                         <div class="row g-2 align-items-end">
-                            <div  class="col" style="flex: 0 0 18%; max-width: 18%;">
-                                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search Student..."
-                                    value="{{ request('search') }}">
+                            <div class="col" style="flex: 0 0 14%; max-width: 14%;">
+                                <input type="text" name="search" class="form-control form-control-sm"
+                                    placeholder="Search Student..." value="{{ request('search') }}">
                             </div>
 
-                            <div  class="col" style="flex: 0 0 15%; max-width: 15%;">
+                            <div class="col" style="flex: 0 0 13%; max-width: 13%;">
                                 <select name="teacher_id" class="form-select form-select-sm">
                                     <option value="">All Teachers</option>
                                     @foreach ($teachers as $teacher)
@@ -38,7 +38,7 @@
                                 </select>
                             </div>
 
-                            <div  class="col" style="flex: 0 0 15%; max-width: 15%;">
+                            <div class="col" style="flex: 0 0 13%; max-width: 13%;">
                                 <select name="semester" class="form-select form-select-sm">
                                     <option value="">All Semester</option>
                                     @for ($i = 1; $i <= 8; $i++)
@@ -50,15 +50,27 @@
                                 </select>
                             </div>
 
-                            <div class="col" style="flex: 0 0 15%; max-width: 15%;">
-                                <input type="date" name="date" class="form-control form-control-sm" value="{{ request('date') }}">
+                            <div class="col" style="flex: 0 0 12%; max-width: 12%;">
+                                {{-- <label class="form-label small mb-1">From Date</label> --}}
+                                <input type="date" id="from_date" name="from_date" max="{{ date('Y-m-d') }}"
+                                    class="form-control form-control-sm" value="{{ request('from_date') }}">
                             </div>
 
                             <div class="col" style="flex: 0 0 12%; max-width: 12%;">
+                                {{-- <label class="form-label small mb-1">To Date</label> --}}
+                                <input type="date" id="to_date" name="to_date" max="{{ date('Y-m-d') }}"
+                                     class="form-control form-control-sm" value="{{ request('to_date') }}">
+                            </div>
+
+                            <div class="col" style="flex: 0 0 11%; max-width: 11%;">
                                 <select name="status" class="form-select form-select-sm">
                                     <option value="">All Status</option>
-                                    <option value="present">Present</option>
-                                    <option value="absent">Absent</option>
+                                    <option value="Present" {{ request('status') == 'Present' ? 'selected' : '' }}>
+                                        Present
+                                    </option>
+                                    <option value="Absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>
+                                        Absent
+                                    </option>
                                 </select>
                             </div>
 
@@ -164,4 +176,39 @@
             </div>
         </div>
     </div>
+
+    {{-- Invalid Date Range --}}
+    <script>
+        $('#attendanceFilterForm').on('submit', function(e) {
+
+            const fromDate = $('#from_date').val();
+            const toDate = $('#to_date').val();
+
+            if (fromDate && toDate && fromDate > toDate) {
+
+                e.preventDefault();
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Invalid Date Range',
+                    // text: 'From Date must be before To Date.',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    customClass: {
+                        popup: 'small-toast'
+                    },
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInRight'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutRight'
+                    }
+                });
+
+            }
+        });
+    </script>
 </body>

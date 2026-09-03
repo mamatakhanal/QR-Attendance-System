@@ -8,64 +8,93 @@ use App\Models\Admin\Attendance;
 use App\Models\Admin\AttendanceSession;
 use App\Models\Admin\Students;
 use App\Models\Admin\Teachers;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class AttendanceController extends Controller
 {
     public function attendance(Request $request)
     {
+
         $teacher = Teachers::find(session('teacher_id'));
         if (! $teacher) {
             return redirect('/home');
         }
+
+        $realDateTime = $this->getRealDateTime();
+
+        if (! $realDateTime) {
+            return redirect()->back()->with(
+                'error',
+                'Unable to verify the current date and time. Please check your internet connection.'
+            );
+        }
+
+        $realDate = $realDateTime['date'];
+        $realTime = $realDateTime['time'];
+
+        $currentDateTime = Carbon::parse(
+            $realDate.' '.$realTime,
+            'Asia/Kathmandu'
+        );
+
         $oldSessions = AttendanceSession::where('teacher_id', $teacher->id)
             ->where('status', 'Open')
-            ->where('end_time', '<=', now())
             ->get();
 
         foreach ($oldSessions as $oldSession) {
 
-            // Get assign class
-            $assignClass = Assignclass::with('subjects')
-                ->find($oldSession->assign_class_id);
+            $sessionEnd = Carbon::parse(
+                $oldSession->date.' '.$oldSession->end_time,
+                'Asia/Kathmandu'
+            );
 
-            if ($assignClass) {
-                // Mark remaining students absent
-                $this->markAbsentStudents(
-                    $assignClass,
-                    $oldSession->teacher_id,
-                    $oldSession->date
-                );
+            if ($currentDateTime->greaterThanOrEqualTo($sessionEnd)) {
+
+                $assignClass = Assignclass::with('subjects')
+                    ->find($oldSession->assign_class_id);
+
+                if ($assignClass) {
+                    $this->markAbsentStudents(
+                        $assignClass,
+                        $oldSession->teacher_id,
+                        $oldSession->date
+                    );
+                }
+
+                $oldSession->update([
+                    'status' => 'Closed',
+                ]);
             }
-
-            // Close expired session
-            $oldSession->update([
-                'status' => 'Closed',
-            ]);
         }
 
+        // Get classes assigned to this teacher
         $assignclasses = Assignclass::with('subjects')
             ->where('teacher_id', $teacher->id)
             ->orderBy('semester')
             ->get();
 
+        // Count students in each semester
         foreach ($assignclasses as $assignclass) {
 
             $assignclass->student_count = Students::where(
                 'current_semester',
                 $assignclass->semester
             )->count();
-
         }
 
+        // Selected class
         $selectedClass = $request->assign_class_id;
 
         $currentClass = null;
 
         if ($selectedClass) {
 
-            $currentClass = Assignclass::with(['subjects', 'teacher'])
-                ->find($selectedClass);
+            $currentClass = Assignclass::with([
+                'subjects',
+                'teacher',
+            ])->find($selectedClass);
 
             if ($currentClass) {
 
@@ -73,7 +102,6 @@ class AttendanceController extends Controller
                     'current_semester',
                     $currentClass->semester
                 )->count();
-
             }
         }
 
@@ -89,6 +117,18 @@ class AttendanceController extends Controller
     // Scan Attendance
     public function scanAttendance(Request $request)
     {
+        $realDateTime = $this->getRealDateTime();
+
+        if (! $realDateTime) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to verify the current date and time. Please check your internet connection and try again.',
+            ]);
+        }
+
+        $realDate = $realDateTime['date'];
+        $realTime = $realDateTime['time'];
+
         // Logged in teacher
         $teacher = Teachers::find(session('teacher_id'));
         if (! $teacher) {
@@ -109,7 +149,7 @@ class AttendanceController extends Controller
 
         $session = AttendanceSession::where('assign_class_id', $assignClass->id)
             ->where('teacher_id', $teacher->id)
-            ->whereDate('date', today())
+            ->whereDate('date', $realDate)
             ->where('status', 'Open')
             ->first();
 
@@ -121,7 +161,17 @@ class AttendanceController extends Controller
         }
 
         // Session time expired
-        if (now()->greaterThanOrEqualTo($session->end_time)) {
+        $currentTime = Carbon::parse(
+            $realDate.' '.$realTime,
+            'Asia/Kathmandu'
+        );
+
+        $sessionEnd = Carbon::parse(
+            $session->date.' '.$session->end_time,
+            'Asia/Kathmandu'
+        );
+
+        if ($currentTime->greaterThanOrEqualTo($sessionEnd)) {
 
             // Mark remaining students absent
             $this->markAbsentStudents(
@@ -174,7 +224,7 @@ class AttendanceController extends Controller
         $attendance = Attendance::where('student_id', $student->id)
             ->where('teacher_id', $teacher->id)
             ->where('subject_id', $assignClass->subjects->first()->id)
-            ->whereDate('date', $session->date)
+            ->whereDate('date', $realDate)
             ->first();
 
         if ($attendance) {
@@ -200,8 +250,8 @@ class AttendanceController extends Controller
             'teacher_id' => $teacher->id,
             'subject_id' => $assignClass->subjects->first()->id,
             'assign_class_id' => $assignClass->id,
-            'date' => $session->date,
-            'time' => now()->format('H:i:s'),
+            'date' => $realDate,
+            'time' => $realTime,
             'status' => 'Present',
         ]);
 
@@ -216,16 +266,31 @@ class AttendanceController extends Controller
             ],
 
             'subject' => $assignClass->subjects->first()->subject_name,
-
-            'date' => now()->format('d M Y'),
-
-            'time' => now()->format('h:i A'),
+            'date' => Carbon::parse($realDate)->format('d M Y'),
+            'time' => Carbon::parse($realTime)->format('h:i A'),
         ]);
     }
 
     // Start Attendance Session
     public function startSession(Request $request)
     {
+        $realDateTime = $this->getRealDateTime();
+
+        if (! $realDateTime) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to verify the current date and time. Please check your internet connection and try again.',
+            ]);
+        }
+
+        $realDate = $realDateTime['date'];
+        $realTime = $realDateTime['time'];
+
+        $currentTime = Carbon::parse(
+            $realDate.' '.$realTime,
+            'Asia/Kathmandu'
+        );
+
         $teacher = Teachers::find(session('teacher_id'));
 
         if (! $teacher) {
@@ -235,7 +300,9 @@ class AttendanceController extends Controller
         }
 
         $assignClass = Assignclass::with('subjects')
-            ->find($request->assign_class_id);
+            ->where('id', $request->assign_class_id)
+            ->where('teacher_id', $teacher->id)
+            ->first();
 
         if (! $assignClass) {
             return response()->json([
@@ -255,7 +322,7 @@ class AttendanceController extends Controller
         // Check if today's session already exists
         $session = AttendanceSession::where('assign_class_id', $assignClass->id)
             ->where('teacher_id', $teacher->id)
-            ->whereDate('date', today())
+            ->whereDate('date', $realDate)
             ->first();
 
         // Check if today's session already open
@@ -263,7 +330,12 @@ class AttendanceController extends Controller
 
             if ($session->status == 'Open') {
 
-                if (now()->greaterThanOrEqualTo($session->end_time)) {
+                $sessionEnd = Carbon::parse(
+                    $session->date.' '.$session->end_time,
+                    'Asia/Kathmandu'
+                );
+
+                if ($currentTime->greaterThanOrEqualTo($sessionEnd)) {
 
                     $this->markAbsentStudents(
                         $assignClass,
@@ -313,6 +385,18 @@ class AttendanceController extends Controller
     // Create Attendance Session
     public function createSession(Request $request)
     {
+        $realDateTime = $this->getRealDateTime();
+
+        if (! $realDateTime) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to verify the current date and time. Please check your internet connection and try again.',
+            ]);
+        }
+
+        $realDate = $realDateTime['date'];
+        $realTime = $realDateTime['time'];
+
         $teacher = Teachers::find(session('teacher_id'));
 
         if (! $teacher) {
@@ -335,7 +419,7 @@ class AttendanceController extends Controller
         // Prevent duplicate session
         $exists = AttendanceSession::where('assign_class_id', $assignClass->id)
             ->where('teacher_id', $teacher->id)
-            ->whereDate('date', today())
+            ->whereDate('date', $realDate)
             ->exists();
 
         if ($exists) {
@@ -344,15 +428,21 @@ class AttendanceController extends Controller
             ]);
         }
 
+        $startTime = Carbon::parse(
+            $realDate.' '.$realTime,
+            'Asia/Kathmandu'
+        );
+
+        $endTime = $startTime->copy()->addMinutes(2);
+        // $endTime = $startTime->copy()->addHours(2);
+
         AttendanceSession::create([
             'assign_class_id' => $assignClass->id,
             'teacher_id' => $teacher->id,
             'subject_id' => $subject->id,
-            'date' => today(),
-            'start_time' => now(),
-            'end_time' => now()->addMinutes(2),
-            // 'end_time' => now()->addMinutes(60),
-            // 'end_time' => now()->addHour(2),
+            'date' => $realDate,
+            'start_time' => $startTime->format('H:i:s'),
+            'end_time' => $endTime->format('H:i:s'),
             'status' => 'Open',
         ]);
 
@@ -365,12 +455,14 @@ class AttendanceController extends Controller
     // Mark Absent Students
     public function markAbsentStudents($assignClass, $teacherId, $date)
     {
-        // Get the subject once
+        // Get the first subject assigned to this class
         $subject = $assignClass->subjects->first();
+
         if (! $subject) {
             return;
         }
 
+        // Get students from the assigned semester
         $students = Students::where(
             'current_semester',
             $assignClass->semester
@@ -378,13 +470,14 @@ class AttendanceController extends Controller
 
         foreach ($students as $student) {
 
+            // Check if attendance already exists
             $exists = Attendance::where('student_id', $student->id)
                 ->where('teacher_id', $teacherId)
                 ->where('subject_id', $subject->id)
-                ->where('assign_class_id', $assignClass->id)
                 ->whereDate('date', $date)
                 ->exists();
 
+            // If attendance does not exist, mark student as Absent
             if (! $exists) {
 
                 Attendance::create([
@@ -392,7 +485,6 @@ class AttendanceController extends Controller
                     'student_id' => $student->id,
                     'teacher_id' => $teacherId,
                     'subject_id' => $subject->id,
-                    'assign_class_id' => $assignClass->id,
                     'date' => $date,
                     'time' => null,
                     'status' => 'Absent',
@@ -404,6 +496,17 @@ class AttendanceController extends Controller
     // Get Attendance Count
     public function getAttendanceCount(Request $request)
     {
+        $realDateTime = $this->getRealDateTime();
+
+        if (! $realDateTime) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to get the current real date and time.',
+            ]);
+        }
+
+        $realDate = $realDateTime['date'];
+
         $teacher = Teachers::find(session('teacher_id'));
 
         $assignClass = Assignclass::with('subjects')
@@ -413,13 +516,13 @@ class AttendanceController extends Controller
 
         $present = Attendance::where('teacher_id', $teacher->id)
             ->where('subject_id', $subject->id)
-            ->whereDate('date', today())
+            ->whereDate('date', $realDate)
             ->where('status', 'Present')
             ->count();
 
         $absent = Attendance::where('teacher_id', $teacher->id)
             ->where('subject_id', $subject->id)
-            ->whereDate('date', today())
+            ->whereDate('date', $realDate)
             ->where('status', 'Absent')
             ->count();
 
@@ -428,5 +531,47 @@ class AttendanceController extends Controller
             'absent' => $absent,
             'total' => Students::where('current_semester', $assignClass->semester)->count(),
         ]);
+    }
+
+    // Real time
+    private function getRealDateTime()
+    {
+        try {
+
+            $response = Http::connectTimeout(2)
+                ->timeout(4)
+                ->get(
+                    'https://timeapi.io/api/time/current/zone',
+                    [
+                        'timeZone' => 'Asia/Kathmandu',
+                    ]
+                );
+
+            if ($response->successful()) {
+
+                $data = $response->json();
+
+                if (isset($data['date'], $data['time'])) {
+
+                    $date = Carbon::parse($data['date'])
+                        ->format('Y-m-d');
+
+                    $time = Carbon::parse($data['time'])
+                        ->format('H:i:s');
+
+                    return [
+                        'date' => $date,
+                        'time' => $time,
+                    ];
+                }
+            }
+
+        } catch (\Throwable $e) {
+
+            // Never use local computer time.
+            return null;
+        }
+
+        return null;
     }
 }

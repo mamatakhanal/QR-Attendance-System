@@ -19,12 +19,12 @@
                         My Attendance
                     </h5>
 
-                    <form method="GET" action="{{ route('student.attendance') }}">
+                    <form id="attendanceFilterForm" method="GET" action="{{ route('student.attendance') }}">
                         <div class="row g-2 align-items-end">
 
                             {{-- Semester --}}
 
-                            <div class="col" style="flex: 0 0 21%; max-width: 21%;">
+                            <div class="col" style="flex: 0 0 18%; max-width: 18%;">
                                 <select class="form-select form-select-sm" name="teacher_id">
                                     <option value="">All Teachers</option>
                                     @foreach ($teachers as $teacher)
@@ -36,7 +36,7 @@
                                 </select>
                             </div>
 
-                            <div  class="col" style="flex: 0 0 20%; max-width: 21%;">
+                            <div  class="col" style="flex: 0 0 18%; max-width: 18%;">
                                 <select class="form-select form-select-sm" name="subject_id">
                                     <option value="">All Subjects</option>
                                     @foreach ($subjects as $subject)
@@ -48,11 +48,19 @@
                                 </select>
                             </div>
 
-                            <div class="col" style="flex: 0 0 17%; max-width: 17%;">
-                                <input type="date" class="form-control form-control-sm" name="date" value="{{ request('date') }}">
+                            <div class="col" style="flex: 0 0 13%; max-width: 13%;">
+                                {{-- <label class="form-label small mb-1">From Date</label> --}}
+                                <input type="date" id="from_date" name="from_date" max="{{ date('Y-m-d') }}"
+                                    class="form-control form-control-sm" value="{{ request('from_date') }}">
                             </div>
 
-                            <div class="col-md-2">
+                            <div class="col" style="flex: 0 0 13%; max-width: 13%;">
+                                {{-- <label class="form-label small mb-1">To Date</label> --}}
+                                <input type="date" id="to_date" name="to_date" max="{{ date('Y-m-d') }}"
+                                     class="form-control form-control-sm" value="{{ request('to_date') }}">
+                            </div>
+
+                            <div class="col" style="flex: 0 0 13%; max-width: 13%;">
                                 <select class="form-select form-select-sm" name="status">
                                     <option value="all">All Status</option>
 
@@ -143,5 +151,39 @@
             </div>
         </div>
     </div>
-    </div>
+    
+    {{-- Invalid Date Range --}}
+    <script>
+        $('#attendanceFilterForm').on('submit', function(e) {
+
+            const fromDate = $('#from_date').val();
+            const toDate = $('#to_date').val();
+
+            if (fromDate && toDate && fromDate > toDate) {
+
+                e.preventDefault();
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Invalid Date Range',
+                    // text: 'From Date must be before To Date.',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    customClass: {
+                        popup: 'small-toast'
+                    },
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInRight'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutRight'
+                    }
+                });
+
+            }
+        });
+    </script>
 </body>

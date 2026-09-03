@@ -17,17 +17,17 @@
                     </h5>
 
                     {{-- Filter --}}
-                    <form method="GET" action="{{ route('teacher.attendancerecords') }}">
+                    <form id="attendanceFilterForm" method="GET" action="{{ route('teacher.attendancerecords') }}">
                         <div class="row g-2 align-items-end">
 
                             {{-- Search --}}
-                            <div class="col" style="flex: 0 0 18%; max-width: 18%;">
-                                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search Student..."
-                                    value="{{ request('search') }}">
+                            <div class="col" style="flex: 0 0 14%; max-width: 14%;">
+                                <input type="text" name="search" class="form-control form-control-sm"
+                                    placeholder="Search Student..." value="{{ request('search') }}">
                             </div>
 
                             {{-- Semester --}}
-                            <div class="col" style="flex: 0 0 15%; max-width: 15%;">
+                            <div class="col" style="flex: 0 0 13%; max-width: 13%;">
                                 <select name="semester" class="form-select form-select-sm">
                                     <option value="">All Semester</option>
 
@@ -41,7 +41,7 @@
                             </div>
 
                             {{-- Subject --}}
-                            <div class="col" style="flex: 0 0 15%; max-width: 15%;">
+                            <div class="col" style="flex: 0 0 13%; max-width: 13%;">
                                 <select name="subject_id" class="form-select form-select-sm">
                                     <option value="">All Subjects</option>
 
@@ -55,12 +55,20 @@
                             </div>
 
                             {{-- Date --}}
-                            <div class="col" style="flex: 0 0 15%; max-width: 15%;">
-                                <input type="date" name="date" class="form-control form-control-sm" value="{{ request('date') }}">
+                            <div class="col" style="flex: 0 0 12%; max-width: 12%;">
+                                {{-- <label class="form-label small mb-1">From Date</label> --}}
+                                <input type="date" id="from_date" name="from_date" max="{{ date('Y-m-d') }}"
+                                    class="form-control form-control-sm" value="{{ request('from_date') }}">
+                            </div>
+
+                            <div class="col" style="flex: 0 0 12%; max-width: 12%;">
+                                {{-- <label class="form-label small mb-1">To Date</label> --}}
+                                <input type="date" id="to_date" name="to_date" max="{{ date('Y-m-d') }}"
+                                    class="form-control form-control-sm" value="{{ request('to_date') }}">
                             </div>
 
                             {{-- Status --}}
-                            <div class="col" style="flex: 0 0 12%; max-width: 12%;">
+                            <div class="col" style="flex: 0 0 11%; max-width: 11%;">
                                 <select name="status" class="form-select form-select-sm">
                                     <option value="">All Status</option>
 
@@ -83,7 +91,8 @@
 
                             {{-- Reset Button --}}
                             <div class="col-md-1 d-grid">
-                                <a href="{{ route('teacher.attendancerecords') }}" class="btn btn-outline-secondary btn-sm">
+                                <a href="{{ route('teacher.attendancerecords') }}"
+                                    class="btn btn-outline-secondary btn-sm">
                                     Reset
                                 </a>
                             </div>
@@ -168,4 +177,39 @@
             </div>
         </div>
     </div>
+
+    {{-- Invalid Date Range --}}
+    <script>
+        $('#attendanceFilterForm').on('submit', function(e) {
+
+            const fromDate = $('#from_date').val();
+            const toDate = $('#to_date').val();
+
+            if (fromDate && toDate && fromDate > toDate) {
+
+                e.preventDefault();
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Invalid Date Range',
+                    // text: 'From Date must be before To Date.',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    customClass: {
+                        popup: 'small-toast'
+                    },
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInRight'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutRight'
+                    }
+                });
+
+            }
+        });
+    </script>
 </body>

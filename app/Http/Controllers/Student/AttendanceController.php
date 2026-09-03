@@ -21,6 +21,11 @@ class AttendanceController extends Controller
             return redirect('/home');
         }
 
+        $request->validate([
+            'from_date' => ['nullable', 'date', 'before_or_equal:today'],
+            'to_date' => ['nullable', 'date', 'before_or_equal:today', 'after_or_equal:from_date'],
+        ]);
+
         $attendances = Attendance::with(['subject', 'teacher'])
             ->where('student_id', $student->id)
 
@@ -32,8 +37,12 @@ class AttendanceController extends Controller
                 $q->where('subject_id', $request->subject_id);
             })
 
-            ->when($request->date, function ($q) use ($request) {
-                $q->whereDate('date', $request->date);
+            ->when($request->filled('from_date'), function ($q) use ($request) {
+                $q->whereDate('date', '>=', $request->from_date);
+            })
+
+            ->when($request->filled('to_date'), function ($q) use ($request) {
+                $q->whereDate('date', '<=', $request->to_date);
             })
 
             ->when($request->status && $request->status != 'all', function ($q) use ($request) {
@@ -89,8 +98,12 @@ class AttendanceController extends Controller
                 $q->where('subject_id', $request->subject_id);
             })
 
-            ->when($request->filled('date'), function ($q) use ($request) {
-                $q->whereDate('date', $request->date);
+            ->when($request->filled('from_date'), function ($q) use ($request) {
+                $q->whereDate('date', '>=', $request->from_date);
+            })
+
+            ->when($request->filled('to_date'), function ($q) use ($request) {
+                $q->whereDate('date', '<=', $request->to_date);
             })
 
             ->when($request->filled('status') && $request->status != 'all', function ($q) use ($request) {
