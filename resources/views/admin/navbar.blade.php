@@ -23,6 +23,7 @@
                             'Teachers' => 'Search by Teachers Name, Email, or Phone...',
                             'Subjects' => 'Search by Subjects Name or Code...',
                             'Assign Classes' => 'Search by Teacher Name or Subject Name...',
+                            'Class Replacement' => 'Search by Teacher Name or Subject Name...',
                         ];
                     @endphp
 

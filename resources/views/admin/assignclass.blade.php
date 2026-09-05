@@ -45,9 +45,9 @@
                                 <th class="py-3">S.N</th>
                                 <th class="py-3">Teacher</th>
                                 <th class="py-3">Semester</th>
+                                <th class="py-3">Subject</th>
                                 <th class="py-3">Start Time</th>
                                 <th class="py-3">End Time</th>
-                                <th class="py-3">Subject</th>
                                 <th class="py-3">Actions</th>
                             </tr>
                         </thead>
@@ -60,13 +60,6 @@
                                     <td>{{ $assignclass->teacher->name ?? 'No Teacher' }}</td>
                                     <td>Semester {{ $assignclass->semester }}</td>
                                     <td>
-                                        {{ $assignclass->start_time ? \Carbon\Carbon::parse($assignclass->start_time)->format('h:i A') : '-' }}
-                                    </td>
-
-                                    <td>
-                                        {{ $assignclass->end_time ? \Carbon\Carbon::parse($assignclass->end_time)->format('h:i A') : '-' }}
-                                    </td>
-                                    <td>
                                         <div class="d-flex flex-wrap gap-2">
                                             @foreach ($assignclass->subjects as $subject)
                                                 <div class="px-2 py-1 border rounded-3 shadow-sm bg-light">
@@ -74,6 +67,13 @@
                                                 </div>
                                             @endforeach
                                         </div>
+                                    </td>
+                                    <td>
+                                        {{ $assignclass->start_time ? \Carbon\Carbon::parse($assignclass->start_time)->format('h:i A') : '-' }}
+                                    </td>
+
+                                    <td>
+                                        {{ $assignclass->end_time ? \Carbon\Carbon::parse($assignclass->end_time)->format('h:i A') : '-' }}
                                     </td>
 
                                     <td>
@@ -83,9 +83,10 @@
                                             data-teacher="{{ $assignclass->teacher_id }}"
                                             data-teacher-name="{{ $assignclass->teacher->name }}"
                                             data-semester="{{ $assignclass->semester }}"
+                                            data-subject-id="{{ $assignclass->subjects->first()->id ?? '' }}"
+                                            data-subject-name="{{ $assignclass->subjects->first()->subject_name ?? '' }}"
                                             data-start-time="{{ $assignclass->start_time }}"
-                                            data-end-time="{{ $assignclass->end_time }}"
-                                            data-subjects='@json($assignclass->subjects->pluck('id'))'>
+                                            data-end-time="{{ $assignclass->end_time }}">
                                             <i class="bi bi-pencil-square"></i> Edit
                                         </button> &nbsp;
                                         <button class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn"

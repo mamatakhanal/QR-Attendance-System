@@ -40,17 +40,11 @@
                         </div>
 
                         <div class="col-md-12">
-                            <label class="form-label">Subjects</label>
-                            <div class="dropdown">
-                                <button id="subjectBtnCreate"
-                                    class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button"
-                                    data-bs-toggle="dropdown"> Select Subjects </button>
-                                <ul class="dropdown-menu w-100 p-3" id="subjectDropdown"
-                                    style="max-height:250px; overflow-y:auto;">
-                                    <li>Select semester first</li>
-                                </ul>
-                            </div>
-                            <small id="subject_ids_error" class="text-danger"></small>
+                            <label for="subject_id" class="form-label">Subject</label>
+                            <select name="subject_id" id="subject_id" class="form-select">
+                                <option value="">Select Semester First</option>
+                            </select>
+                            <small id="subject_id_error" class="text-danger"></small>
                         </div>
 
                         <div class="col-md-6">
@@ -76,50 +70,48 @@
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <script>
-        $(document).ready(function() {
+<script>
+    $(document).ready(function() {
 
-            // Submit Assign Subject Form
-            $('#assignclassForm').submit(function(e) {
-                e.preventDefault();
+        // Submit Assign Subject Form
 
-                // Clear previous error
-                $('#subject_ids_error').text('');
+        $('#assignclassForm').submit(function(e) {
 
-                // No subject selected
-                if ($('.subject-check:checked').length === 0) {
-                    $('#subject_ids_error').text('Please select one subject.');
-                    return;
-                }
+            e.preventDefault();
 
-                let formData = new FormData(this);
-                $.ajax({
-                    url: "{{ route('assignclass.create') }}",
-                    type: "POST",
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
+            // Clear previous errors
+            $('#subject_id_error').text('');
+            $('#start_time_error').text('');
+            $('#end_time_error').text('');
 
-                        if (!response.success) {
-                            Swal.fire({
-                                toast: true,
-                                position: 'top-end',
-                                icon: 'error',
-                                title: response.message,
-                                showConfirmButton: false,
-                                timer: 1500,
-                                customClass: {
-                                    popup: 'small-toast'
-                                }
-                            });
-                            return;
-                        }
+            // Check subject selection
+            if ($('#subject_id').val() === '') {
+
+                $('#subject_id_error').text(
+                    'Please select a subject.'
+                );
+
+                return;
+            }
+
+            let formData = new FormData(this);
+
+            $.ajax({
+
+                url: "{{ route('assignclass.create') }}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+
+                success: function(response) {
+
+                    if (!response.success) {
 
                         Swal.fire({
                             toast: true,
                             position: 'top-end',
-                            icon: 'success',
+                            icon: 'error',
                             title: response.message,
                             showConfirmButton: false,
                             timer: 1500,
@@ -128,126 +120,159 @@
                             }
                         });
 
-                        $('#assignclassForm')[0].reset();
-                        $('#subjectDropdown').html('<li>Select semester first</li>');
-                        $('#subjectBtnCreate').text('Select Subjects');
-
-                        bootstrap.Modal.getInstance(
-                            document.getElementById('addAssignclassModal')
-                        ).hide();
-
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
-                    },
-
-                    error: function(xhr) {
-
-                        $('.text-danger').text('');
-
-                        if (xhr.status === 422) {
-
-                            let errors = xhr.responseJSON.errors;
-
-                            $.each(errors, function(key, value) {
-
-                                if (key === 'subject_ids') {
-                                    $('#subject_ids_error').text(value[0]);
-                                }
-
-                                if (key === 'start_time') {
-                                    $('#start_time_error').text(value[0]);
-                                }
-
-                                if (key === 'end_time') {
-                                    $('#end_time_error').text(value[0]);
-                                }
-
-                            });
-                        }
+                        return;
                     }
-                });
+
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: response.message,
+                        showConfirmButton: false,
+                        timer: 1500,
+                        customClass: {
+                            popup: 'small-toast'
+                        }
+                    });
+
+                    // Reset form
+                    $('#assignclassForm')[0].reset();
+
+                    // Reset subject dropdown
+                    $('#subject_id').html(
+                        '<option value="">Select Semester First</option>'
+                    );
+
+                    // Hide modal
+                    bootstrap.Modal.getInstance(
+                        document.getElementById('addAssignclassModal')
+                    ).hide();
+
+                    // Reload page
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+
+                error: function(xhr) {
+
+                    // Clear previous validation errors
+                    $('#subject_id_error').text('');
+                    $('#start_time_error').text('');
+                    $('#end_time_error').text('');
+
+                    if (xhr.status === 422) {
+
+                        let errors = xhr.responseJSON.errors;
+
+                        $.each(errors, function(key, value) {
+
+                            if (key === 'subject_id') {
+                                $('#subject_id_error')
+                                    .text(value[0]);
+                            }
+
+                            if (key === 'start_time') {
+                                $('#start_time_error')
+                                    .text(value[0]);
+                            }
+
+                            if (key === 'end_time') {
+                                $('#end_time_error')
+                                    .text(value[0]);
+                            }
+
+                        });
+                    }
+                }
             });
         });
-    </script>
 
-    <script>
-        // Clear modal data when closed
+
+        // Load Subjects According to Semester
+
+        $('#semester').on('change', function() {
+
+            let semester = $(this).val();
+            let subjectDropdown = $('#subject_id');
+
+            // Clear previous error
+            $('#subject_id_error').text('');
+
+            // Show loading
+            subjectDropdown.html(
+                '<option value="">Loading...</option>'
+            );
+
+            if (!semester) {
+
+                subjectDropdown.html(
+                    '<option value="">Select Semester First</option>'
+                );
+
+                return;
+            }
+
+            $.ajax({
+
+                url: "{{ url('/admin/assignclass/subjects') }}/" + semester,
+                type: "GET",
+
+                success: function(data) {
+
+                    subjectDropdown.empty();
+
+                    if (data.length === 0) {
+
+                        subjectDropdown.append(
+                            '<option value="">No subjects found</option>'
+                        );
+
+                        return;
+                    }
+
+                    subjectDropdown.append(
+                        '<option value="">Select Subject</option>'
+                    );
+
+                    $.each(data, function(key, subject) {
+
+                        subjectDropdown.append(`
+                            <option value="${subject.id}">
+                                ${subject.subject_name}
+                            </option>
+                        `);
+
+                    });
+                },
+
+                error: function() {
+
+                    subjectDropdown.html(
+                        '<option value="">Unable to load subjects</option>'
+                    );
+                }
+            });
+        });
+
+
+        // Clear Modal When Closed
+
         $('#addAssignclassModal').on('hidden.bs.modal', function() {
 
             $('#assignclassForm')[0].reset();
-            $('#subjectDropdown').html('<li>Select semester first</li>');
-            $('#selectedSubjects').empty();
-            $('#subjectBtnCreate').text('Select Subjects');
-            $('.text-danger').text('');
-            // Clear validation message
-            $('#subject_ids_error').text('');
-        });
-    </script>
 
-    <script>
-        // Show selected subjects count
-        $(document).on('change', '.subject-check', function() {
+            $('#subject_id').html(
+                '<option value="">Select Semester First</option>'
+            );
 
-            $('#subject_ids_error').text('');
-
-            let selectedNames = [];
-
-            $('.subject-check:checked').each(function() {
-                selectedNames.push($(this).next('label').text());
-            });
-
-            if (selectedNames.length > 0) {
-                $('#subjectBtnCreate').text(selectedNames.length + ' Subject Selected');
-            } else {
-                $('#subjectBtnCreate').text('Select Subjects');
-            }
+            $('#subject_id_error').text('');
+            $('#start_time_error').text('');
+            $('#end_time_error').text('');
 
         });
-    </script>
 
-    <script>
-        // Load subjects according to semester
-        $('#semester').on('change', function() {
-            let semester = $(this).val();
-            let dropdown = $('#subjectDropdown');
-            dropdown.html('<li>Loading...</li>');
-            if (semester) {
-                $.ajax({
-                    url: "{{ url('/admin/assignclass/subjects') }}/" + semester,
-                    type: "GET",
-                    success: function(data) {
-                        dropdown.empty();
-                        if (data.length > 0) {
-                            $.each(data, function(key, subject) {
-                                dropdown.append(`
-                            <li>
-                                <div class="form-check">
-                                    <input 
-                                    class="form-check-input subject-check"
-                                    type="checkbox" 
-                                    name="subject_ids[]" 
-                                    value="${subject.id}" 
-                                    id="subject_${subject.id}">
-                                    <label class="form-check-label" for="subject_${subject.id}">
-                                        ${subject.subject_name}
-                                    </label>
-                                </div>
-                            </li>
-                        `);
-                            });
-                        } else {
-                            dropdown.html(
-                                '<li>No subjects found</li>'
-                            );
-                        }
-                    }
-                });
-            } else {
-                dropdown.html(
-                    '<li>Select semester first</li>'
-                );
-            }
-        });
-    </script>
+    });
+</script>
+
 </body>

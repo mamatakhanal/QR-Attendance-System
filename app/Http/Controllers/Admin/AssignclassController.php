@@ -69,14 +69,16 @@ class AssignclassController extends Controller
     public function create(Request $request)
     {
         $request->validate([
-            'teacher_id' => 'required',
-            'semester' => 'required',
-            'subject_ids' => 'required|array|size:1',
+            'teacher_id' => 'required|exists:teachers,id',
+            'semester' => 'required|integer|min:1|max:8',
+            'subject_id' => 'required|exists:subjects,id',
 
             'start_time' => 'required|date_format:H:i|after_or_equal:10:00',
             'end_time' => 'required|date_format:H:i|before_or_equal:17:00|after:start_time',
         ], [
-            'subject_ids.size' => 'Please select only one subject.',
+            'teacher_id.required' => 'Please select a teacher.',
+            'semester.required' => 'Please select a semester.',
+            'subject_id.required' => 'Please select a subject.',
 
             'start_time.required' => 'Start time is required.',
             'start_time.after_or_equal' => 'Start time cannot be before 10:00 AM.',
@@ -88,6 +90,37 @@ class AssignclassController extends Controller
 
         $teacherId = $request->teacher_id;
         $semester = $request->semester;
+        $subjectId = $request->subject_id;
+
+        // Check same semester time conflict
+        $semesterTimeOverlap = Assignclass::where('semester', $semester)
+            ->where(function ($query) use ($request) {
+                $query->where('start_time', '<', $request->end_time)
+                    ->where('end_time', '>', $request->start_time);
+            })
+            ->exists();
+
+        if ($semesterTimeOverlap) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Time already assigned to another teacher.',
+            ]);
+        }
+
+        // Check same teacher time conflict
+        $teacherTimeOverlap = Assignclass::where('teacher_id', $teacherId)
+            ->where(function ($query) use ($request) {
+                $query->where('start_time', '<', $request->end_time)
+                    ->where('end_time', '>', $request->start_time);
+            })
+            ->exists();
+
+        if ($teacherTimeOverlap) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You already have a class at this time.',
+            ]);
+        }
 
         // Teacher already assigned in this semester
         $exists = Assignclass::where('teacher_id', $teacherId)
@@ -101,23 +134,7 @@ class AssignclassController extends Controller
             ]);
         }
 
-        // Check time overlap for same semester
-        $timeOverlap = Assignclass::where('semester', $semester)
-            ->where(function ($query) use ($request) {
-                $query->where('start_time', '<', $request->end_time)
-                    ->where('end_time', '>', $request->start_time);
-            })
-            ->exists();
-
-        if ($timeOverlap) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Time already assigned to another teacher.',
-            ]);
-        }
-
-        // Subjects already assigned to teacher
-        $subjectId = $request->subject_ids[0];
+        // Check if subject is already assigned in this semester
         $subjectAssigned = Assignclass::where('semester', $semester)
             ->whereHas('subjects', function ($q) use ($subjectId) {
                 $q->where('subjects.id', $subjectId);
@@ -131,6 +148,7 @@ class AssignclassController extends Controller
             ]);
         }
 
+        // Create assignment
         $assignclass = Assignclass::create([
             'teacher_id' => $teacherId,
             'semester' => $semester,
@@ -138,7 +156,8 @@ class AssignclassController extends Controller
             'end_time' => $request->end_time,
         ]);
 
-        $assignclass->subjects()->attach($request->subject_ids);
+        // Attach single subject
+        $assignclass->subjects()->attach($subjectId);
 
         return response()->json([
             'success' => true,
@@ -150,15 +169,13 @@ class AssignclassController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'teacher_id' => 'required',
-            'semester' => 'required',
-            'subject_ids' => 'required|array|size:1',
+            'teacher_id' => 'required|exists:teachers,id',
+            'semester' => 'required|integer|min:1|max:8',
+            'subject_id' => 'required|exists:subjects,id',
 
             'start_time' => 'required|date_format:H:i|after_or_equal:10:00',
             'end_time' => 'required|date_format:H:i|before_or_equal:17:00|after:start_time',
         ], [
-            'subject_ids.size' => 'Please select only one subject.',
-
             'start_time.required' => 'Start time is required.',
             'start_time.after_or_equal' => 'Start time cannot be before 10:00 AM.',
 
@@ -167,19 +184,11 @@ class AssignclassController extends Controller
             'end_time.after' => 'End time must be after start time.',
         ]);
 
-        $exists = Assignclass::where('teacher_id', $request->teacher_id)
-            ->where('semester', $request->semester)
-            ->where('id', '!=', $id)
-            ->exists();
+        // Find assignment first
+        $assignclass = Assignclass::findOrFail($id);
 
-        if ($exists) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Teacher is already assigned to this semester.',
-            ]);
-        }
-
-        $timeOverlap = Assignclass::where('semester', $request->semester)
+        // Check same semester time conflict
+        $semesterTimeOverlap = Assignclass::where('semester', $request->semester)
             ->where('id', '!=', $id)
             ->where(function ($query) use ($request) {
                 $query->where('start_time', '<', $request->end_time)
@@ -187,19 +196,50 @@ class AssignclassController extends Controller
             })
             ->exists();
 
-        if ($timeOverlap) {
+        if ($semesterTimeOverlap) {
             return response()->json([
                 'success' => false,
                 'message' => 'Time already assigned to another teacher.',
             ]);
         }
 
-        // Subject already assigned to teacher
-        $subjectId = $request->subject_ids[0];
+        // Check same teacher time conflict
+        $teacherTimeOverlap = Assignclass::with('teacher')
+            ->where('teacher_id', $request->teacher_id)
+            ->where('id', '!=', $id)
+            ->where(function ($query) use ($request) {
+                $query->where('start_time', '<', $request->end_time)
+                    ->where('end_time', '>', $request->start_time);
+            })
+            ->first();
+
+        if ($teacherTimeOverlap) {
+            $teacherName = $teacherTimeOverlap->teacher->name ?? 'Teacher';
+
+            return response()->json([
+                'success' => false,
+                'message' => $teacherName.' has another class at this time.',
+            ]);
+        }
+
+        // Teacher already assigned to another assignment in this semester
+        $teacherSemesterExists = Assignclass::where('teacher_id', $request->teacher_id)
+            ->where('semester', $request->semester)
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($teacherSemesterExists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Teacher is already assigned to this semester.',
+            ]);
+        }
+
+        // Subject already assigned to another teacher in this semester
         $subjectAssigned = Assignclass::where('semester', $request->semester)
             ->where('id', '!=', $id)
-            ->whereHas('subjects', function ($q) use ($subjectId) {
-                $q->where('subjects.id', $subjectId);
+            ->whereHas('subjects', function ($query) use ($request) {
+                $query->where('subjects.id', $request->subject_id);
             })
             ->exists();
 
@@ -210,8 +250,7 @@ class AssignclassController extends Controller
             ]);
         }
 
-        $assignclass = Assignclass::findOrFail($id);
-
+        // Update assignment
         $assignclass->update([
             'teacher_id' => $request->teacher_id,
             'semester' => $request->semester,
@@ -219,7 +258,10 @@ class AssignclassController extends Controller
             'end_time' => $request->end_time,
         ]);
 
-        $assignclass->subjects()->sync($request->subject_ids);
+        // Update single subject
+        $assignclass->subjects()->sync([
+            $request->subject_id,
+        ]);
 
         return response()->json([
             'success' => true,

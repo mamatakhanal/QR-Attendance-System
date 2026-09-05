@@ -2,8 +2,9 @@
     <!-- SIDEBAR -->
     <div class="sidebar d-flex flex-column border-end shadow-lg border-2 p-2 rounded-end-4">
         <!-- LOGO -->
-        <div class="d-flex justify-content-between align-items-center mb-3 mt-2 px-2" >
-            <a href="{{ url('/admin/dashboard') }}" class="text-decoration-none d-flex align-items-center border-bottom border-3 pb-1">
+        <div class="d-flex justify-content-between align-items-center mb-3 mt-2 px-2">
+            <a href="{{ url('/admin/dashboard') }}"
+                class="text-decoration-none d-flex align-items-center border-bottom border-3 pb-1">
                 <img src="{{ asset('images/logo.jpg') }}" alt="logo" height="30" class="me-1">
                 <h4 class="fw-bold mt-2">
                     <span class="text-success">QR</span>
@@ -27,8 +28,8 @@
 
             <!-- USERS -->
             <li class="nav-item my-2">
-                <div class="menu-toggle d-flex justify-content-between align-items-center"
-                    data-bs-toggle="collapse" data-bs-target="#userMenu" aria-expanded="true"
+                <div class="menu-toggle d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+                    data-bs-target="#userMenu" aria-expanded="true"
                     style="cursor:pointer; font-size:14px; padding:0.5rem 1rem;">
                     <span>Users</span>
                     <i class="bi bi-chevron-down arrow"></i>
@@ -43,7 +44,7 @@
                     <li>
                         <a href="{{ route('admin.students') }}"
                             class="nav-link {{ request()->routeIs('admin.students') ? 'active-sidebar' : '' }}">
-                            <i class="bi bi-people-fill me-3"></i> Students  
+                            <i class="bi bi-people-fill me-3"></i> Students
                         </a>
                     </li>
                 </ul>
@@ -51,8 +52,8 @@
 
             <!-- CLASS SUBJECT -->
             <li class="nav-item my-2">
-                <div class="menu-toggle d-flex justify-content-between align-items-center"
-                    data-bs-toggle="collapse" data-bs-target="#classMenu" aria-expanded="true"
+                <div class="menu-toggle d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+                    data-bs-target="#classMenu" aria-expanded="true"
                     style="cursor:pointer; font-size:14px; padding:0.5rem 1rem;">
                     <span>Class & Subject</span>
                     <i class="bi bi-chevron-down arrow"></i>
@@ -68,6 +69,12 @@
                         <a href="{{ route('admin.assignclass') }}"
                             class="nav-link {{ request()->routeIs('admin.assignclass') ? 'active-sidebar' : '' }}">
                             <i class="bi bi-building me-3"></i> Assign Classes
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.classreplacement') }}"
+                            class="nav-link {{ request()->routeIs('admin.classreplacement') ? 'active-sidebar' : '' }}">
+                            <i class="bi bi-arrow-left-right me-3"></i>  Class Replacement
                         </a>
                     </li>
                 </ul>

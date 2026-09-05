@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AssignclassController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\ClassesController;
+use App\Http\Controllers\Admin\ClassReplacementController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -112,13 +113,29 @@ Route::prefix('/admin')->group(function () {
 
     Route::get('/assignclass/{id}', [AssignclassController::class, 'show']);
 
+    // Class Replacement
+    Route::get('/classreplacement', [ClassReplacementController::class, 'classreplacement'])
+        ->name('admin.classreplacement');
+
+    Route::post('/classreplacement/store', [ClassReplacementController::class, 'store'])
+        ->name('admin.classreplacement.store');
+
+    Route::get('/classreplacement/{id}/edit', [ClassReplacementController::class, 'edit'])
+        ->name('admin.classreplacement.edit');
+
+    Route::put('/classreplacement/update/{id}', [ClassReplacementController::class, 'update'])
+        ->name('admin.classreplacement.update');
+
+    Route::delete('/classreplacement/{id}', [ClassReplacementController::class, 'delete'])
+        ->name('admin.classreplacement.delete');
+
     Route::get('/classes', [ClassesController::class, 'classes'])
         ->name('admin.classes');
 
     Route::get('/attendance', [AttendanceController::class, 'attendance'])
         ->name('admin.attendance');
 
-    Route::get('/attendance/pdf',[AttendanceController::class, 'downloadPdf'])
+    Route::get('/attendance/pdf', [AttendanceController::class, 'downloadPdf'])
         ->name('admin.attendance.pdf');
 
     Route::get('/profile', [ProfileController::class, 'profile'])

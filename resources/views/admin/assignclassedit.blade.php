@@ -45,29 +45,27 @@
 
                         <div class="col-md-12">
                             <label class="form-label">Subjects</label>
-                            <div class="dropdown">
-                                <button id="subjectBtnEdit"
-                                    class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button"
-                                    data-bs-toggle="dropdown"> Select Subjects </button>
-                                <ul class="dropdown-menu w-100 p-3" id="editsubjectDropdown"
-                                    style="max-height:250px; overflow-y:auto;">
-                                    <li>Select semester first</li>
-                                </ul>
-                            </div>
-                            {{-- Selected subject ids --}}
-                            <div id="selectedSubjects"></div>
-                            <small id="edit_subject_ids_error" class="text-danger"></small>
+                            <select name="subject_id" id="edit_subject" class="form-select" required>
+
+                                <option value="">
+                                    Select Semester First
+                                </option>
+
+                            </select>
+                            <small id="edit_subject_id_error" class="text-danger"></small>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Start Time</label>
-                            <input type="time" name="start_time" id="edit_start_time" class="form-control" required>
+                            <input type="time" name="start_time" id="edit_start_time" class="form-control"
+                                min="10:00" max="17:00" required>
                             <small id="edit_start_time_error" class="text-danger"></small>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">End Time</label>
-                            <input type="time" name="end_time" id="edit_end_time" class="form-control" required>
+                            <input type="time" name="end_time" id="edit_end_time" class="form-control" min="10:00"
+                                max="17:00" required>
                             <small id="edit_end_time_error" class="text-danger"></small>
                         </div>
                     </div>
@@ -82,8 +80,6 @@
 </body>
 
 <script>
-    let selectedSubjects = [];
-
     // Open Edit Modal
     $(document).on('click', '.edit-btn', function() {
 
@@ -91,18 +87,13 @@
         let teacher = $(this).data('teacher');
         let semester = $(this).data('semester');
         let teacherName = $(this).data('teacher-name');
-        let subjects = $(this).attr('data-subjects');
+        let subjectId = $(this).data('subject-id');
+        let subjectName = $(this).data('subject-name');
 
         // Get existing time
         let startTime = $(this).data('start-time');
         let endTime = $(this).data('end-time');
 
-        // Convert subject IDs to array
-        try {
-            selectedSubjects = JSON.parse(subjects).map(Number);
-        } catch (e) {
-            selectedSubjects = [];
-        }
 
         // Set existing values
         $('#edit_id').val(id);
@@ -120,19 +111,30 @@
         );
 
         // Load subjects for selected semester
-        loadSubjects(semester);
+        loadSubjects(semester, subjectId, subjectName);
     });
 
 
     // Load Subjects Function
-    function loadSubjects(semester) {
+    function loadSubjects(semester, selectedSubjectId = '', selectedSubjectName = '') {
 
-        let dropdown = $('#editsubjectDropdown');
+        let dropdown = $('#edit_subject');
 
-        dropdown.html('<li class="text-muted">Loading...</li>');
+        // Show existing subject immediately
+        if (selectedSubjectId && selectedSubjectName) {
+            dropdown.html(
+                '<option value="' + selectedSubjectId + '" selected>' +
+                selectedSubjectName +
+                '</option>'
+            );
+        } else {
+            dropdown.html('<option value="">Loading...</option>');
+        }
 
         if (!semester) {
-            dropdown.html('<li>Select semester first</li>');
+            dropdown.html(
+                '<option value="">Select Semester First</option>'
+            );
             return;
         }
 
@@ -145,118 +147,69 @@
                 dropdown.empty();
 
                 if (data.length === 0) {
-                    dropdown.html('<li class="text-muted">No subjects found</li>');
-                    updateSelectedCount();
+                    dropdown.html(
+                        '<option value="">No subjects found</option>'
+                    );
                     return;
                 }
 
-                data.forEach(function(sub) {
+                dropdown.append(
+                    '<option value="">Select Subject</option>'
+                );
 
-                    let subjectId = Number(sub.id);
+                $.each(data, function(key, subject) {
 
-                    let checked = selectedSubjects.includes(subjectId) ?
-                        'checked' :
+                    let selected =
+                        Number(subject.id) === Number(selectedSubjectId) ?
+                        'selected' :
                         '';
 
                     dropdown.append(`
-                        <li>
-                            <div class="form-check">
-                                <input
-                                    class="form-check-input edit-subject-check"
-                                    type="checkbox"
-                                    name="subject_ids[]"
-                                    value="${subjectId}"
-                                    id="edit_subject_${subjectId}"
-                                    ${checked}>
-
-                                <label
-                                    class="form-check-label"
-                                    for="edit_subject_${subjectId}">
-                                    ${sub.subject_name}
-                                </label>
-                            </div>
-                        </li>
-                    `);
+                    <option value="${subject.id}" ${selected}>
+                        ${subject.subject_name}
+                    </option>
+                `);
                 });
-
-                updateSelectedCount();
             },
 
             error: function() {
-                dropdown.html(
-                    '<li class="text-danger">Unable to load subjects</li>'
-                );
+
+                // Keep existing selected subject if AJAX fails
+                if (selectedSubjectId && selectedSubjectName) {
+                    dropdown.html(
+                        '<option value="' + selectedSubjectId + '" selected>' +
+                        selectedSubjectName +
+                        '</option>'
+                    );
+                } else {
+                    dropdown.html(
+                        '<option value="">Unable to load subjects</option>'
+                    );
+                }
             }
         });
     }
-
 
     // Semester Change
     $(document).on('change', '#edit_semester', function() {
 
         let semester = $(this).val();
 
-        // Clear old subject
-        selectedSubjects = [];
-
-        $('#editsubjectDropdown').html(
-            '<li>Selecting subjects...</li>'
-        );
+        $('#edit_subject_id_error').text('');
 
         if (semester) {
+
             loadSubjects(semester);
+
         } else {
-            $('#editsubjectDropdown').html(
-                '<li>Select semester first</li>'
+
+            $('#edit_subject').html(
+                '<option value="">Select Semester First</option>'
             );
+
         }
 
-        updateSelectedCount();
     });
-
-
-    // Subject checkbox change
-    $(document).on('change', '.edit-subject-check', function() {
-
-        let checkedSubjects = $('.edit-subject-check:checked')
-            .map(function() {
-                return Number($(this).val());
-            })
-            .get();
-
-        selectedSubjects = checkedSubjects;
-
-        updateSelectedCount();
-
-        $('#edit_subject_ids_error').text('');
-    });
-
-
-    // Update selected subject button
-    function updateSelectedCount() {
-
-        let checked = $('.edit-subject-check:checked');
-
-        if (checked.length > 0) {
-
-            let names = [];
-
-            checked.each(function() {
-                names.push(
-                    $(this).closest('.form-check')
-                    .find('label')
-                    .text()
-                    .trim()
-                );
-            });
-
-            $('#subjectBtnEdit').text(names.join(', '));
-
-        } else {
-
-            $('#subjectBtnEdit').text('Select Subject');
-        }
-    }
 
 
     // Reset modal
@@ -268,15 +221,15 @@
 
         $('#teacher_name_title').text('');
 
-        $('#editsubjectDropdown').html(
-            '<li>Select semester first</li>'
+        $('#edit_subject').html(
+            '<option value="">Select Semester First</option>'
         );
 
-        $('#subjectBtnEdit').text('Select Subject');
+        $('#edit_subject_id_error').text('');
 
-        $('#edit_subject_ids_error').text('');
+        $('#edit_start_time_error').text('');
 
-        selectedSubjects = [];
+        $('#edit_end_time_error').text('');
     });
 
 
@@ -285,33 +238,9 @@
 
         e.preventDefault();
 
-        $('#edit_subject_ids_error').text('');
-
-        let checkedSubjects = $('.edit-subject-check:checked')
-            .map(function() {
-                return $(this).val();
-            })
-            .get();
+        $('#edit_subject_id_error').text('');
 
 
-        // No subject
-        if (checkedSubjects.length === 0) {
-
-            $('#edit_subject_ids_error')
-                .text('Please select one subject.');
-
-            return;
-        }
-
-
-        // More than one subject
-        if (checkedSubjects.length > 1) {
-
-            $('#edit_subject_ids_error')
-                .text('Please select only one subject.');
-
-            return;
-        }
 
 
         $.ajax({
@@ -330,7 +259,7 @@
 
                 semester: $('#edit_semester').val(),
 
-                subject_ids: checkedSubjects,
+                subject_id: $('#edit_subject').val(),
 
                 start_time: $('#edit_start_time').val(),
 
@@ -347,7 +276,7 @@
                         icon: 'error',
                         title: response.message,
                         showConfirmButton: false,
-                        timer: 1000,
+                        timer: 2000,
                         timerProgressBar: true,
                         customClass: {
                             popup: 'small-toast'
@@ -370,7 +299,7 @@
                     icon: 'success',
                     title: response.message,
                     showConfirmButton: false,
-                    timer: 1000,
+                    timer: 2000,
                     timerProgressBar: true,
                     customClass: {
                         popup: 'small-toast'
@@ -405,15 +334,10 @@
 
                     $.each(errors, function(key, value) {
 
-                        if (key === 'subject_ids') {
-
-                            $('#edit_subject_ids_error')
-                                .text(value[0]);
-
+                        if (key === 'subject_id') {
+                            $('#edit_subject_id_error').text(value[0]);
                         } else {
-
-                            $('#edit_' + key + '_error')
-                                .text(value[0]);
+                            $('#edit_' + key + '_error').text(value[0]);
                         }
                     });
                 }
