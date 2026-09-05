@@ -19,12 +19,29 @@ class AttendanceRecordsController extends Controller
             return redirect('/home');
         }
 
+        // Get real current date
+        $realDateTime = $this->getRealDateTime();
+
+        if (! $realDateTime) {
+            return redirect()->back()->with(
+                'error',
+                'Unable to verify the current date and time. Please check your internet connection.'
+            );
+        }
+
+        $realDate = $realDateTime['date'];
+
         $request->validate([
             'semester' => 'nullable|integer|between:1,8',
             'subject_id' => 'nullable|exists:subjects,id',
             'status' => 'nullable|in:present,absent',
-            'from_date' => ['nullable', 'date', 'before_or_equal:today'],
-            'to_date' => ['nullable', 'date', 'before_or_equal:today', 'after_or_equal:from_date'],
+            'from_date' => ['nullable', 'date', 'before_or_equal:'.$realDate],
+            'to_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:'.$realDate,
+                'after_or_equal:from_date',
+            ],
             'search' => 'nullable|string|max:100',
         ]);
 
@@ -106,6 +123,7 @@ class AttendanceRecordsController extends Controller
             'attendances' => $attendances,
             'assignedSemesters' => $assignedSemesters,
             'subjects' => $subjects,
+            'realDate' => $realDate,
         ]);
     }
 
@@ -174,9 +192,52 @@ class AttendanceRecordsController extends Controller
             [
                 'teacher' => $teacher,
                 'attendances' => $attendances,
+                'realDateTime' => $realDateTime,
             ]
         );
+        $pdf->setPaper('A4', 'landscape');
 
         return $pdf->download('teacher-attendance-report.pdf');
+    }
+
+    // Get Real Date and Time
+    private function getRealDateTime()
+    {
+        try {
+
+            $response = Http::connectTimeout(5)
+                ->timeout(5)
+                ->get(
+                    'https://timeapi.io/api/time/current/zone',
+                    [
+                        'timeZone' => 'Asia/Kathmandu',
+                    ]
+                );
+
+            if (! $response->successful()) {
+                return null;
+            }
+
+            $data = $response->json();
+
+            if (! isset($data['date'], $data['time'])) {
+                return null;
+            }
+
+            // Convert API date to YYYY-MM-DD
+            $date = Carbon::parse($data['date'])->format('Y-m-d');
+
+            // Convert API time to HH:MM:SS
+            $time = Carbon::parse($data['time'])->format('H:i:s');
+
+            return [
+                'date' => $date,
+                'time' => $time,
+            ];
+
+        } catch (\Throwable $e) {
+
+            return null;
+        }
     }
 }

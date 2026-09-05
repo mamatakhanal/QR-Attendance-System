@@ -34,7 +34,8 @@ class AttendanceController extends Controller
         $realDate = $realDateTime['date'];
         $realTime = $realDateTime['time'];
 
-        $currentDateTime = Carbon::parse(
+        $currentDateTime = Carbon::createFromFormat(
+            'Y-m-d H:i:s',
             $realDate.' '.$realTime,
             'Asia/Kathmandu'
         );
@@ -45,10 +46,11 @@ class AttendanceController extends Controller
 
         foreach ($oldSessions as $oldSession) {
 
-            $sessionEnd = Carbon::parse(
-                $oldSession->date.' '.$oldSession->end_time,
-                'Asia/Kathmandu'
-            );
+            $sessionEnd = Carbon::parse($oldSession->date)
+                ->setTimeFromTimeString(
+                    Carbon::parse($oldSession->end_time)->format('H:i:s')
+                )
+                ->setTimezone('Asia/Kathmandu');
 
             if ($currentDateTime->greaterThanOrEqualTo($sessionEnd)) {
 
@@ -94,7 +96,10 @@ class AttendanceController extends Controller
             $currentClass = Assignclass::with([
                 'subjects',
                 'teacher',
-            ])->find($selectedClass);
+            ])
+                ->where('id', $selectedClass)
+                ->where('teacher_id', $teacher->id)
+                ->first();
 
             if ($currentClass) {
 
@@ -139,7 +144,11 @@ class AttendanceController extends Controller
         }
 
         // Selected class
-        $assignClass = Assignclass::with('subjects')->find($request->assign_class_id);
+        $assignClass = Assignclass::with('subjects')
+            ->where('id', $request->assign_class_id)
+            ->where('teacher_id', $teacher->id)
+            ->first();
+
         if (! $assignClass) {
             return response()->json([
                 'success' => false,
@@ -147,8 +156,18 @@ class AttendanceController extends Controller
             ]);
         }
 
+        $subject = $assignClass->subjects->first();
+
+        if (! $subject) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No subject is assigned to this class.',
+            ]);
+        }
+
         $session = AttendanceSession::where('assign_class_id', $assignClass->id)
             ->where('teacher_id', $teacher->id)
+            ->where('subject_id', $subject->id)
             ->whereDate('date', $realDate)
             ->where('status', 'Open')
             ->first();
@@ -161,15 +180,17 @@ class AttendanceController extends Controller
         }
 
         // Session time expired
-        $currentTime = Carbon::parse(
+        $currentTime = Carbon::createFromFormat(
+            'Y-m-d H:i:s',
             $realDate.' '.$realTime,
             'Asia/Kathmandu'
         );
 
-        $sessionEnd = Carbon::parse(
-            $session->date.' '.$session->end_time,
-            'Asia/Kathmandu'
-        );
+        $sessionEnd = Carbon::parse($session->date)
+            ->setTimeFromTimeString(
+                Carbon::parse($session->end_time)->format('H:i:s')
+            )
+            ->setTimezone('Asia/Kathmandu');
 
         if ($currentTime->greaterThanOrEqualTo($sessionEnd)) {
 
@@ -224,6 +245,7 @@ class AttendanceController extends Controller
         $attendance = Attendance::where('student_id', $student->id)
             ->where('teacher_id', $teacher->id)
             ->where('subject_id', $assignClass->subjects->first()->id)
+            ->where('assign_class_id', $assignClass->id)
             ->whereDate('date', $realDate)
             ->first();
 
@@ -286,7 +308,8 @@ class AttendanceController extends Controller
         $realDate = $realDateTime['date'];
         $realTime = $realDateTime['time'];
 
-        $currentTime = Carbon::parse(
+        $currentTime = Carbon::createFromFormat(
+            'Y-m-d H:i:s',
             $realDate.' '.$realTime,
             'Asia/Kathmandu'
         );
@@ -296,6 +319,7 @@ class AttendanceController extends Controller
         if (! $teacher) {
             return response()->json([
                 'success' => false,
+                'message' => 'Teacher not found.',
             ]);
         }
 
@@ -307,6 +331,7 @@ class AttendanceController extends Controller
         if (! $assignClass) {
             return response()->json([
                 'success' => false,
+                'message' => 'Class not found or you are not assigned to this class.',
             ]);
         }
 
@@ -322,25 +347,27 @@ class AttendanceController extends Controller
         // Check if today's session already exists
         $session = AttendanceSession::where('assign_class_id', $assignClass->id)
             ->where('teacher_id', $teacher->id)
+            ->where('subject_id', $subject->id)
             ->whereDate('date', $realDate)
             ->first();
 
         // Check if today's session already open
         if ($session) {
 
-            if ($session->status == 'Open') {
+            if ($session->status === 'Open') {
 
-                $sessionEnd = Carbon::parse(
-                    $session->date.' '.$session->end_time,
-                    'Asia/Kathmandu'
-                );
+                $sessionEnd = Carbon::parse($session->date)
+                    ->setTimeFromTimeString(
+                        Carbon::parse($session->end_time)->format('H:i:s')
+                    )
+                    ->setTimezone('Asia/Kathmandu');
 
                 if ($currentTime->greaterThanOrEqualTo($sessionEnd)) {
 
                     $this->markAbsentStudents(
                         $assignClass,
                         $teacher->id,
-                        $session->date
+                        $realDate
                     );
 
                     $session->update([
@@ -350,7 +377,7 @@ class AttendanceController extends Controller
                     return response()->json([
                         'success' => true,
                         'type' => 'closed',
-                        'message' => 'Attendance session has expired. Remaining students have been marked Absent.',
+                        'message' => 'Attendance period has ended. Students who did not scan have been marked Absent.',
                     ]);
                 }
 
@@ -360,22 +387,18 @@ class AttendanceController extends Controller
                 ]);
             }
 
-            // Already closed today
-            if ($session->status == 'Closed') {
+            // Session is already closed
+            if ($session->status === 'Closed') {
+
                 return response()->json([
                     'success' => true,
                     'type' => 'closed',
-                    'message' => 'Attendance for this class has already ended.<br> All students who did not scan their QR code have been marked as <strong>Absent</strong>.',
+                    'message' => 'The attendance session for this class has already ended. Students who did not scan their QR code have been marked Absent.',
                 ]);
             }
-
-            // Session is still active
-            return response()->json([
-                'success' => true,
-                'type' => 'open',
-            ]);
         }
 
+        // No session = allow a new attendance
         return response()->json([
             'success' => true,
             'type' => 'new',
@@ -402,33 +425,59 @@ class AttendanceController extends Controller
         if (! $teacher) {
             return response()->json([
                 'success' => false,
+                'message' => 'Teacher not found.',
             ]);
         }
 
         $assignClass = Assignclass::with('subjects')
-            ->find($request->assign_class_id);
+            ->where('id', $request->assign_class_id)
+            ->where('teacher_id', $teacher->id)
+            ->first();
 
         if (! $assignClass) {
             return response()->json([
                 'success' => false,
+                'message' => 'Class not found or you are not assigned to this class.',
             ]);
         }
 
         $subject = $assignClass->subjects->first();
 
-        // Prevent duplicate session
-        $exists = AttendanceSession::where('assign_class_id', $assignClass->id)
-            ->where('teacher_id', $teacher->id)
-            ->whereDate('date', $realDate)
-            ->exists();
-
-        if ($exists) {
+        if (! $subject) {
             return response()->json([
                 'success' => false,
+                'message' => 'No subject is assigned to this class.',
             ]);
         }
 
-        $startTime = Carbon::parse(
+        // Check existing session for today
+        $existingSession = AttendanceSession::where('assign_class_id', $assignClass->id)
+            ->where('teacher_id', $teacher->id)
+            ->where('subject_id', $subject->id)
+            ->whereDate('date', $realDate)
+            ->first();
+
+        // Do not create another session if one already exists
+        if ($existingSession) {
+
+            if ($existingSession->status === 'Open') {
+                return response()->json([
+                    'success' => true,
+                    'type' => 'open',
+                ]);
+            }
+
+            if ($existingSession->status === 'Closed') {
+                return response()->json([
+                    'success' => false,
+                    'type' => 'closed',
+                    'message' => 'The attendance session for this class has already ended.',
+                ]);
+            }
+        }
+
+        $startTime = Carbon::createFromFormat(
+            'Y-m-d H:i:s',
             $realDate.' '.$realTime,
             'Asia/Kathmandu'
         );
@@ -474,6 +523,7 @@ class AttendanceController extends Controller
             $exists = Attendance::where('student_id', $student->id)
                 ->where('teacher_id', $teacherId)
                 ->where('subject_id', $subject->id)
+                ->where('assign_class_id', $assignClass->id)
                 ->whereDate('date', $date)
                 ->exists();
 
@@ -485,6 +535,7 @@ class AttendanceController extends Controller
                     'student_id' => $student->id,
                     'teacher_id' => $teacherId,
                     'subject_id' => $subject->id,
+                    'assign_class_id' => $assignClass->id,
                     'date' => $date,
                     'time' => null,
                     'status' => 'Absent',
@@ -496,40 +547,78 @@ class AttendanceController extends Controller
     // Get Attendance Count
     public function getAttendanceCount(Request $request)
     {
+        // Get real date instead of device/server date
         $realDateTime = $this->getRealDateTime();
 
         if (! $realDateTime) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to get the current real date and time.',
+                'message' => 'Unable to verify the current date and time.',
             ]);
         }
 
         $realDate = $realDateTime['date'];
 
+        // Logged in teacher
         $teacher = Teachers::find(session('teacher_id'));
 
-        $assignClass = Assignclass::with('subjects')
-            ->find($request->assign_class_id);
+        if (! $teacher) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Teacher not found.',
+            ]);
+        }
 
+        // Selected class
+        $assignClass = Assignclass::with('subjects')
+            ->where('id', $request->assign_class_id)
+            ->where('teacher_id', $teacher->id)
+            ->first();
+
+        if (! $assignClass) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Class not found.',
+            ]);
+        }
+
+        // Get subject
         $subject = $assignClass->subjects->first();
 
-        $present = Attendance::where('teacher_id', $teacher->id)
+        if (! $subject) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No subject assigned to this class.',
+            ]);
+        }
+
+        // Present students
+        $present = Attendance::where('assign_class_id', $assignClass->id)
+            ->where('teacher_id', $teacher->id)
             ->where('subject_id', $subject->id)
             ->whereDate('date', $realDate)
             ->where('status', 'Present')
             ->count();
 
-        $absent = Attendance::where('teacher_id', $teacher->id)
+        // Absent students
+        $absent = Attendance::where('assign_class_id', $assignClass->id)
+            ->where('teacher_id', $teacher->id)
             ->where('subject_id', $subject->id)
             ->whereDate('date', $realDate)
             ->where('status', 'Absent')
             ->count();
 
+        // Total students in selected semester
+        $total = Students::where(
+            'current_semester',
+            $assignClass->semester
+        )->count();
+
         return response()->json([
+            'success' => true,
             'present' => $present,
             'absent' => $absent,
-            'total' => Students::where('current_semester', $assignClass->semester)->count(),
+            'total' => $total,
         ]);
     }
 
@@ -538,8 +627,8 @@ class AttendanceController extends Controller
     {
         try {
 
-            $response = Http::connectTimeout(2)
-                ->timeout(4)
+            $response = Http::connectTimeout(5)
+                ->timeout(5)
                 ->get(
                     'https://timeapi.io/api/time/current/zone',
                     [
@@ -547,31 +636,30 @@ class AttendanceController extends Controller
                     ]
                 );
 
-            if ($response->successful()) {
-
-                $data = $response->json();
-
-                if (isset($data['date'], $data['time'])) {
-
-                    $date = Carbon::parse($data['date'])
-                        ->format('Y-m-d');
-
-                    $time = Carbon::parse($data['time'])
-                        ->format('H:i:s');
-
-                    return [
-                        'date' => $date,
-                        'time' => $time,
-                    ];
-                }
+            if (! $response->successful()) {
+                return null;
             }
+
+            $data = $response->json();
+
+            if (! isset($data['date'], $data['time'])) {
+                return null;
+            }
+
+            // Convert API date to YYYY-MM-DD only
+            $date = Carbon::parse($data['date'])->format('Y-m-d');
+
+            // Convert API time to HH:MM:SS only
+            $time = Carbon::parse($data['time'])->format('H:i:s');
+
+            return [
+                'date' => $date,
+                'time' => $time,
+            ];
 
         } catch (\Throwable $e) {
 
-            // Never use local computer time.
             return null;
         }
-
-        return null;
     }
 }

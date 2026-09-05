@@ -40,7 +40,16 @@
     <br>
     <p><strong>Student:</strong> {{ $student->name }}</p>
     <p><strong>Semester:</strong> {{ $student->current_semester }}</p>
-    <p><strong>Generated Date:</strong> {{ now()->format('d M Y') }}</p>
+
+    <p>
+        <strong>Generated Date:</strong>
+        {{ \Carbon\Carbon::parse($realDateTime['date'])->format('d M Y') }}
+    </p>
+
+    <p>
+        <strong>Generated Time:</strong>
+        {{ \Carbon\Carbon::parse($realDateTime['time'])->format('h:i A') }}
+    </p>
 
     @if (request('from_date') || request('to_date'))
         <p>

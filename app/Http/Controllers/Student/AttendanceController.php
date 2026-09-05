@@ -8,7 +8,9 @@ use App\Models\Admin\Attendance;
 use App\Models\Admin\Students;
 use App\Models\Admin\Subjects;
 use App\Models\Admin\Teachers;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use PDF;
 
 class AttendanceController extends Controller
@@ -21,9 +23,24 @@ class AttendanceController extends Controller
             return redirect('/home');
         }
 
+        // Get real current date
+        $realDateTime = $this->getRealDateTime();
+        if (! $realDateTime) {
+            return redirect()->back()->with(
+                'error',
+                'Unable to verify the current date and time. Please check your internet connection.'
+            );
+        }
+        $realDate = $realDateTime['date'];
+
         $request->validate([
-            'from_date' => ['nullable', 'date', 'before_or_equal:today'],
-            'to_date' => ['nullable', 'date', 'before_or_equal:today', 'after_or_equal:from_date'],
+            'from_date' => ['nullable', 'date', 'before_or_equal:'.$realDate],
+            'to_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:'.$realDate,
+                'after_or_equal:from_date',
+            ],
         ]);
 
         $attendances = Attendance::with(['subject', 'teacher'])
@@ -73,6 +90,7 @@ class AttendanceController extends Controller
             'attendances' => $attendances,
             'subjects' => $subjects,
             'teachers' => $teachers,
+            'realDate' => $realDate,
         ]);
     }
 
@@ -83,6 +101,34 @@ class AttendanceController extends Controller
         if (! $student) {
             return redirect('/home');
         }
+
+        // Get real current date
+        $realDateTime = $this->getRealDateTime();
+
+        if (! $realDateTime) {
+            return redirect()->back()->with(
+                'error',
+                'Unable to verify the current date and time. Please check your internet connection.'
+            );
+        }
+
+        $realDate = $realDateTime['date'];
+
+        // Validate dates using real date
+        $request->validate([
+            'from_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:'.$realDate,
+            ],
+
+            'to_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:'.$realDate,
+                'after_or_equal:from_date',
+            ],
+        ]);
 
         $attendances = Attendance::with([
             'subject',
@@ -118,8 +164,51 @@ class AttendanceController extends Controller
             'student' => $student,
             'attendances' => $attendances,
             'request' => $request,
+            'realDateTime' => $realDateTime,
         ]);
 
+        $pdf->setPaper('A4', 'landscape');
         return $pdf->download('my-attendance-report.pdf');
+    }
+
+    // Get Real Date and Time
+    private function getRealDateTime()
+    {
+        try {
+
+            $response = Http::connectTimeout(5)
+                ->timeout(5)
+                ->get(
+                    'https://timeapi.io/api/time/current/zone',
+                    [
+                        'timeZone' => 'Asia/Kathmandu',
+                    ]
+                );
+
+            if (! $response->successful()) {
+                return null;
+            }
+
+            $data = $response->json();
+
+            if (! isset($data['date'], $data['time'])) {
+                return null;
+            }
+
+            // Convert API date to YYYY-MM-DD
+            $date = Carbon::parse($data['date'])->format('Y-m-d');
+
+            // Convert API time to HH:MM:SS
+            $time = Carbon::parse($data['time'])->format('H:i:s');
+
+            return [
+                'date' => $date,
+                'time' => $time,
+            ];
+
+        } catch (\Throwable $e) {
+
+            return null;
+        }
     }
 }

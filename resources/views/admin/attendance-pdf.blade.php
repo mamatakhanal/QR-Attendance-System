@@ -49,8 +49,16 @@
 
     <h2>Attendance Report</h2>
     <br>
-    <p><strong>Generated Date:</strong> {{ now()->format('d M Y') }}</p>
-    <p><strong>Generated Time:</strong> {{ now()->format('h:i A') }}</p>
+
+    <p>
+        <strong>Generated Date:</strong>
+        {{ \Carbon\Carbon::parse($realDateTime['date'])->format('d M Y') }}
+    </p>
+
+    <p>
+        <strong>Generated Time:</strong>
+        {{ \Carbon\Carbon::parse($realDateTime['time'])->format('h:i A') }}
+    </p>
 
     @if (request('from_date') || request('to_date'))
         <p>
@@ -85,13 +93,13 @@
 
                     <td>{{ $loop->iteration }}</td>
 
-                    <td>{{ $attendance->student->name ?? '-' }}</td>
+                    <td>{{ $attendance->student?->name ?? '-' }}</td>
 
-                    <td>{{ $attendance->student->student_code ?? '-' }}</td>
+                    <td>{{ $attendance->student?->student_code ?? '-' }}</td>
 
                     <td>{{ $attendance->semester }}</td>
 
-                    <td>{{ $attendance->teacher->name ?? '-' }}</td>
+                    <td>{{ $attendance->teacher?->name ?? '-' }}</td>
 
                     <td>{{ $attendance->subject->subject_name ?? '-' }}</td>
 

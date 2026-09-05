@@ -72,7 +72,7 @@
                             Today's Classes
                         </h5>
                         <span class="badge bg-light text-dark fs-6 px-3 py-2">
-                            {{ now()->format('d M Y') }}
+                            {{ \Carbon\Carbon::parse($realDate)->format('d F Y') }}
                         </span>
                     </div>
 

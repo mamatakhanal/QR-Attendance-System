@@ -7,8 +7,10 @@ use App\Models\Admin\Admin;
 use App\Models\Admin\Attendance;
 use App\Models\Admin\Subjects;
 use App\Models\Admin\Teachers;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use PDF;
+use Illuminate\Support\Facades\Http;
 
 class AttendanceController extends Controller
 {
@@ -20,10 +22,25 @@ class AttendanceController extends Controller
             return redirect('/admin/login');
         }
 
-         // Validate Date Range
+        // Get real current date
+        $realDateTime = $this->getRealDateTime();
+        if (! $realDateTime) {
+            return redirect()->back()->with(
+                'error',
+                'Unable to verify the current date and time. Please check your internet connection.'
+            );
+        }
+        $realDate = $realDateTime['date'];
+
+        // Validate Date Range
         $request->validate([
-        'from_date' => ['nullable', 'date', 'before_or_equal:today'],
-        'to_date' => ['nullable', 'date', 'before_or_equal:today', 'after_or_equal:from_date'],
+            'from_date' => ['nullable', 'date', 'before_or_equal:'.$realDate],
+            'to_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:'.$realDate,
+                'after_or_equal:from_date',
+            ],
         ]);
 
         $attendances = Attendance::with([
@@ -70,69 +87,152 @@ class AttendanceController extends Controller
             'attendances' => $attendances,
             'teachers' => Teachers::orderBy('name')->get(),
             'subjects' => Subjects::orderBy('subject_name')->get(),
+            'realDate' => $realDate,
         ]);
     }
 
     public function downloadPdf(Request $request)
     {
-        $admin = Admin::find(session('admin_id'));
+            $admin = Admin::find(session('admin_id'));
 
-        if (! $admin) {
-            return redirect('/admin/login');
+            if (! $admin) {
+                return redirect('/admin/login');
+            }
+
+            // Get real current date
+            $now = Carbon::now('Asia/Kathmandu');
+
+            $realDateTime = [
+                'date' => $now->format('Y-m-d'),
+                'time' => $now->format('H:i:s'),
+            ];
+
+            $realDate = $realDateTime['date'];
+
+            // Validate dates using real date
+            $request->validate([
+                'from_date' => [
+                    'nullable',
+                    'date',
+                    'before_or_equal:'.$realDate,
+                ],
+
+                'to_date' => [
+                    'nullable',
+                    'date',
+                    'before_or_equal:'.$realDate,
+                    'after_or_equal:from_date',
+                ],
+            ]);
+
+            $attendances = Attendance::with([
+                'student',
+                'teacher',
+                'subject',
+            ])
+
+                // Semester Filter
+                ->when($request->filled('semester'), function ($q) use ($request) {
+                    $q->where('semester', $request->semester);
+                })
+
+                // Teacher Filter
+                ->when($request->filled('teacher_id'), function ($q) use ($request) {
+                    $q->where('teacher_id', $request->teacher_id);
+                })
+
+                // Student Filter
+                ->when($request->filled('student_id'), function ($q) use ($request) {
+                    $q->where('student_id', $request->student_id);
+                })
+
+                // Status Filter
+                ->when($request->filled('status'), function ($q) use ($request) {
+                    $q->where('status', $request->status);
+                })
+
+                // Date Filter
+                ->when($request->filled('from_date'), function ($q) use ($request) {
+                    $q->whereDate('date', '>=', $request->from_date);
+                })
+
+                ->when($request->filled('to_date'), function ($q) use ($request) {
+                    $q->whereDate('date', '<=', $request->to_date);
+                })
+
+                ->when($request->filled('search'), function ($q) use ($request) {
+
+                    $search = $request->search;
+
+                    $q->whereHas('student', function ($student) use ($search) {
+
+                        $student->where('name', 'like', "%{$search}%")
+                            ->orWhere('roll_no', 'like', "%{$search}%")
+                            ->orWhere('student_code', 'like', "%{$search}%");
+                    });
+                })
+
+                ->orderByDesc('date')
+                ->orderBy('semester')
+                ->orderBy('teacher_id')
+                ->orderBy('student_id')
+                ->orderByRaw("FIELD(status,'Present','Absent')")
+                ->orderBy('time', 'asc')
+                ->get();
+
+            $pdf = Pdf::loadView(
+                'admin.attendance-pdf',
+                [
+                    'admin' => $admin,
+                    'attendances' => $attendances,
+                    'request' => $request,
+                    'realDateTime' => $realDateTime,
+                ]
+            );
+
+            $pdf->setPaper('A4', 'landscape');
+
+            return $pdf->download('admin-attendance-report.pdf');
+    }
+
+    // Get Real Date and Time
+    private function getRealDateTime()
+    {
+        try {
+
+            $response = Http::connectTimeout(5)
+                ->timeout(5)
+                ->get(
+                    'https://timeapi.io/api/time/current/zone',
+                    [
+                        'timeZone' => 'Asia/Kathmandu',
+                    ]
+                );
+
+            if (! $response->successful()) {
+                return null;
+            }
+
+            $data = $response->json();
+
+            if (! isset($data['date'], $data['time'])) {
+                return null;
+            }
+
+            // Convert API date to YYYY-MM-DD
+            $date = Carbon::parse($data['date'])->format('Y-m-d');
+
+            // Convert API time to HH:MM:SS
+            $time = Carbon::parse($data['time'])->format('H:i:s');
+
+            return [
+                'date' => $date,
+                'time' => $time,
+            ];
+
+        } catch (\Throwable $e) {
+
+            return null;
         }
-
-        $attendances = Attendance::with([
-            'student',
-            'teacher',
-            'subject',
-        ])
-
-            // Semester Filter
-            ->when($request->filled('semester'), function ($q) use ($request) {
-                $q->where('semester', $request->semester);
-            })
-
-            // Teacher Filter
-            ->when($request->filled('teacher_id'), function ($q) use ($request) {
-                $q->where('teacher_id', $request->teacher_id);
-            })
-
-            // Student Filter
-            ->when($request->filled('student_id'), function ($q) use ($request) {
-                $q->where('student_id', $request->student_id);
-            })
-
-            // Status Filter
-            ->when($request->filled('status'), function ($q) use ($request) {
-                $q->where('status', $request->status);
-            })
-
-            // Date Filter
-            ->when($request->filled('from_date'), function ($q) use ($request) {
-                $q->whereDate('date', '>=', $request->from_date);
-            })
-
-            ->when($request->filled('to_date'), function ($q) use ($request) {
-                $q->whereDate('date', '<=', $request->to_date);
-            })
-
-            ->orderByDesc('date')
-            ->orderBy('semester')
-            ->orderBy('teacher_id')
-            ->orderBy('student_id')
-            ->orderByRaw("FIELD(status,'Present','Absent')")
-            ->orderBy('time', 'asc')
-            ->get();
-
-        $pdf = PDF::loadView(
-            'admin.attendance-pdf',
-            [
-                'admin' => $admin,
-                'attendances' => $attendances,
-                'request' => $request,
-            ]
-        );
-
-        return $pdf->download('admin-attendance-report.pdf');
     }
 }

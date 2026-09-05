@@ -52,13 +52,13 @@
 
                             <div class="col" style="flex: 0 0 12%; max-width: 12%;">
                                 {{-- <label class="form-label small mb-1">From Date</label> --}}
-                                <input type="date" id="from_date" name="from_date" max="{{ date('Y-m-d') }}"
+                                <input type="date" id="from_date" name="from_date" max="{{ $realDate }}"
                                     class="form-control form-control-sm" value="{{ request('from_date') }}">
                             </div>
 
                             <div class="col" style="flex: 0 0 12%; max-width: 12%;">
                                 {{-- <label class="form-label small mb-1">To Date</label> --}}
-                                <input type="date" id="to_date" name="to_date" max="{{ date('Y-m-d') }}"
+                                <input type="date" id="to_date" name="to_date" max="{{ $realDate }}"
                                      class="form-control form-control-sm" value="{{ request('to_date') }}">
                             </div>
 
