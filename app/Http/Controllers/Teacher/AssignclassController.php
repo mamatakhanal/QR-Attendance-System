@@ -41,6 +41,7 @@ class AssignclassController extends Controller
                 });
             })
             ->orderBy('semester', 'asc')
+            ->orderBy('start_time', 'asc')
             ->paginate(10)
             ->withQueryString();
 

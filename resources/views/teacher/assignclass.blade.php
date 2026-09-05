@@ -26,6 +26,7 @@
                                 <th class="py-3">Semester</th>
                                 <th class="py-3">Subjects</th>
                                 <th class="py-3">Code</th>
+                                <th class="py-3">Class Time</th>
                                 <th class="py-3">Students</th>
                                 <th class="py-3">Action</th>
                             </tr>
@@ -52,6 +53,15 @@
                                         {{ $subject->subject_code }}
                                     </td>
                                     <td>
+                                        @if ($assignclass->start_time && $assignclass->end_time)
+                                            {{ \Carbon\Carbon::parse($assignclass->start_time)->format('h:i A') }}
+                                            -
+                                            {{ \Carbon\Carbon::parse($assignclass->end_time)->format('h:i A') }}
+                                        @else
+                                            <span class="text-muted">Not Assigned</span>
+                                        @endif
+                                    </td>
+                                     <td>
                                         <a href="{{ route('teacher.students', ['semester' => $assignclass->semester]) }}"
                                             class="text-decoration-none text-dark fw-semibold">
                                             {{ $assignclass->student_count }} Students
