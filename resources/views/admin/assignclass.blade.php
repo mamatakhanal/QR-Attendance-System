@@ -19,11 +19,11 @@
             <div class="card shadow-sm border-0 mx-2 my-2 p-4 rounded-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-semibold mb-0">Assign Classes List</h5>
-                     <div class="d-flex align-items-center">
-                    <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
-                        data-bs-target="#addAssignclassModal"> + Assign Class
-                    </button>
-                     </div>
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal"
+                            data-bs-target="#addAssignclassModal"> + Assign Class
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Semester Filter Buttons -->
@@ -45,6 +45,8 @@
                                 <th class="py-3">S.N</th>
                                 <th class="py-3">Teacher</th>
                                 <th class="py-3">Semester</th>
+                                <th class="py-3">Start Time</th>
+                                <th class="py-3">End Time</th>
                                 <th class="py-3">Subject</th>
                                 <th class="py-3">Actions</th>
                             </tr>
@@ -58,6 +60,13 @@
                                     <td>{{ $assignclass->teacher->name ?? 'No Teacher' }}</td>
                                     <td>Semester {{ $assignclass->semester }}</td>
                                     <td>
+                                        {{ $assignclass->start_time ? \Carbon\Carbon::parse($assignclass->start_time)->format('h:i A') : '-' }}
+                                    </td>
+
+                                    <td>
+                                        {{ $assignclass->end_time ? \Carbon\Carbon::parse($assignclass->end_time)->format('h:i A') : '-' }}
+                                    </td>
+                                    <td>
                                         <div class="d-flex flex-wrap gap-2">
                                             @foreach ($assignclass->subjects as $subject)
                                                 <div class="px-2 py-1 border rounded-3 shadow-sm bg-light">
@@ -66,6 +75,7 @@
                                             @endforeach
                                         </div>
                                     </td>
+
                                     <td>
                                         <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 edit-btn"
                                             style="font-size:10px;" data-bs-toggle="modal"
@@ -73,6 +83,8 @@
                                             data-teacher="{{ $assignclass->teacher_id }}"
                                             data-teacher-name="{{ $assignclass->teacher->name }}"
                                             data-semester="{{ $assignclass->semester }}"
+                                            data-start-time="{{ $assignclass->start_time }}"
+                                            data-end-time="{{ $assignclass->end_time }}"
                                             data-subjects='@json($assignclass->subjects->pluck('id'))'>
                                             <i class="bi bi-pencil-square"></i> Edit
                                         </button> &nbsp;
@@ -84,61 +96,61 @@
                                         </button>
                                     </td>
                                 </tr>
-                                @empty
-                                    <tr id="noAssignClassRow">
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            No classes found.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="pagination-data">
-                        @if ($assignclasses->hasPages())
-                            @include('layouts.pagination', ['paginator' => $assignclasses])
-                        @endif
-                    </div>
+                            @empty
+                                <tr id="noAssignClassRow">
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        No classes found.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination-data">
+                    @if ($assignclasses->hasPages())
+                        @include('layouts.pagination', ['paginator' => $assignclasses])
+                    @endif
                 </div>
             </div>
         </div>
-    </body>
+    </div>
+</body>
 
-    <script>
-        function loadData() {
+<script>
+    function loadData() {
 
-            $.ajax({
-                url: window.location.pathname,
-                type: "GET",
-                data: {
-                    search: $("#globalSearch").val(),
-                    semester: $(".semester-btn.active").data("semester")
-                },
-                success: function(response) {
+        $.ajax({
+            url: window.location.pathname,
+            type: "GET",
+            data: {
+                search: $("#globalSearch").val(),
+                semester: $(".semester-btn.active").data("semester")
+            },
+            success: function(response) {
 
-                    $("#assignclass-data").html(
-                        $(response).find("#assignclass-data").html()
-                    );
+                $("#assignclass-data").html(
+                    $(response).find("#assignclass-data").html()
+                );
 
-                    $("#pagination-data").html(
-                        $(response).find("#pagination-data").html()
-                    );
-                }
-            });
-
-        }
-
-        $(document).on("click", ".semester-btn", function() {
-
-            $(".semester-btn")
-                .removeClass("active btn-primary")
-                .addClass("btn-outline-primary");
-
-            $(this)
-                .removeClass("btn-outline-primary")
-                .addClass("btn-primary active");
-
-            loadData();
-
+                $("#pagination-data").html(
+                    $(response).find("#pagination-data").html()
+                );
+            }
         });
-    </script>
+
+    }
+
+    $(document).on("click", ".semester-btn", function() {
+
+        $(".semester-btn")
+            .removeClass("active btn-primary")
+            .addClass("btn-outline-primary");
+
+        $(this)
+            .removeClass("btn-outline-primary")
+            .addClass("btn-primary active");
+
+        loadData();
+
+    });
+</script>

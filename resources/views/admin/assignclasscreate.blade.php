@@ -53,6 +53,18 @@
                             <small id="subject_ids_error" class="text-danger"></small>
                         </div>
 
+                        <div class="col-md-6">
+                            <label class="form-label">Start Time</label>
+                            <input type="time" name="start_time" id="start_time" class="form-control" required>
+                            <small id="start_time_error" class="text-danger"></small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">End Time</label>
+                            <input type="time" name="end_time" id="end_time" class="form-control" required>
+                            <small id="end_time_error" class="text-danger"></small>
+                        </div>
+
                     </div>
                     <div class="modal-footer mt-3 mb-0">
                         <button class="btn btn-success">Save </button>
@@ -130,12 +142,28 @@
                     },
 
                     error: function(xhr) {
+
                         $('.text-danger').text('');
+
                         if (xhr.status === 422) {
+
                             let errors = xhr.responseJSON.errors;
-                            if (errors.subject_ids) {
-                                $('#subject_ids_error').text(errors.subject_ids[0]);
-                            }
+
+                            $.each(errors, function(key, value) {
+
+                                if (key === 'subject_ids') {
+                                    $('#subject_ids_error').text(value[0]);
+                                }
+
+                                if (key === 'start_time') {
+                                    $('#start_time_error').text(value[0]);
+                                }
+
+                                if (key === 'end_time') {
+                                    $('#end_time_error').text(value[0]);
+                                }
+
+                            });
                         }
                     }
                 });
