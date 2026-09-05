@@ -35,6 +35,7 @@
                                         <th class="py-3">Subject Code</th>
                                         <th class="py-3">Subject</th>
                                         <th class="py-3">Teacher</th>
+                                        <th class="py-3">Class Time</th>
                                         <th class="py-3">Contact</th>
                                     </tr>
                                 </thead>
@@ -49,15 +50,28 @@
                                             <td class="pt-3"> {{ $subject->subject_code }} </td>
                                             <td class="pt-3"> {{ $subject->subject_name }} </td>
                                             <td class="pt-3">
-                                                @if (isset($teacherBySubject[$subject->id]))
-                                                    {{ $teacherBySubject[$subject->id]->name }}
+                                                @php
+                                                    $assignment = $assignmentBySubject[$subject->id] ?? null;
+                                                    $teacher = $assignment?->teacher;
+                                                @endphp
+
+                                                @if ($teacher)
+                                                    {{ $teacher->name }}
                                                 @else
                                                     <span class="text-muted">Not Assigned</span>
                                                 @endif
                                             </td>
-                                            @php
-                                                $teacher = $teacherBySubject[$subject->id] ?? null;
-                                            @endphp
+
+                                            <td class="pt-3">
+                                                @if ($assignment?->start_time && $assignment?->end_time)
+                                                    {{ \Carbon\Carbon::parse($assignment->start_time)->format('h:i A') }}
+                                                    -
+                                                    {{ \Carbon\Carbon::parse($assignment->end_time)->format('h:i A') }}
+                                                @else
+                                                    <span class="text-muted">Not Assigned</span>
+                                                @endif
+                                            </td>
+
                                             <td>
                                                 <div>
                                                     <i class="bi bi-envelope me-1 text-muted"></i>
