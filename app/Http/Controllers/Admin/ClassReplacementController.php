@@ -67,22 +67,22 @@ class ClassReplacementController extends Controller
                         })
 
                         // Replacement teacher
-                        ->orWhereHas('replacementTeacher', function ($teacher) use ($search) {
-                            $teacher->where(
-                                'name',
-                                'like',
-                                "%{$search}%"
-                            );
-                        })
+                            ->orWhereHas('replacementTeacher', function ($teacher) use ($search) {
+                                $teacher->where(
+                                    'name',
+                                    'like',
+                                    "%{$search}%"
+                                );
+                            })
 
                         // Subject
-                        ->orWhereHas('assignclass.subjects', function ($subject) use ($search) {
-                            $subject->where(
-                                'subject_name',
-                                'like',
-                                "%{$search}%"
-                            );
-                        });
+                            ->orWhereHas('assignclass.subjects', function ($subject) use ($search) {
+                                $subject->where(
+                                    'subject_name',
+                                    'like',
+                                    "%{$search}%"
+                                );
+                            });
 
                     });
                 }
@@ -97,12 +97,6 @@ class ClassReplacementController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        /*
-        |--------------------------------------------------------------------------
-        | AJAX Request
-        |--------------------------------------------------------------------------
-        */
-
         if ($request->ajax()) {
             return view('admin.classreplacement', [
                 'replacements' => $replacements,
@@ -111,12 +105,6 @@ class ClassReplacementController extends Controller
                 'pageTitle' => 'Class Replacement',
             ])->render();
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Normal Request
-        |--------------------------------------------------------------------------
-        */
 
         return view('admin.classreplacement', [
             'admin' => $admin,
@@ -127,10 +115,6 @@ class ClassReplacementController extends Controller
         ]);
     }
 
-
-    /**
-     * Store a new class replacement.
-     */
     public function store(Request $request)
     {
         $admin = Admin::find(session('admin_id'));
@@ -141,17 +125,33 @@ class ClassReplacementController extends Controller
 
         $request->validate([
             'assign_class_id' => 'required|exists:assign_class,id',
-            'original_teacher_id' => 'required|exists:teachers,id',
-            'replacement_teacher_id' => 'required|exists:teachers,id|different:original_teacher_id',
+            'replacement_teacher_id' => 'required|exists:teachers,id',
             'date' => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
+            'start_time' => 'required|date_format:H:i|after_or_equal:10:00',
+            'end_time' => 'required|date_format:H:i|before_or_equal:17:00|after:start_time',
             'reason' => 'nullable|string|max:255',
+        ], [
+            'start_time.after_or_equal' => 'Start time cannot be before 10:00 AM.',
+            'end_time.before_or_equal' => 'End time cannot be after 5:00 PM.',
+            'end_time.after' => 'End time must be after start time.',
         ]);
+
+        // Get the original assigned class
+        $assignClass = Assignclass::with('teacher')
+            ->findOrFail($request->assign_class_id);
+
+        $originalTeacherId = $assignClass->teacher_id;
+
+        // Replacement teacher cannot be the original teacher
+        if ($originalTeacherId == $request->replacement_teacher_id) {
+            return back()
+                ->withInput()
+                ->with('error', 'The replacement teacher must be different from the original teacher.');
+        }
 
         /*
         |--------------------------------------------------------------------------
-        | Prevent duplicate replacement for same class and date
+        | Prevent duplicate replacement for same class/date
         |--------------------------------------------------------------------------
         */
 
@@ -170,7 +170,7 @@ class ClassReplacementController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Prevent replacement teacher from having overlapping permanent class
+        | Prevent replacement teacher permanent class conflict
         |--------------------------------------------------------------------------
         */
 
@@ -192,7 +192,7 @@ class ClassReplacementController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Prevent replacement teacher from having overlapping replacement
+        | Prevent replacement teacher replacement conflict on same date
         |--------------------------------------------------------------------------
         */
 
@@ -221,7 +221,7 @@ class ClassReplacementController extends Controller
 
         ClassReplacement::create([
             'assign_class_id' => $request->assign_class_id,
-            'original_teacher_id' => $request->original_teacher_id,
+            'original_teacher_id' => $originalTeacherId,
             'replacement_teacher_id' => $request->replacement_teacher_id,
             'date' => $request->date,
             'start_time' => $request->start_time,
@@ -234,10 +234,6 @@ class ClassReplacementController extends Controller
             ->with('success', 'Class replacement created successfully.');
     }
 
-
-    /**
-     * Get replacement data for Edit modal.
-     */
     public function edit($id)
     {
         $replacement = ClassReplacement::with([
@@ -257,24 +253,19 @@ class ClassReplacementController extends Controller
 
             'original_teacher_id' => $replacement->original_teacher_id,
 
-            'original_teacher_name' =>
-                $replacement->originalTeacher->name ?? '',
+            'original_teacher_name' => $replacement->originalTeacher->name ?? '',
 
-            'replacement_teacher_id' =>
-                $replacement->replacement_teacher_id,
+            'replacement_teacher_id' => $replacement->replacement_teacher_id,
 
             'date' => $replacement->date,
 
-            'start_time' =>
-                substr($replacement->start_time, 0, 5),
+            'start_time' => substr($replacement->start_time, 0, 5),
 
-            'end_time' =>
-                substr($replacement->end_time, 0, 5),
+            'end_time' => substr($replacement->end_time, 0, 5),
 
             'reason' => $replacement->reason ?? '',
         ]);
     }
-
 
     /**
      * Update an existing class replacement.
@@ -385,7 +376,6 @@ class ClassReplacementController extends Controller
             ->route('admin.classreplacement')
             ->with('success', 'Class replacement updated successfully.');
     }
-
 
     /**
      * Delete a class replacement.

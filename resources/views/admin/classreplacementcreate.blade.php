@@ -163,459 +163,302 @@
                 </div>
             </form>
         </div>
+
     </div>
+
 </div>
 
 
 <script>
+$(document).ready(function () {
 
-    $(document).ready(function() {
+    $('#replacementSemester').on('change', function () {
 
+        let semester = $(this).val();
+        let subjectDropdown = $('#replacementSubject');
 
-        /*
-        |--------------------------------------------------------------------------
-        | Load Subjects According To Semester
-        |--------------------------------------------------------------------------
-        */
+        subjectDropdown.html(
+            '<option value="">Loading...</option>'
+        );
 
-        $('#replacementSemester').on('change', function() {
-
-            let semester = $(this).val();
-
-            let subjectDropdown = $('#replacementSubject');
-
-
+        if (!semester) {
             subjectDropdown.html(
-                '<option value="">Loading...</option>'
+                '<option value="">Select Semester First</option>'
             );
+            return;
+        }
 
+        $.ajax({
+            url: "{{ url('/admin/assignclass/subjects') }}/" + semester,
+            type: "GET",
 
-            if (!semester) {
+            success: function (data) {
 
-                subjectDropdown.html(
-                    '<option value="">Select Semester First</option>'
-                );
+                subjectDropdown.empty();
 
-                return;
+                if (data.length > 0) {
 
-            }
-
-
-            $.ajax({
-
-                url: "{{ url('/admin/assignclass/subjects') }}/" + semester,
-
-                type: "GET",
-
-                success: function(data) {
-
-                    subjectDropdown.empty();
-
-
-                    if (data.length > 0) {
-
-                        subjectDropdown.append(
-                            '<option value="">Select Subject</option>'
-                        );
-
-
-                        $.each(data, function(key, subject) {
-
-                            subjectDropdown.append(`
-
-                                <option value="${subject.id}">
-                                    ${subject.subject_name}
-                                </option>
-
-                            `);
-
-                        });
-
-                    } else {
-
-                        subjectDropdown.html(
-                            '<option value="">No subjects found</option>'
-                        );
-
-                    }
-
-                },
-
-                error: function() {
-
-                    subjectDropdown.html(
-                        '<option value="">Unable to load subjects</option>'
+                    subjectDropdown.append(
+                        '<option value="">Select Subject</option>'
                     );
 
-                }
-
-            });
-
-        });
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Start Time Validation
-        |--------------------------------------------------------------------------
-        */
-
-        $('#replacementStartTime').on('change', function() {
-
-            let startTime = $(this).val();
-
-            $('#start_time_error').text('');
-
-            if (startTime && startTime < '10:00') {
-
-                $('#start_time_error').text(
-                    'Start time must be between 10:00 AM and 5:00 PM.'
-                );
-
-                $(this).val('');
-
-            }
-
-        });
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | End Time Validation
-        |--------------------------------------------------------------------------
-        */
-
-        $('#replacementEndTime').on('change', function() {
-
-            let endTime = $(this).val();
-
-            let startTime = $('#replacementStartTime').val();
-
-            $('#end_time_error').text('');
-
-
-            if (endTime && endTime > '17:00') {
-
-                $('#end_time_error').text(
-                    'End time must be between 10:00 AM and 5:00 PM.'
-                );
-
-                $(this).val('');
-
-                return;
-
-            }
-
-
-            if (startTime && endTime && endTime <= startTime) {
-
-                $('#end_time_error').text(
-                    'End time must be after start time.'
-                );
-
-                $(this).val('');
-
-            }
-
-        });
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Submit Form Validation
-        |--------------------------------------------------------------------------
-        */
-
-        $('#createClassReplacementForm').submit(function(e) {
-
-            e.preventDefault();
-
-
-            $('#subject_id_error').text('');
-            $('#start_time_error').text('');
-            $('#end_time_error');
-
-
-            let teacher = $('#replacementTeacher').val();
-
-            let semester = $('#replacementSemester').val();
-
-            let subject = $('#replacementSubject').val();
-
-            let startTime = $('#replacementStartTime').val();
-
-            let endTime = $('#replacementEndTime').val();
-
-
-            /*
-            | Teacher
-            */
-
-            if (!teacher) {
-
-                return;
-
-            }
-
-
-            /*
-            | Semester
-            */
-
-            if (!semester) {
-
-                return;
-
-            }
-
-
-            /*
-            | Subject
-            */
-
-            if (!subject) {
-
-                $('#subject_id_error').text(
-                    'Please select a subject.'
-                );
-
-                return;
-
-            }
-
-
-            /*
-            | Start Time
-            */
-
-            if (!startTime) {
-
-                $('#start_time_error').text(
-                    'Please select start time.'
-                );
-
-                return;
-
-            }
-
-
-            if (startTime < '10:00' || startTime > '17:00') {
-
-                $('#start_time_error').text(
-                    'Start time must be between 10:00 AM and 5:00 PM.'
-                );
-
-                return;
-
-            }
-
-
-            /*
-            | End Time
-            */
-
-            if (!endTime) {
-
-                $('#end_time_error').text(
-                    'Please select end time.'
-                );
-
-                return;
-
-            }
-
-
-            if (endTime < '10:00' || endTime > '17:00') {
-
-                $('#end_time_error').text(
-                    'End time must be between 10:00 AM and 5:00 PM.'
-                );
-
-                return;
-
-            }
-
-
-            /*
-            | End time must be after start time
-            */
-
-            if (endTime <= startTime) {
-
-                $('#end_time_error').text(
-                    'End time must be after start time.'
-                );
-
-                return;
-
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Submit
-            |--------------------------------------------------------------------------
-            */
-
-            let formData = new FormData(this);
-
-
-            $.ajax({
-
-                url: $(this).attr('action'),
-
-                type: "POST",
-
-                data: formData,
-
-                processData: false,
-
-                contentType: false,
-
-
-                success: function(response) {
-
-                    if (!response.success) {
-
-                        Swal.fire({
-
-                            toast: true,
-
-                            position: 'top-end',
-
-                            icon: 'error',
-
-                            title: response.message,
-
-                            showConfirmButton: false,
-
-                            timer: 1500,
-
-                            customClass: {
-                                popup: 'small-toast'
-                            }
-
-                        });
-
-                        return;
-
-                    }
-
-
-                    Swal.fire({
-
-                        toast: true,
-
-                        position: 'top-end',
-
-                        icon: 'success',
-
-                        title: response.message,
-
-                        showConfirmButton: false,
-
-                        timer: 1500,
-
-                        customClass: {
-                            popup: 'small-toast'
-                        }
+                    $.each(data, function (key, subject) {
+
+                        subjectDropdown.append(
+                            '<option value="' + subject.id + '">' +
+                                subject.subject_name +
+                            '</option>'
+                        );
 
                     });
 
+                } else {
 
-                    $('#createClassReplacementForm')[0].reset();
-
-
-                    $('#replacementSubject').html(
-                        '<option value="">Select Semester First</option>'
+                    subjectDropdown.html(
+                        '<option value="">No subjects found</option>'
                     );
 
-
-                    $('#subject_id_error').text('');
-
-                    $('#start_time_error').text('');
-
-                    $('#end_time_error').text('');
-
-
-                    bootstrap.Modal.getInstance(
-                        document.getElementById(
-                            'createClassReplacementModal'
-                        )
-                    ).hide();
-
-
-                    setTimeout(function() {
-
-                        location.reload();
-
-                    }, 1500);
-
-                },
-
-
-                error: function(xhr) {
-
-                    $('#subject_id_error').text('');
-
-                    $('#start_time_error').text('');
-
-                    $('#end_time_error').text('');
-
-
-                    if (xhr.status === 422) {
-
-                        let errors = xhr.responseJSON.errors;
-
-
-                        $.each(errors, function(key, value) {
-
-                            if (key === 'subject_id') {
-
-                                $('#subject_id_error').text(
-                                    value[0]
-                                );
-
-                            }
-
-
-                            if (key === 'start_time') {
-
-                                $('#start_time_error').text(
-                                    value[0]
-                                );
-
-                            }
-
-
-                            if (key === 'end_time') {
-
-                                $('#end_time_error').text(
-                                    value[0]
-                                );
-
-                            }
-
-                        });
-
-                    }
-
                 }
+            },
 
-            });
+            error: function () {
 
+                subjectDropdown.html(
+                    '<option value="">Unable to load subjects</option>'
+                );
+
+            }
         });
+
+    });
+
+
+    $('#replacementStartTime').on('change', function () {
+
+        let startTime = $(this).val();
+
+        $('#start_time_error').text('');
+
+        if (startTime && startTime < '10:00') {
+
+            $('#start_time_error').text(
+                'Start time must be between 10:00 AM and 5:00 PM.'
+            );
+
+            $(this).val('');
+
+        }
+
+    });
+
+
+    $('#replacementEndTime').on('change', function () {
+
+        let endTime = $(this).val();
+        let startTime = $('#replacementStartTime').val();
+
+        $('#end_time_error').text('');
+
+        if (endTime && endTime > '17:00') {
+
+            $('#end_time_error').text(
+                'End time must be between 10:00 AM and 5:00 PM.'
+            );
+
+            $(this).val('');
+
+            return;
+        }
+
+        if (startTime && endTime && endTime <= startTime) {
+
+            $('#end_time_error').text(
+                'End time must be after start time.'
+            );
+
+            $(this).val('');
+
+        }
+
+    });
+
+
+    $('#createClassReplacementForm').on('submit', function (e) {
+
+        e.preventDefault();
+
+        // Clear old errors
+        $('#subject_id_error').text('');
+        $('#start_time_error').text('');
+        $('#end_time_error').text('');
+
+        let teacher = $('#replacementTeacher').val();
+        let semester = $('#replacementSemester').val();
+        let subject = $('#replacementSubject').val();
+        let startTime = $('#replacementStartTime').val();
+        let endTime = $('#replacementEndTime').val();
+
+
+
+
+        if (!teacher) {
+            return;
+        }
+
+
+
+        if (!semester) {
+            return;
+        }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Clear Modal When Closed
+        | Subject
         |--------------------------------------------------------------------------
         */
 
-        $('#createClassReplacementModal').on(
-            'hidden.bs.modal',
-            function() {
+        if (!subject) {
+
+            $('#subject_id_error').text(
+                'Please select a subject.'
+            );
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Start Time
+        |--------------------------------------------------------------------------
+        */
+
+        if (!startTime) {
+
+            $('#start_time_error').text(
+                'Please select start time.'
+            );
+
+            return;
+        }
+
+        if (startTime < '10:00' || startTime > '17:00') {
+
+            $('#start_time_error').text(
+                'Start time must be between 10:00 AM and 5:00 PM.'
+            );
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | End Time
+        |--------------------------------------------------------------------------
+        */
+
+        if (!endTime) {
+
+            $('#end_time_error').text(
+                'Please select end time.'
+            );
+
+            return;
+        }
+
+        if (endTime < '10:00' || endTime > '17:00') {
+
+            $('#end_time_error').text(
+                'End time must be between 10:00 AM and 5:00 PM.'
+            );
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | End Time Must Be After Start Time
+        |--------------------------------------------------------------------------
+        */
+
+        if (endTime <= startTime) {
+
+            $('#end_time_error').text(
+                'End time must be after start time.'
+            );
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | AJAX Submit
+        |--------------------------------------------------------------------------
+        */
+
+        let formData = new FormData(this);
+
+        $.ajax({
+
+            url: $(this).attr('action'),
+
+            type: 'POST',
+
+            data: formData,
+
+            processData: false,
+
+            contentType: false,
+
+
+            success: function (response) {
+
+                if (!response.success) {
+
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: response.message,
+                        showConfirmButton: false,
+                        timer: 2000,
+                        customClass: {
+                            popup: 'small-toast'
+                        }
+                    });
+
+                    return;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Success
+                |--------------------------------------------------------------------------
+                */
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: response.message,
+                    showConfirmButton: false,
+                    timer: 1500,
+                    customClass: {
+                        popup: 'small-toast'
+                    }
+                });
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Reset Form
+                |--------------------------------------------------------------------------
+                */
 
                 $('#createClassReplacementForm')[0].reset();
 
@@ -624,15 +467,135 @@
                 );
 
                 $('#subject_id_error').text('');
-
                 $('#start_time_error').text('');
-
                 $('#end_time_error').text('');
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | Close Modal
+                |--------------------------------------------------------------------------
+                */
+
+                let modalElement = document.getElementById(
+                    'createClassReplacementModal'
+                );
+
+                let modal = bootstrap.Modal.getInstance(modalElement);
+
+                if (modal) {
+                    modal.hide();
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Reload Table
+                |--------------------------------------------------------------------------
+                */
+
+                setTimeout(function () {
+                    location.reload();
+                }, 1500);
+
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Validation / Server Error
+            |--------------------------------------------------------------------------
+            */
+
+            error: function (xhr) {
+
+                $('#subject_id_error').text('');
+                $('#start_time_error').text('');
+                $('#end_time_error').text('');
+
+
+                if (xhr.status === 422) {
+
+                    let errors = xhr.responseJSON.errors;
+
+                    $.each(errors, function (key, value) {
+
+                        if (key === 'subject_id') {
+
+                            $('#subject_id_error').text(
+                                value[0]
+                            );
+
+                        }
+
+                        if (key === 'start_time') {
+
+                            $('#start_time_error').text(
+                                value[0]
+                            );
+
+                        }
+
+                        if (key === 'end_time') {
+
+                            $('#end_time_error').text(
+                                value[0]
+                            );
+
+                        }
+
+                    });
+
+                    return;
+                }
+
+
+                // Show other server errors
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Something went wrong.',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    customClass: {
+                        popup: 'small-toast'
+                    }
+                });
+
+                console.log(xhr.responseText);
+
             }
-        );
+
+        });
 
     });
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Clear Modal When Closed
+    |--------------------------------------------------------------------------
+    */
+
+    $('#createClassReplacementModal').on(
+        'hidden.bs.modal',
+        function () {
+
+            $('#createClassReplacementForm')[0].reset();
+
+            $('#replacementSubject').html(
+                '<option value="">Select Semester First</option>'
+            );
+
+            $('#subject_id_error').text('');
+            $('#start_time_error').text('');
+            $('#end_time_error').text('');
+
+        }
+    );
+
+});
 </script>
+
 
