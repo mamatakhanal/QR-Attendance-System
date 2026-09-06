@@ -30,6 +30,77 @@
                 </div>
 
 
+                {{-- Filter --}}
+                {{-- <form id="replacementFilterForm" method="GET" action="{{ route('admin.classreplacement') }}">
+
+                    <div class="row g-2 align-items-end">
+
+                        <div class="col" style="flex: 0 0 19%; max-width: 19%;">
+                            <select name="teacher_id" class="form-select form-select-sm">
+                                <option value="">All Teachers</option>
+
+                                @foreach ($teachers as $teacher)
+                                    <option value="{{ $teacher->id }}"
+                                        {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
+                                        {{ $teacher->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col" style="flex: 0 0 18%; max-width: 18%;">
+                            <select name="semester" class="form-select form-select-sm">
+                                <option value="">All Semester</option>
+
+                                @for ($i = 1; $i <= 8; $i++)
+                                    <option value="{{ $i }}"
+                                        {{ request('semester') == $i ? 'selected' : '' }}>
+                                        Semester {{ $i }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+
+                        <div class="col" style="flex: 0 0 18%; max-width: 18%;">
+                            <select name="subject_id" class="form-select form-select-sm">
+                                <option value="">All Subjects</option>
+
+                                @foreach ($subjects as $subject)
+                                    <option value="{{ $subject->id }}"
+                                        {{ request('subject_id') == $subject->id ? 'selected' : '' }}>
+                                        {{ $subject->subject_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col" style="flex: 0 0 14%; max-width: 14%;">
+                            <input type="time" name="time" id="time" class="form-control form-control-sm"
+                                value="{{ request('time') }}">
+                        </div>
+
+                        <div class="col" style="flex: 0 0 14%; max-width: 14%;">
+                            <input type="date" name="from_date" id="from_date" class="form-control form-control-sm"
+                                value="{{ request('from_date') }}">
+                        </div>
+
+                        <div class="col-md-1 d-grid">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                Search
+                            </button>
+                        </div>
+
+                        <div class="col-md-1 d-grid">
+                            <a href="{{ route('admin.classreplacement') }}" class="btn btn-outline-secondary btn-sm">
+                                Reset
+                            </a>
+                        </div>
+
+                    </div>
+                </form> --}}
+
+
+
                 {{-- Semester Filter --}}
                 <div class="d-flex flex-wrap align-items-center mb-3">
                     <button class="btn btn-primary btn-sm semester-btn active" data-semester="all">
@@ -38,7 +109,8 @@
                     </button>
 
                     @for ($i = 1; $i <= 8; $i++)
-                        <button class="btn btn-outline-primary btn-sm semester-btn" data-semester="{{ $i }}">
+                        <button class="btn btn-outline-primary btn-sm semester-btn"
+                            data-semester="{{ $i }}">
                             Semester {{ $i }}
                         </button>
                     @endfor
@@ -91,7 +163,8 @@
                                     </td>
                                     <td>
                                         <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 edit-btn"
-                                            style="font-size:10px;" data-bs-toggle="modal" data-bs-target="#editClassReplacementModal"
+                                            style="font-size:10px;" data-bs-toggle="modal"
+                                            data-bs-target="#editClassReplacementModal"
                                             data-id="{{ $replacement->id }}">
                                             <i class="bi bi-pencil-square"></i>
                                             Edit
@@ -142,61 +215,52 @@
     <script>
         function loadData() {
 
+            let semester = $(".semester-btn.active").data("semester");
+
             $.ajax({
-
-                url: window.location.pathname,
-
+                url: "{{ route('admin.classreplacement') }}",
                 type: "GET",
 
                 data: {
+                    teacher_id: $("select[name='teacher_id']").val(),
+                    subject_id: $("select[name='subject_id']").val(),
+                    from_date: $("input[name='from_date']").val(),
+                    to_date: $("input[name='to_date']").val(),
 
-                    search: $("#globalSearch").val(),
-
-                    semester: $(".semester-btn.active").data("semester")
-
+                    // Semester button
+                    semester: semester === "all" ? "" : semester
                 },
 
                 success: function(response) {
 
                     $("#classreplacement-data").html(
-                        $(response)
-                        .find("#classreplacement-data")
-                        .html()
+                        $(response).find("#classreplacement-data").html()
                     );
 
                     $("#pagination-data").html(
-                        $(response)
-                        .find("#pagination-data")
-                        .html()
+                        $(response).find("#pagination-data").html()
                     );
-
                 },
 
                 error: function(xhr) {
-
                     console.log(xhr.responseText);
-
                 }
-
             });
-
         }
 
 
+        // Semester buttons
         $(document).on("click", ".semester-btn", function() {
 
             $(".semester-btn")
                 .removeClass("active btn-primary")
                 .addClass("btn-outline-primary");
 
-
             $(this)
                 .removeClass("btn-outline-primary")
                 .addClass("btn-primary active");
 
-
             loadData();
-
         });
     </script>
 

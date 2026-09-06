@@ -8,6 +8,7 @@ use App\Models\Admin\Assignclass;
 use App\Models\Admin\ClassReplacement;
 use App\Models\Admin\Subjects;
 use App\Models\Admin\Teachers;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ClassReplacementController extends Controller
@@ -78,6 +79,11 @@ class ClassReplacementController extends Controller
                 }
             )
             ->orderBy('date', 'desc')
+            ->orderBy(
+                Subjects::select('semester')
+                    ->whereColumn('subjects.id', 'class_replacements.subject_id'),
+                'asc'
+            )
             ->orderBy('start_time', 'asc')
             ->paginate(10)
             ->withQueryString();
@@ -145,25 +151,49 @@ class ClassReplacementController extends Controller
         ], [
 
             'subject_id.required' => 'Please select a subject.',
-
             'subject_id.exists' => 'Selected subject does not exist.',
-
             'replacement_teacher_id.required' => 'Please select a replacement teacher.',
-
             'date.after_or_equal' => 'Replacement date cannot be before today.',
-
             'start_time.after_or_equal' => 'Start time cannot be before 10:00 AM.',
-
             'start_time.before_or_equal' => 'Start time cannot be after 5:00 PM.',
-
             'end_time.before_or_equal' => 'End time cannot be after 5:00 PM.',
-
             'end_time.after' => 'End time must be after start time.',
         ]);
 
         $subject = Subjects::findOrFail(
             $request->subject_id
         );
+
+        $hasSemesterConflict = ClassReplacement::whereDate(
+            'date',
+            $request->date
+        )
+            ->whereHas('subject', function ($query) use ($subject) {
+                $query->where('semester', $subject->semester);
+            })
+            ->where(function ($query) use ($request) {
+
+                $query->where(
+                    'start_time',
+                    '<',
+                    $request->end_time
+                )
+                    ->where(
+                        'end_time',
+                        '>',
+                        $request->start_time
+                    );
+
+            })
+            ->exists();
+
+        if ($hasSemesterConflict) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'This semester already has a class during this time.',
+            ], 422);
+        }
 
         $assignClass = Assignclass::where(
             'semester',
@@ -179,15 +209,10 @@ class ClassReplacementController extends Controller
             ->first();
 
         $assignClassId = $assignClass?->id;
-
         $today = now()->toDateString();
-
         if ($request->date === $today) {
-
             $currentTime = now()->format('H:i');
-
             if ($request->start_time < $currentTime) {
-
                 return response()->json([
                     'success' => false,
                     'message' => 'For today, replacement class start time cannot be earlier than the current time.',
@@ -209,7 +234,7 @@ class ClassReplacementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'A replacement already exists for this subject on the selected date.',
+                'message' => 'This subject already has a replacement on this date.',
             ], 422);
         }
 
@@ -233,6 +258,7 @@ class ClassReplacementController extends Controller
                         '>',
                         $request->start_time
                     );
+
             })
             ->exists();
 
@@ -240,7 +266,7 @@ class ClassReplacementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'The replacement teacher already has another replacement class during this time.',
+                'message' => 'This teacher already has another replacement class during the selected time on this date.',
             ], 422);
         }
 
@@ -254,6 +280,7 @@ class ClassReplacementController extends Controller
         //         'message' => 'The original teacher cannot be selected as the replacement teacher.',
         //     ], 422);
         // }
+
         // $hasPermanentClass = Assignclass::where(
         //     'teacher_id',
         //     $request->replacement_teacher_id
@@ -306,7 +333,6 @@ class ClassReplacementController extends Controller
     {
         $replacement = ClassReplacement::with([
             'subject',
-            'assignclass',
             'replacementTeacher',
         ])->findOrFail($id);
 
@@ -315,19 +341,21 @@ class ClassReplacementController extends Controller
 
             'subject_id' => $replacement->subject_id,
 
-            'semester' => $replacement->subject->semester ?? '',
+            'semester' => $replacement->subject?->semester,
 
-            'subject' => $replacement->subject->subject_name ?? '',
-
-            'assign_class_id' => $replacement->assign_class_id,
+            'subject' => $replacement->subject?->subject_name,
 
             'replacement_teacher_id' => $replacement->replacement_teacher_id,
 
             'date' => $replacement->date,
 
-            'start_time' => substr($replacement->start_time, 0, 5),
+            'start_time' => Carbon::parse(
+                $replacement->start_time
+            )->format('H:i'),
 
-            'end_time' => substr($replacement->end_time, 0, 5),
+            'end_time' => Carbon::parse(
+                $replacement->end_time
+            )->format('H:i'),
         ]);
     }
 
@@ -336,12 +364,18 @@ class ClassReplacementController extends Controller
         $admin = Admin::find(session('admin_id'));
 
         if (! $admin) {
-            return redirect('/admin/login');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.',
+            ], 401);
+
         }
 
         $replacement = ClassReplacement::findOrFail($id);
 
         $request->validate([
+
             'subject_id' => [
                 'required',
                 'exists:subjects,id',
@@ -371,13 +405,35 @@ class ClassReplacementController extends Controller
                 'before_or_equal:17:00',
                 'after:start_time',
             ],
+
+        ], [
+
+            'subject_id.required' => 'Please select a subject.',
+
+            'subject_id.exists' => 'Selected subject does not exist.',
+
+            'replacement_teacher_id.required' => 'Please select a replacement teacher.',
+
+            'replacement_teacher_id.exists' => 'Selected replacement teacher does not exist.',
+
+            'date.required' => 'Please select replacement date.',
+
+            'date.after_or_equal' => 'Replacement date cannot be before today.',
+
+            'start_time.required' => 'Please select start time.',
+
+            'start_time.after_or_equal' => 'Start time cannot be before 10:00 AM.',
+
+            'start_time.before_or_equal' => 'Start time cannot be after 5:00 PM.',
+
+            'end_time.required' => 'Please select end time.',
+
+            'end_time.before_or_equal' => 'End time cannot be after 5:00 PM.',
+
+            'end_time.after' => 'End time must be after start time.',
+
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Today Time Validation
-        |--------------------------------------------------------------------------
-        */
         $today = now()->toDateString();
 
         if ($request->date === $today) {
@@ -386,29 +442,55 @@ class ClassReplacementController extends Controller
 
             if ($request->start_time < $currentTime) {
 
-                return back()
-                    ->withInput()
-                    ->with(
-                        'error',
-                        'For today, replacement class start time cannot be earlier than the current time.'
-                    );
+                return response()->json([
+                    'success' => false,
+                    'message' => 'For today, replacement class start time cannot be earlier than the current time.',
+                ], 422);
+
             }
+
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Get Subject
-        |--------------------------------------------------------------------------
-        */
         $subject = Subjects::findOrFail(
             $request->subject_id
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Find Assign Class
-        |--------------------------------------------------------------------------
-        */
+        $hasSemesterConflict = ClassReplacement::whereDate(
+            'date',
+            $request->date
+        )
+            ->whereHas('subject', function ($query) use ($subject) {
+                $query->where('semester', $subject->semester);
+            })
+            ->where(
+                'id',
+                '!=',
+                $replacement->id
+            )
+            ->where(function ($query) use ($request) {
+
+                $query->where(
+                    'start_time',
+                    '<',
+                    $request->end_time
+                )
+                    ->where(
+                        'end_time',
+                        '>',
+                        $request->start_time
+                    );
+
+            })
+            ->exists();
+
+        if ($hasSemesterConflict) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'This semester already has a class during this time.',
+            ], 422);
+        }
+
         $assignClass = Assignclass::where(
             'semester',
             $subject->semester
@@ -419,16 +501,12 @@ class ClassReplacementController extends Controller
                     'subjects.id',
                     $subject->id
                 );
+
             })
             ->first();
 
         $assignClassId = $assignClass?->id;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Prevent duplicate replacement for same subject/date
-        |--------------------------------------------------------------------------
-        */
         $existingReplacement = ClassReplacement::where(
             'subject_id',
             $request->subject_id
@@ -446,24 +524,12 @@ class ClassReplacementController extends Controller
 
         if ($existingReplacement) {
 
-            return back()
-                ->withInput()
-                ->with(
-                    'error',
-                    'A replacement already exists for this subject on the selected date.'
-                );
+            return response()->json([
+                'success' => false,
+                'message' => 'This subject already has a replacement on this date.',
+            ], 422);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Replacement teacher overlap
-        |--------------------------------------------------------------------------
-        |
-        | Only replacement classes are checked.
-        |
-        | Normal Assignclass classes are NOT checked.
-        |
-        */
         $hasReplacementClass = ClassReplacement::where(
             'replacement_teacher_id',
             $request->replacement_teacher_id
@@ -489,25 +555,21 @@ class ClassReplacementController extends Controller
                         '>',
                         $request->start_time
                     );
+
             })
             ->exists();
 
         if ($hasReplacementClass) {
 
-            return back()
-                ->withInput()
-                ->with(
-                    'error',
-                    'The replacement teacher already has another replacement class during this time.'
-                );
+            return response()->json([
+                'success' => false,
+                'message' => 'The replacement teacher already has another replacement class during this time.',
+            ], 422);
+
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Update
-        |--------------------------------------------------------------------------
-        */
         $replacement->update([
+
             'assign_class_id' => $assignClassId,
 
             'subject_id' => $request->subject_id,
@@ -519,19 +581,18 @@ class ClassReplacementController extends Controller
             'start_time' => $request->start_time,
 
             'end_time' => $request->end_time,
+
         ]);
 
-        return redirect()
-            ->route('admin.classreplacement')
-            ->with(
-                'success',
-                'Class replacement updated successfully.'
-            );
+        return response()->json([
+
+            'success' => true,
+
+            'message' => 'Class replacement updated successfully.',
+
+        ]);
     }
 
-    /**
-     * Delete replacement.
-     */
     public function delete($id)
     {
         $admin = Admin::find(session('admin_id'));
