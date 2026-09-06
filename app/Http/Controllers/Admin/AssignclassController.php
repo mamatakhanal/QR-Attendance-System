@@ -277,12 +277,43 @@ class AssignclassController extends Controller
         return redirect()->back()->with('success', 'Deleted successfully');
     }
 
-    // Get Subjects after chossing semester
+    // Get ALL subjects after choosing semester
+
     public function getSubjects($semester)
     {
-        $subjects = Subjects::where('semester', (int) $semester)->get();
+        $subjects = Subjects::where(
+            'semester',
+            (int) $semester
+        )
+            ->orderBy('subject_name')
+            ->get();
+        $data = [];
 
-        return response()->json($subjects);
+        foreach ($subjects as $subject) {
+
+            $assignClass = Assignclass::where(
+                'semester',
+                (int) $semester
+            )
+                ->whereHas('subjects', function ($query) use ($subject) {
+
+                    $query->where(
+                        'subjects.id',
+                        $subject->id
+                    );
+                })
+                ->first();
+
+            $data[] = [
+                'subject_id' => $subject->id,
+
+                'assign_class_id' => $assignClass?->id,
+
+                'subject_name' => $subject->subject_name,
+            ];
+        }
+
+        return response()->json($data);
     }
 
     // View

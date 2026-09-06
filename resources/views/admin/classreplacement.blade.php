@@ -68,70 +68,52 @@
                         <tbody id="classreplacement-data">
 
                             @forelse ($replacements as $replacement)
-                                <tr class="replacement-row" data-semester="{{ $replacement->assignclass->semester }}">
-
+                                <tr class="replacement-row" data-semester="{{ $replacement->subject?->semester }}">
                                     <td>
                                         {{ $replacements->firstItem() + $loop->index }}
                                     </td>
-
                                     <td>
                                         {{ \Carbon\Carbon::parse($replacement->date)->format('d M Y') }}
                                     </td>
-
                                     <td>
-                                        Semester {{ $replacement->assignclass->semester }}
+                                        Semester {{ $replacement->subject?->semester }}
                                     </td>
-
                                     <td>
-                                        {{ $replacement->assignclass->subjects->first()?->subject_name ?? '-' }}
+                                        {{ $replacement->subject?->subject_name ?? '-' }}
                                     </td>
-
                                     <td>
-                                        {{ $replacement->replacementTeacher->name ?? '-' }}
+                                        {{ $replacement->replacementTeacher?->name ?? '-' }}
                                     </td>
-
                                     <td>
                                         {{ \Carbon\Carbon::parse($replacement->start_time)->format('h:i A') }}
                                         -
                                         {{ \Carbon\Carbon::parse($replacement->end_time)->format('h:i A') }}
                                     </td>
-
                                     <td>
                                         <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 edit-btn"
-                                            data-bs-toggle="modal" data-bs-target="#editClassReplacementModal"
+                                            style="font-size:10px;" data-bs-toggle="modal" data-bs-target="#editClassReplacementModal"
                                             data-id="{{ $replacement->id }}">
                                             <i class="bi bi-pencil-square"></i>
                                             Edit
                                         </button>
-
                                         &nbsp;
-
                                         <button class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn"
-                                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                            style="font-size:10px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
                                             data-id="{{ $replacement->id }}"
-                                            data-url="{{ route('classreplacement.delete', $replacement->id) }}">
+                                            data-url="{{ route('admin.classreplacement.delete', $replacement->id) }}">
 
                                             <i class="bi bi-trash"></i>
                                             Delete
-
                                         </button>
                                     </td>
-
                                 </tr>
-
                             @empty
-
                                 <tr>
-
                                     <td colspan="7" class="text-center text-muted py-4">
-
                                         No class replacements found.
-
                                     </td>
-
                                 </tr>
                             @endforelse
-
                         </tbody>
 
                     </table>
