@@ -118,7 +118,7 @@ Route::prefix('/admin')->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'attendance'])
         ->name('admin.attendance');
 
-    Route::get('/admin/attendance/pdf',[AttendanceController::class, 'downloadPdf'])
+    Route::get('/attendance/pdf',[AttendanceController::class, 'downloadPdf'])
         ->name('admin.attendance.pdf');
 
     Route::get('/profile', [ProfileController::class, 'profile'])

@@ -266,6 +266,12 @@ class AttendanceController extends Controller
             }
         }
 
+        $realDateTimeValue = Carbon::createFromFormat(
+            'Y-m-d H:i:s',
+            $realDate.' '.$realTime,
+            'Asia/Kathmandu'
+        );
+
         Attendance::create([
             'semester' => $student->current_semester,
             'student_id' => $student->id,
@@ -275,6 +281,9 @@ class AttendanceController extends Controller
             'date' => $realDate,
             'time' => $realTime,
             'status' => 'Present',
+
+            'created_at' => $realDateTimeValue,
+            'updated_at' => $realDateTimeValue,
         ]);
 
         return response()->json([
@@ -530,6 +539,21 @@ class AttendanceController extends Controller
             // If attendance does not exist, mark student as Absent
             if (! $exists) {
 
+                $realDateTime = $this->getRealDateTime();
+
+                if (! $realDateTime) {
+                    return;
+                }
+
+                $realDate = $realDateTime['date'];
+                $realTime = $realDateTime['time'];
+
+                $realDateTimeValue = Carbon::createFromFormat(
+                    'Y-m-d H:i:s',
+                    $realDate.' '.$realTime,
+                    'Asia/Kathmandu'
+                );
+
                 Attendance::create([
                     'semester' => $student->current_semester,
                     'student_id' => $student->id,
@@ -539,6 +563,8 @@ class AttendanceController extends Controller
                     'date' => $date,
                     'time' => null,
                     'status' => 'Absent',
+                    'created_at' => $realDateTimeValue,
+                    'updated_at' => $realDateTimeValue,
                 ]);
             }
         }

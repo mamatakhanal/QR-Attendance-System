@@ -7,7 +7,6 @@ use App\Models\Admin\Admin;
 use App\Models\Admin\Attendance;
 use App\Models\Admin\Subjects;
 use App\Models\Admin\Teachers;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -48,6 +47,16 @@ class AttendanceController extends Controller
             'student',
             'subject',
         ])
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = trim($request->search);
+
+                $q->whereHas('student', function ($studentQuery) use ($search) {
+                    $studentQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('student_code', 'like', "%{$search}%")
+                        ->orWhere('roll_no', 'like', "%{$search}%");
+                });
+            })
+
             ->when($request->teacher_id, function ($q) use ($request) {
                 $q->where('teacher_id', $request->teacher_id);
             })
@@ -66,15 +75,7 @@ class AttendanceController extends Controller
             ->when($request->filled('to_date'), function ($q) use ($request) {
                 $q->whereDate('date', '<=', $request->to_date);
             })
-            ->when($request->search, function ($q) use ($request) {
 
-                $q->whereHas('student', function ($student) use ($request) {
-
-                    $student->where('name', 'like', "%{$request->search}%")
-                        ->orWhere('roll_no', 'like', "%{$request->search}%")
-                        ->orWhere('student_code', 'like', "%{$request->search}%");
-                });
-            })
             ->orderBy('date', 'desc')
             ->orderBy('semester', 'asc')
             ->orderBy('status', 'desc')
@@ -89,110 +90,6 @@ class AttendanceController extends Controller
             'subjects' => Subjects::orderBy('subject_name')->get(),
             'realDate' => $realDate,
         ]);
-    }
-
-    public function downloadPdf(Request $request)
-    {
-            $admin = Admin::find(session('admin_id'));
-
-            if (! $admin) {
-                return redirect('/admin/login');
-            }
-
-            // Get real current date
-            $now = Carbon::now('Asia/Kathmandu');
-
-            $realDateTime = [
-                'date' => $now->format('Y-m-d'),
-                'time' => $now->format('H:i:s'),
-            ];
-
-            $realDate = $realDateTime['date'];
-
-            // Validate dates using real date
-            $request->validate([
-                'from_date' => [
-                    'nullable',
-                    'date',
-                    'before_or_equal:'.$realDate,
-                ],
-
-                'to_date' => [
-                    'nullable',
-                    'date',
-                    'before_or_equal:'.$realDate,
-                    'after_or_equal:from_date',
-                ],
-            ]);
-
-            $attendances = Attendance::with([
-                'student',
-                'teacher',
-                'subject',
-            ])
-
-                // Semester Filter
-                ->when($request->filled('semester'), function ($q) use ($request) {
-                    $q->where('semester', $request->semester);
-                })
-
-                // Teacher Filter
-                ->when($request->filled('teacher_id'), function ($q) use ($request) {
-                    $q->where('teacher_id', $request->teacher_id);
-                })
-
-                // Student Filter
-                ->when($request->filled('student_id'), function ($q) use ($request) {
-                    $q->where('student_id', $request->student_id);
-                })
-
-                // Status Filter
-                ->when($request->filled('status'), function ($q) use ($request) {
-                    $q->where('status', $request->status);
-                })
-
-                // Date Filter
-                ->when($request->filled('from_date'), function ($q) use ($request) {
-                    $q->whereDate('date', '>=', $request->from_date);
-                })
-
-                ->when($request->filled('to_date'), function ($q) use ($request) {
-                    $q->whereDate('date', '<=', $request->to_date);
-                })
-
-                ->when($request->filled('search'), function ($q) use ($request) {
-
-                    $search = $request->search;
-
-                    $q->whereHas('student', function ($student) use ($search) {
-
-                        $student->where('name', 'like', "%{$search}%")
-                            ->orWhere('roll_no', 'like', "%{$search}%")
-                            ->orWhere('student_code', 'like', "%{$search}%");
-                    });
-                })
-
-                ->orderByDesc('date')
-                ->orderBy('semester')
-                ->orderBy('teacher_id')
-                ->orderBy('student_id')
-                ->orderByRaw("FIELD(status,'Present','Absent')")
-                ->orderBy('time', 'asc')
-                ->get();
-
-            $pdf = Pdf::loadView(
-                'admin.attendance-pdf',
-                [
-                    'admin' => $admin,
-                    'attendances' => $attendances,
-                    'request' => $request,
-                    'realDateTime' => $realDateTime,
-                ]
-            );
-
-            $pdf->setPaper('A4', 'landscape');
-
-            return $pdf->download('admin-attendance-report.pdf');
     }
 
     // Get Real Date and Time

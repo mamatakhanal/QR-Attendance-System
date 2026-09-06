@@ -32,7 +32,7 @@
                 <!-- Semester Filter Buttons -->
                 <div @class(['d-flex', 'flex-wrap', 'align-items-center', 'mb-3'])>
                     <button @class(['btn', 'btn-primary', 'btn-sm', 'semester-btn', 'active']) data-semester="all">
-                        <i @class(['bi', 'bi-people'])></i> &nbsp; All Students
+                        <i @class(['bi', 'bi-people'])></i>&nbsp;All Students
                     </button>
                     @for ($i = 1; $i <= 8; $i++)
                         <button @class(['btn', 'btn-outline-primary', 'btn-sm', 'semester-btn']) data-semester="{{ $i }}">

@@ -70,7 +70,7 @@ class DashboardController extends Controller
                 'assign_class_id',
                 $class->id
             )
-                ->whereDate('date', today())
+                ->whereDate('date', $realDate)
                 ->latest('id')
                 ->first();
 

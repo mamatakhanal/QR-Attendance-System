@@ -24,7 +24,7 @@ Route::prefix('/student')->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'attendance'])
         ->name('student.attendance');
 
-    Route::get('/student/attendance/pdf', [AttendanceController::class, 'downloadPdf'])
+    Route::get('/attendance/pdf', [AttendanceController::class, 'downloadPdf'])
         ->name('student.attendance.pdf');
 
     Route::get('/reports', [ReportsController::class, 'reports'])
@@ -36,7 +36,7 @@ Route::prefix('/student')->group(function () {
     Route::put('/profile/update/{id}', [ProfileController::class, 'update'])
         ->name('student.profile.update');
 
-    Route::get('/student/qrcode', [QrCodeController::class, 'qrcode'])
+    Route::get('/qrcode', [QrCodeController::class, 'qrcode'])
         ->name('student.qrcode');
 
     // Logout

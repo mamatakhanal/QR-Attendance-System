@@ -64,11 +64,11 @@
                                 <select class="form-select form-select-sm" name="status">
                                     <option value="all">All Status</option>
 
-                                    <option value="present" {{ request('status') == 'Present' ? 'selected' : '' }}>
+                                    <option value="Present" {{ request('status') == 'Present' ? 'selected' : '' }}>
                                         Present
                                     </option>
 
-                                    <option value="absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>
+                                    <option value="Absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>
                                         Absent
                                     </option>
                                 </select>

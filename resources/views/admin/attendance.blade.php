@@ -59,7 +59,7 @@
                             <div class="col" style="flex: 0 0 12%; max-width: 12%;">
                                 {{-- <label class="form-label small mb-1">To Date</label> --}}
                                 <input type="date" id="to_date" name="to_date" max="{{ $realDate }}"
-                                     class="form-control form-control-sm" value="{{ request('to_date') }}">
+                                    class="form-control form-control-sm" value="{{ request('to_date') }}">
                             </div>
 
                             <div class="col" style="flex: 0 0 11%; max-width: 11%;">
@@ -87,12 +87,19 @@
                             </div>
 
                             <div class="col-md-1 d-grid">
+                                <button type="button" id="downloadPdfBtn" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                    PDF
+                                </button>
+                            </div>
+
+                            {{-- <div class="col-md-1 d-grid">
                                 <a href="{{ route('admin.attendance.pdf', request()->query()) }}"
                                     class="btn btn-sm btn-danger">
                                     <i class="bi bi-file-earmark-pdf"></i>
                                     PDF
                                 </a>
-                            </div>
+                            </div> --}}
                         </div>
                     </form>
 
@@ -209,6 +216,105 @@
                 });
 
             }
+        });
+    </script>
+    <script>
+        $('#downloadPdfBtn').on('click', async function() {
+
+            const button = $(this);
+
+            // Get all currently selected filters
+            const form = document.getElementById('attendanceFilterForm');
+            const formData = new FormData(form);
+
+            const params = new URLSearchParams();
+
+            for (const [key, value] of formData.entries()) {
+                if (value !== '') {
+                    params.append(key, value);
+                }
+            }
+
+            const pdfUrl = "{{ route('admin.attendance.pdf') }}";
+
+            // Disable button while downloading
+            button.prop('disabled', true);
+
+            try {
+
+                const response = await fetch(
+                    pdfUrl + '?' + params.toString(), {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/pdf'
+                        }
+                    }
+                );
+
+                // Check response
+                if (!response.ok) {
+                    throw new Error('PDF generation failed.');
+                }
+
+                // Make sure Laravel returned a PDF
+                const contentType = response.headers.get('content-type');
+
+                if (!contentType || !contentType.includes('application/pdf')) {
+                    throw new Error('Server did not return a PDF.');
+                }
+
+                // Convert response to PDF blob
+                const blob = await response.blob();
+
+                // Create temporary download URL
+                const blobUrl = window.URL.createObjectURL(blob);
+
+                // Create invisible download link
+                const downloadLink = document.createElement('a');
+
+                downloadLink.href = blobUrl;
+                downloadLink.download = 'admin-attendance-report.pdf';
+
+                document.body.appendChild(downloadLink);
+
+                // Trigger download
+                downloadLink.click();
+
+                // Cleanup
+                downloadLink.remove();
+
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(blobUrl);
+                }, 1000);
+
+            } catch (error) {
+
+                console.error('PDF Error:', error);
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Unable to download PDF',
+                    showConfirmButton: false,
+                    timer: 2500,
+                    timerProgressBar: true,
+                    customClass: {
+                        popup: 'small-toast'
+                    }
+                });
+
+            } finally {
+
+                // Enable button again
+                button.prop('disabled', false);
+
+                // Keep normal PDF button
+                button.html(
+                    '<i class="bi bi-file-earmark-pdf"></i> PDF'
+                );
+            }
+
         });
     </script>
 </body>

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin\Assignclass;
 use App\Models\Admin\Attendance;
 use App\Models\Admin\Teachers;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use PDF;
 
 class AttendanceRecordsController extends Controller
@@ -19,7 +21,7 @@ class AttendanceRecordsController extends Controller
             return redirect('/home');
         }
 
-        // Get real current date
+        // Get real Nepal date from TimeAPI
         $realDateTime = $this->getRealDateTime();
 
         if (! $realDateTime) {
@@ -34,7 +36,7 @@ class AttendanceRecordsController extends Controller
         $request->validate([
             'semester' => 'nullable|integer|between:1,8',
             'subject_id' => 'nullable|exists:subjects,id',
-            'status' => 'nullable|in:present,absent',
+            'status' => 'nullable|in:Present,Absent',
             'from_date' => ['nullable', 'date', 'before_or_equal:'.$realDate],
             'to_date' => [
                 'nullable',
@@ -133,6 +135,15 @@ class AttendanceRecordsController extends Controller
 
         if (! $teacher) {
             return redirect('/home');
+        }
+
+        $realDateTime = $this->getRealDateTime();
+
+        if (! $realDateTime) {
+            return redirect()->back()->with(
+                'error',
+                'Unable to verify the current date and time. Please check your internet connection.'
+            );
         }
 
         $attendances = Attendance::with(['student', 'subject'])
