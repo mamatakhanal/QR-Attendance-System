@@ -215,7 +215,7 @@ class ClassReplacementController extends Controller
             if ($request->start_time < $currentTime) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'For today, replacement class start time cannot be earlier than the current time.',
+                    'message' => 'Replacement class start time cannot be earlier than the current time.',
                 ], 422);
             }
         }
@@ -270,6 +270,29 @@ class ClassReplacementController extends Controller
             ], 422);
         }
 
+        $teacherAssignedClass = Assignclass::where(
+            'teacher_id',
+            $request->replacement_teacher_id
+        )
+            ->where(
+                'semester',
+                $subject->semester
+            )
+            ->whereHas('subjects', function ($query) use ($request) {
+                $query->where(
+                    'subjects.id',
+                    $request->subject_id
+                );
+            })
+            ->first();
+
+        if (! $teacherAssignedClass) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This teacher is not assigned to this class and subject.',
+            ], 422);
+        }
+
         // if (
         //     $assignClass->teacher_id ==
         //     $request->replacement_teacher_id
@@ -310,16 +333,11 @@ class ClassReplacementController extends Controller
         // }
 
         ClassReplacement::create([
-            'assign_class_id' => $assignClassId,
-
+            'assign_class_id' => $teacherAssignedClass->id,
             'subject_id' => $request->subject_id,
-
             'replacement_teacher_id' => $request->replacement_teacher_id,
-
             'date' => $request->date,
-
             'start_time' => $request->start_time,
-
             'end_time' => $request->end_time,
         ]);
 
@@ -444,7 +462,7 @@ class ClassReplacementController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'For today, replacement class start time cannot be earlier than the current time.',
+                    'message' => 'Replacement class start time cannot be earlier than the current time.',
                 ], 422);
 
             }
@@ -454,6 +472,29 @@ class ClassReplacementController extends Controller
         $subject = Subjects::findOrFail(
             $request->subject_id
         );
+
+        $teacherAssignedClass = Assignclass::where(
+    'teacher_id',
+    $request->replacement_teacher_id
+)
+    ->where(
+        'semester',
+        $subject->semester
+    )
+    ->whereHas('subjects', function ($query) use ($request) {
+        $query->where(
+            'subjects.id',
+            $request->subject_id
+        );
+    })
+    ->first();
+
+if (! $teacherAssignedClass) {
+    return response()->json([
+        'success' => false,
+        'message' => 'This teacher is not assigned to this class and subject.',
+    ], 422);
+}
 
         $hasSemesterConflict = ClassReplacement::whereDate(
             'date',
@@ -490,22 +531,6 @@ class ClassReplacementController extends Controller
                 'message' => 'This semester already has a class during this time.',
             ], 422);
         }
-
-        $assignClass = Assignclass::where(
-            'semester',
-            $subject->semester
-        )
-            ->whereHas('subjects', function ($query) use ($subject) {
-
-                $query->where(
-                    'subjects.id',
-                    $subject->id
-                );
-
-            })
-            ->first();
-
-        $assignClassId = $assignClass?->id;
 
         $existingReplacement = ClassReplacement::where(
             'subject_id',
@@ -569,19 +594,12 @@ class ClassReplacementController extends Controller
         }
 
         $replacement->update([
-
-            'assign_class_id' => $assignClassId,
-
+            'assign_class_id' => $teacherAssignedClass->id,
             'subject_id' => $request->subject_id,
-
             'replacement_teacher_id' => $request->replacement_teacher_id,
-
             'date' => $request->date,
-
             'start_time' => $request->start_time,
-
             'end_time' => $request->end_time,
-
         ]);
 
         return response()->json([

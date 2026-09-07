@@ -161,12 +161,18 @@
                                         {{ \Carbon\Carbon::parse($replacement->end_time)->format('h:i A') }}
                                     </td>
                                     <td>
-                                        <button class="btn btn-outline-primary fw-semibold btn-sm rounded-3 edit-btn"
+                                        <button type="button"
+                                            class="btn btn-outline-primary fw-semibold btn-sm rounded-3 edit-btn"
                                             style="font-size:10px;" data-bs-toggle="modal"
                                             data-bs-target="#editClassReplacementModal"
-                                            data-id="{{ $replacement->id }}">
-                                            <i class="bi bi-pencil-square"></i>
-                                            Edit
+                                            data-id="{{ $replacement->id }}"
+                                            data-teacher="{{ $replacement->replacement_teacher_id }}"
+                                            data-date="{{ $replacement->date }}"
+                                            data-semester="{{ $replacement->semester }}"
+                                            data-subject-id="{{ $replacement->subject_id }}"
+                                            data-start-time="{{ $replacement->start_time }}"
+                                            data-end-time="{{ $replacement->end_time }}">
+                                            <i class="bi bi-pencil-square"></i> Edit
                                         </button>
                                         &nbsp;
                                         <button type="button"
@@ -305,5 +311,17 @@
             });
         });
     </script>
+
+    {{-- Replacement validation error popup --}}
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Replacement Not Allowed',
+                text: @json(session('error')),
+                confirmButtonText: 'OK'
+            });
+        </script>
+    @endif
 
 </body>
