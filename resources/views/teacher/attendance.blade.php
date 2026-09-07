@@ -29,24 +29,58 @@
                                     Select Class
                                 </label>
                                 <select class="form-select" id="class_id">
+
                                     <option value="">
                                         Select Class
                                     </option>
+
+                                    {{-- Permanent Classes --}}
                                     @foreach ($assignclasses as $assignclass)
                                         @foreach ($assignclass->subjects as $subject)
-                                            <option value="{{ $assignclass->id }}"
-                                                {{ isset($selectedClass) && $selectedClass == $assignclass->id ? 'selected' : '' }}
+                                            <option value="{{ $assignclass->id }}" data-type="normal"
                                                 data-semester="{{ $assignclass->semester }}"
                                                 data-subject="{{ $subject->subject_name }}"
-                                                data-students="{{ $assignclass->student_count }}">
+                                                data-students="{{ $assignclass->student_count }}"
+                                                data-start-time="{{ \Carbon\Carbon::parse($assignclass->start_time)->format('H:i') }}"
+                                                data-end-time="{{ \Carbon\Carbon::parse($assignclass->end_time)->format('H:i') }}">
+
                                                 Semester {{ $assignclass->semester }}
                                                 -
                                                 {{ $subject->subject_name }}
+                                                -
+                                                {{ \Carbon\Carbon::parse($assignclass->start_time)->format('h:i A') }}
+                                                to
+                                                {{ \Carbon\Carbon::parse($assignclass->end_time)->format('h:i A') }}
+
                                             </option>
                                         @endforeach
                                     @endforeach
 
+
+                                    {{-- Today's Replacement Classes --}}
+                                    @foreach ($replacements as $replacement)
+                                        <option value="{{ $replacement->assign_class_id }}" data-type="replacement"
+                                            data-replacement-id="{{ $replacement->id }}"
+                                            data-semester="{{ $replacement->subject->semester }}"
+                                            data-subject="{{ $replacement->subject->subject_name }}"
+                                            data-students="{{ $replacement->student_count }}"
+                                            data-start-time="{{ \Carbon\Carbon::parse($replacement->start_time)->format('H:i') }}"
+                                            data-end-time="{{ \Carbon\Carbon::parse($replacement->end_time)->format('H:i') }}">
+
+                                            Replacement -
+                                            Semester {{ $replacement->subject->semester }}
+                                            -
+                                            {{ $replacement->subject->subject_name }}
+                                            -
+                                            {{ \Carbon\Carbon::parse($replacement->start_time)->format('h:i A') }}
+                                            to
+                                            {{ \Carbon\Carbon::parse($replacement->end_time)->format('h:i A') }}
+
+                                        </option>
+                                    @endforeach
+
                                 </select>
+
                                 @if ($currentClass)
                                     <script>
                                         document.addEventListener(
@@ -527,9 +561,9 @@
                         },
 
 
-        
+
                         // QR Successfully Scanned
-        
+
                         async function(decodedText) {
 
                                 // Prevent duplicate QR callbacks
@@ -571,9 +605,9 @@
                             },
 
 
-            
+
                             // Ignore scanning errors
-            
+
                             function(errorMessage) {
 
                                 // Do not show errors for every frame
@@ -687,14 +721,14 @@
                     },
 
 
-    
+
                     // AJAX SUCCESS
-    
+
                     success: function(response) {
 
-        
+
                         // SUCCESS
-        
+
                         if (response.success) {
 
                             loadAttendanceCount();
@@ -841,9 +875,9 @@
                         }
 
 
-        
+
                         // ATTENDANCE ERROR
-        
+
                         let icon = 'error';
 
                         let title = 'Invalid QR Code';
@@ -956,9 +990,9 @@
                     },
 
 
-    
+
                     // AJAX ERROR
-    
+
                     error: function(xhr) {
 
                         console.log(

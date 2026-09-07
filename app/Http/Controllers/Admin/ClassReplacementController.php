@@ -595,22 +595,9 @@ class ClassReplacementController extends Controller
 
     public function delete($id)
     {
-        $admin = Admin::find(session('admin_id'));
+        ClassReplacement::findOrFail($id)->delete();
 
-        if (! $admin) {
-            return redirect('/admin/login');
-        }
-
-        $replacement = ClassReplacement::findOrFail($id);
-
-        $replacement->delete();
-
-        return redirect()
-            ->route('admin.classreplacement')
-            ->with(
-                'success',
-                'Class replacement deleted successfully.'
-            );
+        return redirect()->back()->with('success', 'Class replacement deleted successfully');
     }
 
     public function destroy($id)

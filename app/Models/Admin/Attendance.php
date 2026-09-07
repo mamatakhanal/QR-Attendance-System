@@ -3,6 +3,7 @@
 namespace App\Models\Admin;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Admin\ClassReplacement;
 
 class Attendance extends Model
 {
@@ -17,6 +18,7 @@ class Attendance extends Model
         'date',
         'time',
         'status',
+        'replacement_id',
     ];
 
     public function student()
@@ -34,4 +36,11 @@ class Attendance extends Model
         return $this->belongsTo(Teachers::class, 'teacher_id');
     }
 
+    public function replacement()
+    {
+        return $this->belongsTo(
+            ClassReplacement::class,
+            'replacement_id'
+        );
+    }
 }

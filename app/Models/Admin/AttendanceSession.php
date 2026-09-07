@@ -3,6 +3,7 @@
 namespace App\Models\Admin;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Admin\ClassReplacement;
 
 class AttendanceSession extends Model
 {
@@ -10,6 +11,7 @@ class AttendanceSession extends Model
 
     protected $fillable = [
         'assign_class_id',
+        'replacement_id',
         'teacher_id',
         'subject_id',
         'date',
@@ -40,5 +42,13 @@ class AttendanceSession extends Model
     public function subject()
     {
         return $this->belongsTo(Subjects::class, 'subject_id');
+    }
+
+    public function replacement()
+    {
+        return $this->belongsTo(
+            ClassReplacement::class,
+            'replacement_id'
+        );
     }
 }

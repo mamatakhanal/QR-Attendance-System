@@ -109,8 +109,7 @@
                     </button>
 
                     @for ($i = 1; $i <= 8; $i++)
-                        <button class="btn btn-outline-primary btn-sm semester-btn"
-                            data-semester="{{ $i }}">
+                        <button class="btn btn-outline-primary btn-sm semester-btn" data-semester="{{ $i }}">
                             Semester {{ $i }}
                         </button>
                     @endfor
@@ -170,13 +169,13 @@
                                             Edit
                                         </button>
                                         &nbsp;
-                                        <button class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn"
+                                        <button type="button"
+                                            class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn"
                                             style="font-size:10px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
                                             data-id="{{ $replacement->id }}"
                                             data-url="{{ route('admin.classreplacement.delete', $replacement->id) }}">
 
-                                            <i class="bi bi-trash"></i>
-                                            Delete
+                                            <i class="bi bi-trash"></i> Delete
                                         </button>
                                     </td>
                                 </tr>
@@ -261,6 +260,49 @@
                 .addClass("btn-primary active");
 
             loadData();
+        });
+    </script>
+
+    <script>
+        $(document).on('submit', '#deleteForm', function(e) {
+            e.preventDefault();
+
+            let form = $(this);
+            let url = form.attr('action');
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: form.serialize(),
+
+                success: function(response) {
+
+                    $('#deleteModal').modal('hide');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: response.message || 'Class replacement deleted successfully.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(function() {
+
+                        // Stay on Class Replacement page
+                        window.location.href = "{{ route('admin.classreplacement') }}";
+
+                    });
+                },
+
+                error: function(xhr) {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: xhr.responseJSON?.message || 'Unable to delete class replacement.'
+                    });
+
+                }
+            });
         });
     </script>
 
