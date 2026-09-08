@@ -54,14 +54,14 @@
                                     </td>
                                     <td>
                                         @if ($assignclass->start_time && $assignclass->end_time)
-                                            {{ \Carbon\Carbon::parse($assignclass->start_time)->format('h:i A') }}
+                                            {{ \Carbon\Carbon::parse($assignclass->display_start_time)->format('h:i A') }}
                                             -
-                                            {{ \Carbon\Carbon::parse($assignclass->end_time)->format('h:i A') }}
+                                            {{ \Carbon\Carbon::parse($assignclass->display_end_time)->format('h:i A') }}
                                         @else
                                             <span class="text-muted">Not Assigned</span>
                                         @endif
                                     </td>
-                                     <td>
+                                    <td>
                                         <a href="{{ route('teacher.students', ['semester' => $assignclass->semester]) }}"
                                             class="text-decoration-none text-dark fw-semibold">
                                             {{ $assignclass->student_count }} Students

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Teachers;
 use App\Models\Admin\Assignclass;
+use App\Models\Admin\ClassReplacement;
+use App\Models\Admin\Students;
+use App\Models\Admin\Teachers;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class AssignclassController extends Controller
@@ -13,7 +16,7 @@ class AssignclassController extends Controller
     {
         $teacher = Teachers::find(session('teacher_id'));
 
-        if (!$teacher) {
+        if (! $teacher) {
             return redirect('/home');
         }
 
@@ -36,7 +39,7 @@ class AssignclassController extends Controller
 
                     // subject name search
                     $q->orWhereHas('subjects', function ($subject) use ($search) {
-                        $subject->where('subject_name', 'like', '%' . $search . '%');
+                        $subject->where('subject_name', 'like', '%'.$search.'%');
                     });
                 });
             })
@@ -45,17 +48,51 @@ class AssignclassController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $today = Carbon::today()->toDateString();
+
+        $replacements = ClassReplacement::where(
+            'replacement_teacher_id',
+            $teacher->id
+        )
+            ->whereDate('date', $today)
+            ->get()
+            ->keyBy('assign_class_id');
+
         foreach ($assignclasses as $assignclass) {
-            $assignclass->student_count = \App\Models\Admin\Students::where(
+            Students::where(
                 'current_semester',
                 $assignclass->semester
             )->count();
+
+            // Original Time
+            $assignclass->display_start_time =
+                $assignclass->start_time;
+
+            $assignclass->display_end_time =
+                $assignclass->end_time;
+
+            $assignclass->is_replacement_today = false;
+
+            // Replace TIme
+            if ($replacements->has($assignclass->id)) {
+
+                $replacement = $replacements->get($assignclass->id);
+
+                $assignclass->display_start_time =
+                    $replacement->start_time;
+
+                $assignclass->display_end_time =
+                    $replacement->end_time;
+
+                $assignclass->is_replacement_today = true;
+            }
+
         }
 
         return view('teacher.assignclass', [
             'pageTitle' => 'Assigned Classes',
             'teacher' => $teacher,
-            'assignclasses' => $assignclasses
+            'assignclasses' => $assignclasses,
         ]);
     }
 }
