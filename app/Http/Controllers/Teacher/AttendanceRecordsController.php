@@ -6,38 +6,43 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin\Assignclass;
 use App\Models\Admin\Attendance;
 use App\Models\Admin\Teachers;
-use Carbon\Carbon;
+use App\Services\RealTimeService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use PDF;
 
 class AttendanceRecordsController extends Controller
 {
-    public function attendancerecords(Request $request)
-    {
+    public function attendancerecords(
+        Request $request,
+        RealTimeService $realTimeService
+    ) {
         $teacher = Teachers::find(session('teacher_id'));
 
         if (! $teacher) {
             return redirect('/home');
         }
 
-        // Get real Nepal date from TimeAPI
-        $realDateTime = $this->getRealDateTime();
+        // Get real Nepal date and time from external API
+        $realNow = $realTimeService->now();
 
-        if (! $realDateTime) {
+        if (! $realNow) {
             return redirect()->back()->with(
                 'error',
                 'Unable to verify the current date and time. Please check your internet connection.'
             );
         }
 
-        $realDate = $realDateTime['date'];
+        $realDate = $realNow->format('Y-m-d');
 
         $request->validate([
             'semester' => 'nullable|integer|between:1,8',
             'subject_id' => 'nullable|exists:subjects,id',
             'status' => 'nullable|in:Present,Absent',
-            'from_date' => ['nullable', 'date', 'before_or_equal:'.$realDate],
+            'from_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:'.$realDate,
+            ],
             'to_date' => [
                 'nullable',
                 'date',
@@ -48,14 +53,20 @@ class AttendanceRecordsController extends Controller
         ]);
 
         // Teacher assigned semesters
-        $assignedSemesters = Assignclass::where('teacher_id', $teacher->id)
+        $assignedSemesters = Assignclass::where(
+            'teacher_id',
+            $teacher->id
+        )
             ->pluck('semester')
             ->unique()
             ->sort()
             ->values();
 
         // Teacher assigned subjects
-        $subjects = Assignclass::where('teacher_id', $teacher->id)
+        $subjects = Assignclass::where(
+            'teacher_id',
+            $teacher->id
+        )
             ->with('subjects')
             ->get()
             ->pluck('subjects')
@@ -86,6 +97,7 @@ class AttendanceRecordsController extends Controller
             ->when($request->filled('from_date'), function ($q) use ($request) {
                 $q->whereDate('date', '>=', $request->from_date);
             })
+
             ->when($request->filled('to_date'), function ($q) use ($request) {
                 $q->whereDate('date', '<=', $request->to_date);
             })
@@ -101,12 +113,20 @@ class AttendanceRecordsController extends Controller
                     $query->whereHas('student', function ($student) use ($search) {
                         $student->where('name', 'like', "%{$search}%")
                             ->orWhere('roll_no', 'like', "%{$search}%")
-                            ->orWhere('student_code', 'like', "%{$search}%");
+                            ->orWhere(
+                                'student_code',
+                                'like',
+                                "%{$search}%"
+                            );
                     })
 
                         // Subject Search
                         ->orWhereHas('subject', function ($subject) use ($search) {
-                            $subject->where('subject_name', 'like', "%{$search}%");
+                            $subject->where(
+                                'subject_name',
+                                'like',
+                                "%{$search}%"
+                            );
                         });
                 });
             })
@@ -129,42 +149,66 @@ class AttendanceRecordsController extends Controller
         ]);
     }
 
-    public function downloadPdf(Request $request)
-    {
+    public function downloadPdf(
+        Request $request,
+        RealTimeService $realTimeService
+    ) {
         $teacher = Teachers::find(session('teacher_id'));
 
         if (! $teacher) {
             return redirect('/home');
         }
 
-        $realDateTime = $this->getRealDateTime();
+        // Get real Nepal date and time from external API
+        $realNow = $realTimeService->now();
 
-        if (! $realDateTime) {
+        if (! $realNow) {
             return redirect()->back()->with(
                 'error',
                 'Unable to verify the current date and time. Please check your internet connection.'
             );
         }
 
+        $realDate = $realNow->format('Y-m-d');
+        $realTime = $realNow->format('H:i:s');
+
+        $request->validate([
+            'semester' => 'nullable|integer|between:1,8',
+            'subject_id' => 'nullable|exists:subjects,id',
+            'status' => 'nullable|in:Present,Absent',
+            'from_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:'.$realDate,
+            ],
+            'to_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:'.$realDate,
+                'after_or_equal:from_date',
+            ],
+            'search' => 'nullable|string|max:100',
+        ]);
+
         $attendances = Attendance::with(['student', 'subject'])
             ->where('teacher_id', $teacher->id)
 
-    // Semester Filter
+            // Semester Filter
             ->when($request->filled('semester'), function ($q) use ($request) {
                 $q->where('semester', $request->semester);
             })
 
-    // Subject Filter
+            // Subject Filter
             ->when($request->filled('subject_id'), function ($q) use ($request) {
                 $q->where('subject_id', $request->subject_id);
             })
 
-    // Status Filter
+            // Status Filter
             ->when($request->filled('status'), function ($q) use ($request) {
                 $q->where('status', $request->status);
             })
 
-    // Date Filter
+            // Date Filter
             ->when($request->filled('from_date'), function ($q) use ($request) {
                 $q->whereDate('date', '>=', $request->from_date);
             })
@@ -173,7 +217,7 @@ class AttendanceRecordsController extends Controller
                 $q->whereDate('date', '<=', $request->to_date);
             })
 
-    // Search Filter
+            // Search Filter
             ->when($request->filled('search'), function ($q) use ($request) {
 
                 $search = trim($request->search);
@@ -183,14 +227,23 @@ class AttendanceRecordsController extends Controller
                     $query->whereHas('student', function ($student) use ($search) {
                         $student->where('name', 'like', "%{$search}%")
                             ->orWhere('roll_no', 'like', "%{$search}%")
-                            ->orWhere('student_code', 'like', "%{$search}%");
+                            ->orWhere(
+                                'student_code',
+                                'like',
+                                "%{$search}%"
+                            );
                     })
-                        ->orWhereHas('subject', function ($subject) use ($search) {
-                            $subject->where('subject_name', 'like', "%{$search}%");
-                        });
 
+                        ->orWhereHas('subject', function ($subject) use ($search) {
+                            $subject->where(
+                                'subject_name',
+                                'like',
+                                "%{$search}%"
+                            );
+                        });
                 });
             })
+
             ->orderByDesc('date')
             ->orderBy('semester')
             ->orderBy('subject_id')
@@ -203,52 +256,15 @@ class AttendanceRecordsController extends Controller
             [
                 'teacher' => $teacher,
                 'attendances' => $attendances,
-                'realDateTime' => $realDateTime,
+                'realDateTime' => [
+                    'date' => $realDate,
+                    'time' => $realTime,
+                ],
             ]
         );
+
         $pdf->setPaper('A4', 'landscape');
 
         return $pdf->download('teacher-attendance-report.pdf');
-    }
-
-    // Get Real Date and Time
-    private function getRealDateTime()
-    {
-        try {
-
-            $response = Http::connectTimeout(5)
-                ->timeout(5)
-                ->get(
-                    'https://timeapi.io/api/time/current/zone',
-                    [
-                        'timeZone' => 'Asia/Kathmandu',
-                    ]
-                );
-
-            if (! $response->successful()) {
-                return null;
-            }
-
-            $data = $response->json();
-
-            if (! isset($data['date'], $data['time'])) {
-                return null;
-            }
-
-            // Convert API date to YYYY-MM-DD
-            $date = Carbon::parse($data['date'])->format('Y-m-d');
-
-            // Convert API time to HH:MM:SS
-            $time = Carbon::parse($data['time'])->format('H:i:s');
-
-            return [
-                'date' => $date,
-                'time' => $time,
-            ];
-
-        } catch (\Throwable $e) {
-
-            return null;
-        }
     }
 }

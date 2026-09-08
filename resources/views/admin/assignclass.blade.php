@@ -84,7 +84,6 @@
                                             data-teacher-name="{{ $assignclass->teacher->name }}"
                                             data-semester="{{ $assignclass->semester }}"
                                             data-subject-id="{{ $assignclass->subjects->first()->id ?? '' }}"
-                                            data-subject-name="{{ $assignclass->subjects->first()->subject_name ?? '' }}"
                                             data-start-time="{{ $assignclass->start_time }}"
                                             data-end-time="{{ $assignclass->end_time }}">
                                             <i class="bi bi-pencil-square"></i> Edit

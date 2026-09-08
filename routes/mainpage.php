@@ -19,7 +19,7 @@ Route::get('/student/dashboard', function () {
     return view('student.dashboard');
 });
 
-// Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login');
 
 Route::post('/teacher-login', [LoginController::class, 'teacherLogin'])
 ->name('teacher.login');

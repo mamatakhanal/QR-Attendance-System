@@ -22,14 +22,16 @@ class AttendanceController extends Controller
         }
 
         // Get real current date
-        $realDateTime = $this->getRealDateTime();
-        if (! $realDateTime) {
-            return redirect()->back()->with(
-                'error',
-                'Unable to verify the current date and time. Please check your internet connection.'
-            );
-        }
-        $realDate = $realDateTime['date'];
+        // $realDateTime = $this->getRealDateTime();
+        // if (! $realDateTime) {
+        //     return redirect()->back()->with(
+        //         'error',
+        //         'Unable to verify the current date and time. Please check your internet connection.'
+        //     );
+        // }
+        // $realDate = $realDateTime['date'];
+
+         $realDate = Carbon::now('Asia/Kathmandu')->format('Y-m-d');
 
         // Validate Date Range
         $request->validate([
@@ -93,43 +95,43 @@ class AttendanceController extends Controller
     }
 
     // Get Real Date and Time
-    private function getRealDateTime()
-    {
-        try {
+    // private function getRealDateTime()
+    // {
+    //     try {
 
-            $response = Http::connectTimeout(5)
-                ->timeout(5)
-                ->get(
-                    'https://timeapi.io/api/time/current/zone',
-                    [
-                        'timeZone' => 'Asia/Kathmandu',
-                    ]
-                );
+    //         $response = Http::connectTimeout(5)
+    //             ->timeout(5)
+    //             ->get(
+    //                 'https://timeapi.io/api/time/current/zone',
+    //                 [
+    //                     'timeZone' => 'Asia/Kathmandu',
+    //                 ]
+    //             );
 
-            if (! $response->successful()) {
-                return null;
-            }
+    //         if (! $response->successful()) {
+    //             return null;
+    //         }
 
-            $data = $response->json();
+    //         $data = $response->json();
 
-            if (! isset($data['date'], $data['time'])) {
-                return null;
-            }
+    //         if (! isset($data['date'], $data['time'])) {
+    //             return null;
+    //         }
 
-            // Convert API date to YYYY-MM-DD
-            $date = Carbon::parse($data['date'])->format('Y-m-d');
+    //         // Convert API date to YYYY-MM-DD
+    //         $date = Carbon::parse($data['date'])->format('Y-m-d');
 
-            // Convert API time to HH:MM:SS
-            $time = Carbon::parse($data['time'])->format('H:i:s');
+    //         // Convert API time to HH:MM:SS
+    //         $time = Carbon::parse($data['time'])->format('H:i:s');
 
-            return [
-                'date' => $date,
-                'time' => $time,
-            ];
+    //         return [
+    //             'date' => $date,
+    //             'time' => $time,
+    //         ];
 
-        } catch (\Throwable $e) {
+    //     } catch (\Throwable $e) {
 
-            return null;
-        }
-    }
+    //         return null;
+    //     }
+    // }
 }

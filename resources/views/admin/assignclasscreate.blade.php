@@ -70,48 +70,63 @@
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<script>
-    $(document).ready(function() {
+    <script>
+        $(document).ready(function() {
 
-        // Submit Assign Subject Form
+            // Submit Assign Subject Form
 
-        $('#assignclassForm').submit(function(e) {
+            $('#assignclassForm').submit(function(e) {
 
-            e.preventDefault();
+                e.preventDefault();
 
-            // Clear previous errors
-            $('#subject_id_error').text('');
-            $('#start_time_error').text('');
-            $('#end_time_error').text('');
+                // Clear previous errors
+                $('#subject_id_error').text('');
+                $('#start_time_error').text('');
+                $('#end_time_error').text('');
 
-            // Check subject selection
-            if ($('#subject_id').val() === '') {
+                // Check subject selection
+                if ($('#subject_id').val() === '') {
 
-                $('#subject_id_error').text(
-                    'Please select a subject.'
-                );
+                    $('#subject_id_error').text(
+                        'Please select a subject.'
+                    );
 
-                return;
-            }
+                    return;
+                }
 
-            let formData = new FormData(this);
+                let formData = new FormData(this);
 
-            $.ajax({
+                $.ajax({
 
-                url: "{{ route('assignclass.create') }}",
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
+                    url: "{{ route('assignclass.create') }}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
 
-                success: function(response) {
+                    success: function(response) {
 
-                    if (!response.success) {
+                        if (!response.success) {
+
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: response.message,
+                                showConfirmButton: false,
+                                timer: 1500,
+                                customClass: {
+                                    popup: 'small-toast'
+                                }
+                            });
+
+                            return;
+                        }
 
                         Swal.fire({
                             toast: true,
                             position: 'top-end',
-                            icon: 'error',
+                            icon: 'success',
                             title: response.message,
                             showConfirmButton: false,
                             timer: 1500,
@@ -120,159 +135,144 @@
                             }
                         });
 
-                        return;
-                    }
+                        // Reset form
+                        $('#assignclassForm')[0].reset();
 
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'success',
-                        title: response.message,
-                        showConfirmButton: false,
-                        timer: 1500,
-                        customClass: {
-                            popup: 'small-toast'
+                        // Reset subject dropdown
+                        $('#subject_id').html(
+                            '<option value="">Select Semester First</option>'
+                        );
+
+                        // Hide modal
+                        bootstrap.Modal.getInstance(
+                            document.getElementById('addAssignclassModal')
+                        ).hide();
+
+                        // Reload page
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    },
+
+                    error: function(xhr) {
+
+                        // Clear previous validation errors
+                        $('#subject_id_error').text('');
+                        $('#start_time_error').text('');
+                        $('#end_time_error').text('');
+
+                        if (xhr.status === 422) {
+
+                            let errors = xhr.responseJSON.errors;
+
+                            $.each(errors, function(key, value) {
+
+                                if (key === 'subject_id') {
+                                    $('#subject_id_error')
+                                        .text(value[0]);
+                                }
+
+                                if (key === 'start_time') {
+                                    $('#start_time_error')
+                                        .text(value[0]);
+                                }
+
+                                if (key === 'end_time') {
+                                    $('#end_time_error')
+                                        .text(value[0]);
+                                }
+
+                            });
                         }
-                    });
+                    }
+                });
+            });
 
-                    // Reset form
-                    $('#assignclassForm')[0].reset();
 
-                    // Reset subject dropdown
-                    $('#subject_id').html(
+            // Load Subjects According to Semester
+
+            $('#semester').on('change', function() {
+
+                let semester = $(this).val();
+                let subjectDropdown = $('#subject_id');
+
+                // Clear previous error
+                $('#subject_id_error').text('');
+
+                // Show loading
+                subjectDropdown.html(
+                    '<option value="">Loading...</option>'
+                );
+
+                if (!semester) {
+
+                    subjectDropdown.html(
                         '<option value="">Select Semester First</option>'
                     );
 
-                    // Hide modal
-                    bootstrap.Modal.getInstance(
-                        document.getElementById('addAssignclassModal')
-                    ).hide();
-
-                    // Reload page
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                },
-
-                error: function(xhr) {
-
-                    // Clear previous validation errors
-                    $('#subject_id_error').text('');
-                    $('#start_time_error').text('');
-                    $('#end_time_error').text('');
-
-                    if (xhr.status === 422) {
-
-                        let errors = xhr.responseJSON.errors;
-
-                        $.each(errors, function(key, value) {
-
-                            if (key === 'subject_id') {
-                                $('#subject_id_error')
-                                    .text(value[0]);
-                            }
-
-                            if (key === 'start_time') {
-                                $('#start_time_error')
-                                    .text(value[0]);
-                            }
-
-                            if (key === 'end_time') {
-                                $('#end_time_error')
-                                    .text(value[0]);
-                            }
-
-                        });
-                    }
+                    return;
                 }
-            });
-        });
 
+                $.ajax({
 
-        // Load Subjects According to Semester
+                    url: "{{ url('/admin/assignclass/subjects') }}/" + semester,
+                    type: "GET",
 
-        $('#semester').on('change', function() {
+                    success: function(data) {
 
-            let semester = $(this).val();
-            let subjectDropdown = $('#subject_id');
+                        subjectDropdown.empty();
 
-            // Clear previous error
-            $('#subject_id_error').text('');
+                        if (data.length === 0) {
 
-            // Show loading
-            subjectDropdown.html(
-                '<option value="">Loading...</option>'
-            );
+                            subjectDropdown.append(
+                                '<option value="">No subjects found</option>'
+                            );
 
-            if (!semester) {
-
-                subjectDropdown.html(
-                    '<option value="">Select Semester First</option>'
-                );
-
-                return;
-            }
-
-            $.ajax({
-
-                url: "{{ url('/admin/assignclass/subjects') }}/" + semester,
-                type: "GET",
-
-                success: function(data) {
-
-                    subjectDropdown.empty();
-
-                    if (data.length === 0) {
+                            return;
+                        }
 
                         subjectDropdown.append(
-                            '<option value="">No subjects found</option>'
+                            '<option value="">Select Subject</option>'
                         );
 
-                        return;
-                    }
+                        $.each(data, function(key, subject) {
 
-                    subjectDropdown.append(
-                        '<option value="">Select Subject</option>'
-                    );
-
-                    $.each(data, function(key, subject) {
-
-                        subjectDropdown.append(`
-                            <option value="${subject.id}">
+                            subjectDropdown.append(`
+                            <option value="${subject.subject_id}">
                                 ${subject.subject_name}
                             </option>
                         `);
 
-                    });
-                },
+                        });
+                    },
 
-                error: function() {
+                    error: function() {
 
-                    subjectDropdown.html(
-                        '<option value="">Unable to load subjects</option>'
-                    );
-                }
+                        subjectDropdown.html(
+                            '<option value="">Unable to load subjects</option>'
+                        );
+                    }
+                });
             });
+
+
+            // Clear Modal When Closed
+
+            $('#addAssignclassModal').on('hidden.bs.modal', function() {
+
+                $('#assignclassForm')[0].reset();
+
+                $('#subject_id').html(
+                    '<option value="">Select Semester First</option>'
+                );
+
+                $('#subject_id_error').text('');
+                $('#start_time_error').text('');
+                $('#end_time_error').text('');
+
+            });
+
         });
-
-
-        // Clear Modal When Closed
-
-        $('#addAssignclassModal').on('hidden.bs.modal', function() {
-
-            $('#assignclassForm')[0].reset();
-
-            $('#subject_id').html(
-                '<option value="">Select Semester First</option>'
-            );
-
-            $('#subject_id_error').text('');
-            $('#start_time_error').text('');
-            $('#end_time_error').text('');
-
-        });
-
-    });
-</script>
+    </script>
 
 </body>

@@ -7,12 +7,12 @@ use App\Models\Admin\Assignclass;
 use App\Models\Admin\Attendance;
 use App\Models\Admin\AttendanceSession;
 use App\Models\Admin\Students;
+use App\Services\RealTimeService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Http;
 
 class DashboardController extends Controller
 {
-    public function dashboard()
+    public function dashboard(RealTimeService $realTimeService)
     {
         $student = Students::find(session('student_id'));
 
@@ -21,21 +21,22 @@ class DashboardController extends Controller
         }
 
         // Get real Nepal date and time
-        $realDateTime = $this->getRealDateTime();
+        $realNow = $realTimeService->now();
 
-        if (! $realDateTime) {
+        if (! $realNow) {
             return back()->with(
                 'error',
-                'Unable to verify the current date and time. Please check your internet connection.'
+                'Unable to verify the real date and time. Please check your internet connection.'
             );
         }
 
-        $realDate = $realDateTime['date'];
-        $realTime = $realDateTime['time'];
+        $realDate = $realNow->format('Y-m-d');
+        $realTime = $realNow->format('H:i:s');
 
         // Student Subjects
         $classes = Assignclass::with(['subjects', 'teacher'])
             ->where('semester', $student->current_semester)
+            ->orderBy('start_time', 'asc')
             ->get();
 
         $subjects = $classes->pluck('subjects')->flatten();
@@ -76,14 +77,30 @@ class DashboardController extends Controller
 
             // Determine Attendance Status
             if (! $session) {
+
                 $status = 'Not Taken';
                 $statusClass = 'secondary';
                 $statusIcon = 'bi-dash-circle';
+
+            } elseif (
+                $session->status === 'Open' &&
+                $class->end_time &&
+                Carbon::parse($class->end_time)->lte(Carbon::parse($realTime))
+            ) {
+
+                // Class time has ended, so attendance is considered closed
+                $status = 'Taken';
+                $statusClass = 'success';
+                $statusIcon = 'bi-check-circle-fill';
+
             } elseif ($session->status === 'Open') {
+
                 $status = 'Open';
                 $statusClass = 'warning';
                 $statusIcon = 'bi-hourglass-split';
+
             } else {
+
                 $status = 'Taken';
                 $statusClass = 'success';
                 $statusIcon = 'bi-check-circle-fill';
@@ -93,9 +110,10 @@ class DashboardController extends Controller
             $teacherName = $class->teacher->name ?? '-';
 
             //  Time
-            $time = $session
-        ? Carbon::parse($session->start_time)->format('h:i A')
-        : '-';
+            $time = $class->start_time && $class->end_time
+                ? Carbon::parse($class->start_time)->format('h:i A').' - '.
+                Carbon::parse($class->end_time)->format('h:i A')
+                : '-';
 
             // Store Today Class
             $todayClasses[] = [
@@ -184,44 +202,44 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function getRealDateTime()
-    {
-        try {
+//     private function getRealDateTime()
+//     {
+//         try {
 
-            $response = Http::connectTimeout(3)
-                ->timeout(5)
-                ->get(
-                    'https://timeapi.io/api/time/current/zone',
-                    [
-                        'timeZone' => 'Asia/Kathmandu',
-                    ]
-                );
+//             $response = Http::connectTimeout(3)
+//                 ->timeout(5)
+//                 ->get(
+//                     'https://timeapi.io/api/time/current/zone',
+//                     [
+//                         'timeZone' => 'Asia/Kathmandu',
+//                     ]
+//                 );
 
-            if ($response->successful()) {
+//             if ($response->successful()) {
 
-                $data = $response->json();
+//                 $data = $response->json();
 
-                if (
-                    isset($data['date']) &&
-                    isset($data['time'])
-                ) {
+//                 if (
+//                     isset($data['date']) &&
+//                     isset($data['time'])
+//                 ) {
 
-                    return [
-                        'date' => Carbon::parse(
-                            $data['date']
-                        )->format('Y-m-d'),
+//                     return [
+//                         'date' => Carbon::parse(
+//                             $data['date']
+//                         )->format('Y-m-d'),
 
-                        'time' => Carbon::parse(
-                            $data['time']
-                        )->format('H:i:s'),
-                    ];
-                }
-            }
+//                         'time' => Carbon::parse(
+//                             $data['time']
+//                         )->format('H:i:s'),
+//                     ];
+//                 }
+//             }
 
-        } catch (\Throwable $e) {
-            return null;
-        }
+//         } catch (\Throwable $e) {
+//             return null;
+//         }
 
-        return null;
-    }
+//         return null;
+//     }
 }

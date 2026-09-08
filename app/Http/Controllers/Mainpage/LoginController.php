@@ -13,50 +13,68 @@ class LoginController extends Controller
 
     public function teacherLogin(Request $request)
     {
-
         $request->validate([
             'teacher_email' => 'required|email',
-            'teacher_password' => 'required'
+            'teacher_password' => 'required',
         ]);
 
         $teacher = Teachers::where('email', $request->teacher_email)->first();
 
-        if (!$teacher || !Hash::check($request->teacher_password, $teacher->password)) {
-            return back()
-                ->with('error', 'Invalid credentials')
-                ->with('login_type', 'teacher')
-                ->withInput();
+        if (!$teacher) {
+            return redirect()->route('mainpage.home')
+                ->with('error', 'Teacher email not found.')
+                ->with('login_type', 'teacher');
         }
 
-        session([
+        if (!Hash::check($request->teacher_password, $teacher->password)) {
+            return redirect()->route('mainpage.home')
+                ->with('error', 'Incorrect teacher password.')
+                ->with('login_type', 'teacher');
+        }
+
+        // Regenerate session after successful login
+        $request->session()->regenerate();
+
+        // Store teacher information in session
+        $request->session()->put([
             'teacher_id' => $teacher->id,
-            'teacher_name' => $teacher->name
+            'teacher_name' => $teacher->name,
         ]);
 
-        return redirect('/teacher/dashboard');
+        return redirect()->route('teacher.dashboard');
     }
+
 
     public function studentLogin(Request $request)
     {
-
         $request->validate([
             'student_email' => 'required|email',
-            'student_password' => 'required'
+            'student_password' => 'required',
         ]);
 
         $student = Students::where('email', $request->student_email)->first();
 
-        if (!$student || !Hash::check($request->student_password, $student->password)) {
-            return back()
-                ->with('error', 'Invalid credentials')
-                ->with('login_type', 'student')
-                ->withInput();
+        if (!$student) {
+            return redirect()->route('mainpage.home')
+                ->with('error', 'Student email not found.')
+                ->with('login_type', 'student');
         }
-        session([
-            'student_id' => $student->id,
-            'student_name' => $student->name
 
+        if (!Hash::check($request->student_password, $student->password)) {
+            return redirect()->route('mainpage.home')
+                ->with('error', 'Incorrect student password.')
+                ->with('login_type', 'student');
+        }
+
+        // Regenerate session after successful login
+        $request->session()->regenerate();
+
+        // Store student information in session
+        $request->session()->put([
+            'student_id' => $student->id,
+            'student_name' => $student->name,
         ]);
-        return redirect('/student/dashboard');
+
+        return redirect()->route('student.dashboard');
     }
 }

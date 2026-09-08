@@ -88,7 +88,6 @@
         let semester = $(this).data('semester');
         let teacherName = $(this).data('teacher-name');
         let subjectId = $(this).data('subject-id');
-        let subjectName = $(this).data('subject-name');
 
         // Get existing time
         let startTime = $(this).data('start-time');
@@ -111,25 +110,16 @@
         );
 
         // Load subjects for selected semester
-        loadSubjects(semester, subjectId, subjectName);
+        loadSubjects(semester, subjectId);
     });
 
 
     // Load Subjects Function
-    function loadSubjects(semester, selectedSubjectId = '', selectedSubjectName = '') {
+    function loadSubjects(semester, selectedSubjectId = '') {
 
         let dropdown = $('#edit_subject');
 
-        // Show existing subject immediately
-        if (selectedSubjectId && selectedSubjectName) {
-            dropdown.html(
-                '<option value="' + selectedSubjectId + '" selected>' +
-                selectedSubjectName +
-                '</option>'
-            );
-        } else {
-            dropdown.html('<option value="">Loading...</option>');
-        }
+        dropdown.html('<option value="">Loading...</option>');
 
         if (!semester) {
             dropdown.html(
@@ -160,32 +150,26 @@
                 $.each(data, function(key, subject) {
 
                     let selected =
-                        Number(subject.id) === Number(selectedSubjectId) ?
+                        Number(subject.subject_id) === Number(selectedSubjectId) ?
                         'selected' :
                         '';
 
                     dropdown.append(`
-                    <option value="${subject.id}" ${selected}>
+                    <option value="${subject.subject_id}" ${selected}>
                         ${subject.subject_name}
                     </option>
                 `);
                 });
+
+                // Make sure existing subject is selected
+                dropdown.val(String(selectedSubjectId));
             },
 
             error: function() {
 
-                // Keep existing selected subject if AJAX fails
-                if (selectedSubjectId && selectedSubjectName) {
-                    dropdown.html(
-                        '<option value="' + selectedSubjectId + '" selected>' +
-                        selectedSubjectName +
-                        '</option>'
-                    );
-                } else {
-                    dropdown.html(
-                        '<option value="">Unable to load subjects</option>'
-                    );
-                }
+                dropdown.html(
+                    '<option value="">Unable to load subjects</option>'
+                );
             }
         });
     }

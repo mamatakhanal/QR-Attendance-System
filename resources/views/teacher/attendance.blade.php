@@ -1086,7 +1086,7 @@
 
                                 title: 'Attendance Not Started',
 
-                                text: response.message,
+                                html: response.message,
 
                                 confirmButtonText: 'Close',
 
@@ -1227,7 +1227,7 @@
                                 <br><br>
 
                                 <p>
-                                    Attendance will be available only during the
+                                    Attendance will be available only during the <br>
                                     <b>scheduled class time</b>.
                                 </p>
 

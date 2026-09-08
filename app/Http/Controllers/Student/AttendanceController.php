@@ -8,14 +8,13 @@ use App\Models\Admin\Attendance;
 use App\Models\Admin\Students;
 use App\Models\Admin\Subjects;
 use App\Models\Admin\Teachers;
-use Carbon\Carbon;
+use App\Services\RealTimeService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use PDF;
 
 class AttendanceController extends Controller
 {
-    public function attendance(Request $request)
+    public function attendance(Request $request, RealTimeService $realTimeService)
     {
         $student = Students::find(session('student_id'));
 
@@ -23,18 +22,25 @@ class AttendanceController extends Controller
             return redirect('/home');
         }
 
-        // Get real current date
-        $realDateTime = $this->getRealDateTime();
-        if (! $realDateTime) {
+        // Get real Nepal date and time from external API
+        $realNow = $realTimeService->now();
+
+        if (! $realNow) {
             return redirect()->back()->with(
                 'error',
-                'Unable to verify the current date and time. Please check your internet connection.'
+                'Unable to verify the real date and time. Please check your internet connection.'
             );
         }
-        $realDate = $realDateTime['date'];
+
+        $realDate = $realNow->format('Y-m-d');
 
         $request->validate([
-            'from_date' => ['nullable', 'date', 'before_or_equal:'.$realDate],
+            'from_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:'.$realDate,
+            ],
+
             'to_date' => [
                 'nullable',
                 'date',
@@ -46,11 +52,11 @@ class AttendanceController extends Controller
         $attendances = Attendance::with(['subject', 'teacher'])
             ->where('student_id', $student->id)
 
-            ->when($request->teacher_id, function ($q) use ($request) {
+            ->when($request->filled('teacher_id'), function ($q) use ($request) {
                 $q->where('teacher_id', $request->teacher_id);
             })
 
-            ->when($request->subject_id, function ($q) use ($request) {
+            ->when($request->filled('subject_id'), function ($q) use ($request) {
                 $q->where('subject_id', $request->subject_id);
             })
 
@@ -62,22 +68,31 @@ class AttendanceController extends Controller
                 $q->whereDate('date', '<=', $request->to_date);
             })
 
-            ->when($request->status && $request->status != 'all', function ($q) use ($request) {
-                $q->where('status', $request->status);
-            })
+            ->when(
+                $request->filled('status') && $request->status != 'all',
+                function ($q) use ($request) {
+                    $q->where('status', $request->status);
+                }
+            )
 
             ->orderBy('date', 'desc')
             ->orderBy('time', 'desc')
             ->paginate(10)
             ->withQueryString();
 
-        $subjects = Subjects::where('semester', $student->current_semester)
+        $subjects = Subjects::where(
+            'semester',
+            $student->current_semester
+        )
             ->orderBy('subject_name')
             ->get();
 
         $teachers = Teachers::whereIn(
             'id',
-            Assignclass::where('semester', $student->current_semester)
+            Assignclass::where(
+                'semester',
+                $student->current_semester
+            )
                 ->pluck('teacher_id')
                 ->unique()
         )
@@ -94,25 +109,28 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function downloadPdf(Request $request)
-    {
+    public function downloadPdf(
+        Request $request,
+        RealTimeService $realTimeService
+    ) {
         $student = Students::find(session('student_id'));
 
         if (! $student) {
             return redirect('/home');
         }
 
-        // Get real current date
-        $realDateTime = $this->getRealDateTime();
+        // Get real Nepal date and time from external API
+        $realNow = $realTimeService->now();
 
-        if (! $realDateTime) {
+        if (! $realNow) {
             return redirect()->back()->with(
                 'error',
-                'Unable to verify the current date and time. Please check your internet connection.'
+                'Unable to verify the real date and time. Please check your internet connection.'
             );
         }
 
-        $realDate = $realDateTime['date'];
+        $realDate = $realNow->format('Y-m-d');
+        $realTime = $realNow->format('H:i:s');
 
         // Validate dates using real date
         $request->validate([
@@ -152,9 +170,12 @@ class AttendanceController extends Controller
                 $q->whereDate('date', '<=', $request->to_date);
             })
 
-            ->when($request->filled('status') && $request->status != 'all', function ($q) use ($request) {
-                $q->where('status', $request->status);
-            })
+            ->when(
+                $request->filled('status') && $request->status != 'all',
+                function ($q) use ($request) {
+                    $q->where('status', $request->status);
+                }
+            )
 
             ->orderBy('date', 'desc')
             ->orderBy('time', 'desc')
@@ -164,51 +185,16 @@ class AttendanceController extends Controller
             'student' => $student,
             'attendances' => $attendances,
             'request' => $request,
-            'realDateTime' => $realDateTime,
+
+            // Send Carbon real date/time to PDF
+            'realDateTime' => [
+                'date' => $realDate,
+                'time' => $realTime,
+            ],
         ]);
 
         $pdf->setPaper('A4', 'landscape');
+
         return $pdf->download('my-attendance-report.pdf');
-    }
-
-    // Get Real Date and Time
-    private function getRealDateTime()
-    {
-        try {
-
-            $response = Http::connectTimeout(5)
-                ->timeout(5)
-                ->get(
-                    'https://timeapi.io/api/time/current/zone',
-                    [
-                        'timeZone' => 'Asia/Kathmandu',
-                    ]
-                );
-
-            if (! $response->successful()) {
-                return null;
-            }
-
-            $data = $response->json();
-
-            if (! isset($data['date'], $data['time'])) {
-                return null;
-            }
-
-            // Convert API date to YYYY-MM-DD
-            $date = Carbon::parse($data['date'])->format('Y-m-d');
-
-            // Convert API time to HH:MM:SS
-            $time = Carbon::parse($data['time'])->format('H:i:s');
-
-            return [
-                'date' => $date,
-                'time' => $time,
-            ];
-
-        } catch (\Throwable $e) {
-
-            return null;
-        }
     }
 }

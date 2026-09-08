@@ -8,13 +8,13 @@ use App\Models\Admin\Attendance;
 use App\Models\Admin\AttendanceSession;
 use App\Models\Admin\Students;
 use App\Models\Admin\Teachers;
+use App\Services\RealTimeService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class AttendanceController extends Controller
 {
-    public function attendance(Request $request)
+    public function attendance(Request $request, RealTimeService $realTimeService)
     {
 
         $teacher = Teachers::find(session('teacher_id'));
@@ -22,23 +22,19 @@ class AttendanceController extends Controller
             return redirect('/home');
         }
 
-        $realDateTime = $this->getRealDateTime();
+        $realNow = $realTimeService->now();
 
-        if (! $realDateTime) {
+        if (! $realNow) {
             return redirect()->back()->with(
                 'error',
                 'Unable to verify the current date and time. Please check your internet connection.'
             );
         }
 
-        $realDate = $realDateTime['date'];
-        $realTime = $realDateTime['time'];
+        $realDate = $realNow->format('Y-m-d');
+        $realTime = $realNow->format('H:i:s');
 
-        $currentDateTime = Carbon::createFromFormat(
-            'Y-m-d H:i:s',
-            $realDate.' '.$realTime,
-            'Asia/Kathmandu'
-        );
+        $currentDateTime = $realNow->copy()->setTimezone('Asia/Kathmandu');
 
         $oldSessions = AttendanceSession::where('teacher_id', $teacher->id)
             ->where('status', 'Open')
@@ -120,19 +116,19 @@ class AttendanceController extends Controller
     }
 
     // Scan Attendance
-    public function scanAttendance(Request $request)
+    public function scanAttendance(Request $request, RealTimeService $realTimeService)
     {
-        $realDateTime = $this->getRealDateTime();
+        $realNow = $realTimeService->now();
 
-        if (! $realDateTime) {
+        if (! $realNow) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to verify the current date and time. Please check your internet connection and try again.',
             ]);
         }
 
-        $realDate = $realDateTime['date'];
-        $realTime = $realDateTime['time'];
+        $realDate = $realNow->format('Y-m-d');
+        $realTime = $realNow->format('H:i:s');
 
         // Logged in teacher
         $teacher = Teachers::find(session('teacher_id'));
@@ -303,25 +299,21 @@ class AttendanceController extends Controller
     }
 
     // Start Attendance Session
-    public function startSession(Request $request)
+    public function startSession(Request $request, RealTimeService $realTimeService)
     {
-        $realDateTime = $this->getRealDateTime();
+        $realNow = $realTimeService->now();
 
-        if (! $realDateTime) {
+        if (! $realNow) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to verify the current date and time. Please check your internet connection and try again.',
             ]);
         }
 
-        $realDate = $realDateTime['date'];
-        $realTime = $realDateTime['time'];
+        $realDate = $realNow->format('Y-m-d');
+        $realTime = $realNow->format('H:i:s');
 
-        $currentTime = Carbon::createFromFormat(
-            'Y-m-d H:i:s',
-            $realDate.' '.$realTime,
-            'Asia/Kathmandu'
-        );
+        $currentTime = $realNow->copy()->setTimezone('Asia/Kathmandu');
 
         $teacher = Teachers::find(session('teacher_id'));
 
@@ -364,8 +356,8 @@ class AttendanceController extends Controller
             return response()->json([
                 'success' => false,
                 'type' => 'not_started',
-                'message' => 'Attendance has not started yet. Please wait until '.
-                    $classStartTime->format('h:i A').'.',
+                'message' => 'Attendance will be started from '.
+    '<strong>'.$classStartTime->format('h:i A').'</strong>.',
             ]);
         }
 
@@ -442,19 +434,19 @@ class AttendanceController extends Controller
     }
 
     // Create Attendance Session
-    public function createSession(Request $request)
+    public function createSession(Request $request, RealTimeService $realTimeService)
     {
-        $realDateTime = $this->getRealDateTime();
+        $realNow = $realTimeService->now();
 
-        if (! $realDateTime) {
+        if (! $realNow) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to verify the current date and time. Please check your internet connection and try again.',
             ]);
         }
 
-        $realDate = $realDateTime['date'];
-        $realTime = $realDateTime['time'];
+        $realDate = $realNow->format('Y-m-d');
+        $realTime = $realNow->format('H:i:s');
 
         $teacher = Teachers::find(session('teacher_id'));
 
@@ -495,8 +487,8 @@ class AttendanceController extends Controller
             return response()->json([
                 'success' => false,
                 'type' => 'not_started',
-                'message' => 'Attendance has not started yet. Please wait until '.
-                    $classStartTime->format('h:i A').'.',
+                'message' => 'Attendance will be started from'.
+            '<strong>'.$classStartTime->format('h:i A').'</strong>.',
             ]);
         }
 
@@ -569,14 +561,12 @@ class AttendanceController extends Controller
     // Mark Absent Students
     public function markAbsentStudents($assignClass, $teacherId, $date)
     {
-        // Get the first subject assigned to this class
         $subject = $assignClass->subjects->first();
 
         if (! $subject) {
             return;
         }
 
-        // Get students from the assigned semester
         $students = Students::where(
             'current_semester',
             $assignClass->semester
@@ -584,7 +574,6 @@ class AttendanceController extends Controller
 
         foreach ($students as $student) {
 
-            // Check if attendance already exists
             $exists = Attendance::where('student_id', $student->id)
                 ->where('teacher_id', $teacherId)
                 ->where('subject_id', $subject->id)
@@ -592,23 +581,7 @@ class AttendanceController extends Controller
                 ->whereDate('date', $date)
                 ->exists();
 
-            // If attendance does not exist, mark student as Absent
             if (! $exists) {
-
-                $realDateTime = $this->getRealDateTime();
-
-                if (! $realDateTime) {
-                    return;
-                }
-
-                $realDate = $realDateTime['date'];
-                $realTime = $realDateTime['time'];
-
-                $realDateTimeValue = Carbon::createFromFormat(
-                    'Y-m-d H:i:s',
-                    $realDate.' '.$realTime,
-                    'Asia/Kathmandu'
-                );
 
                 Attendance::create([
                     'semester' => $student->current_semester,
@@ -619,27 +592,25 @@ class AttendanceController extends Controller
                     'date' => $date,
                     'time' => null,
                     'status' => 'Absent',
-                    'created_at' => $realDateTimeValue,
-                    'updated_at' => $realDateTimeValue,
                 ]);
             }
         }
     }
 
     // Get Attendance Count
-    public function getAttendanceCount(Request $request)
+    public function getAttendanceCount(Request $request, RealTimeService $realTimeService)
     {
-        // Get real date instead of device/server date
-        $realDateTime = $this->getRealDateTime();
+        $realNow = $realTimeService->now();
 
-        if (! $realDateTime) {
+        if (! $realNow) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to verify the current date and time.',
+                'message' => 'Unable to verify the current date and time. Please check your internet connection.',
             ]);
         }
 
-        $realDate = $realDateTime['date'];
+        $realDate = $realNow->format('Y-m-d');
+        $realTime = $realNow->format('H:i:s');
 
         // Logged in teacher
         $teacher = Teachers::find(session('teacher_id'));
@@ -702,46 +673,5 @@ class AttendanceController extends Controller
             'absent' => $absent,
             'total' => $total,
         ]);
-    }
-
-    // Real time
-    private function getRealDateTime()
-    {
-        try {
-
-            $response = Http::connectTimeout(5)
-                ->timeout(5)
-                ->get(
-                    'https://timeapi.io/api/time/current/zone',
-                    [
-                        'timeZone' => 'Asia/Kathmandu',
-                    ]
-                );
-
-            if (! $response->successful()) {
-                return null;
-            }
-
-            $data = $response->json();
-
-            if (! isset($data['date'], $data['time'])) {
-                return null;
-            }
-
-            // Convert API date to YYYY-MM-DD only
-            $date = Carbon::parse($data['date'])->format('Y-m-d');
-
-            // Convert API time to HH:MM:SS only
-            $time = Carbon::parse($data['time'])->format('H:i:s');
-
-            return [
-                'date' => $date,
-                'time' => $time,
-            ];
-
-        } catch (\Throwable $e) {
-
-            return null;
-        }
     }
 }
