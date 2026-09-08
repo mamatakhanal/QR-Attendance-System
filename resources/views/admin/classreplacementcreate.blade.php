@@ -315,46 +315,6 @@
             }
 
 
-            /*
-            | Today cannot start before current time
-            */
-
-            let selectedDate = $('#replacementDate').val();
-
-            if (selectedDate === getToday()) {
-
-                let now = new Date();
-
-                let currentHour = String(
-                    now.getHours()
-                ).padStart(2, '0');
-
-                let currentMinute = String(
-                    now.getMinutes()
-                ).padStart(2, '0');
-
-                let currentTime =
-                    currentHour + ':' + currentMinute;
-
-
-                if (startTime < currentTime) {
-
-                    $('#start_time_error').text(
-                        'For today, start time cannot be earlier than the current time.'
-                    );
-
-                    $(this).val('');
-
-                    return;
-                }
-
-            }
-
-
-            /*
-            | Check existing end time
-            */
-
             let endTime = $('#replacementEndTime').val();
 
             if (
@@ -585,47 +545,6 @@
 
                 return;
             }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Today current-time restriction
-            |--------------------------------------------------------------------------
-            */
-
-            if (date === getToday()) {
-
-                let now = new Date();
-
-                let currentHour = String(
-                    now.getHours()
-                ).padStart(2, '0');
-
-                let currentMinute = String(
-                    now.getMinutes()
-                ).padStart(2, '0');
-
-                let currentTime =
-                    currentHour + ':' + currentMinute;
-
-
-                if (startTime < currentTime) {
-
-                    $('#start_time_error').text(
-                        'For today, start time cannot be earlier than the current time.'
-                    );
-
-                    return;
-                }
-
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | End time
-            |--------------------------------------------------------------------------
-            */
 
             if (!endTime) {
 

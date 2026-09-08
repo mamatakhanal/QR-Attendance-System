@@ -12,7 +12,6 @@
 
                 <input type="hidden" name="id" id="editReplacementId">
 
-                <!-- Header -->
                 <div class="modal-header">
 
                     <h3 class="modal-title fw-bold">
@@ -25,15 +24,13 @@
                 </div>
 
 
-                <!-- Body -->
                 <div class="modal-body row g-3">
 
-
                     {{-- Replacement Teacher --}}
-                    <div class="col-md-12">
+                    <div class="col-md-6">
 
                         <label class="form-label">
-                            Replacement Teacher
+                            Teacher
                         </label>
 
                         <select name="replacement_teacher_id" id="editReplacementTeacher" class="form-select" required>
@@ -57,7 +54,7 @@
 
 
                     {{-- Date --}}
-                    <div class="col-md-12">
+                    <div class="col-md-6">
 
                         <label class="form-label">
                             Date
@@ -72,7 +69,7 @@
 
 
                     {{-- Semester --}}
-                    <div class="col-md-12">
+                    <div class="col-md-6">
 
                         <label class="form-label">
                             Semester
@@ -99,7 +96,7 @@
 
 
                     {{-- Subject --}}
-                    <div class="col-md-12">
+                    <div class="col-md-6">
 
                         <label class="form-label">
                             Subject
@@ -108,14 +105,8 @@
                         <select name="subject_id" id="editReplacementSubject" class="form-select" required>
 
                             <option value="">
-                                Select Subject
+                                Select Semester First
                             </option>
-
-                            @foreach ($subjects as $subject)
-                                <option value="{{ $subject->id }}" data-semester="{{ $subject->semester }}">
-                                    {{ $subject->subject_name }}
-                                </option>
-                            @endforeach
 
                         </select>
 
@@ -159,11 +150,12 @@
                 </div>
 
 
-                <!-- Footer -->
-                <div class="modal-footer mt-2 mb-0">
+                <div class="modal-footer mt-3 mb-0">
 
                     <button type="submit" class="btn btn-primary">
+
                         Update
+
                     </button>
 
                 </div>
@@ -180,27 +172,19 @@
 <script>
     $(document).ready(function() {
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | GET TODAY
-        |--------------------------------------------------------------------------
-        */
-
         function getToday() {
 
             let today = new Date();
 
-            let year =
-                today.getFullYear();
+            let year = today.getFullYear();
 
-            let month =
-                String(today.getMonth() + 1)
-                .padStart(2, '0');
+            let month = String(
+                today.getMonth() + 1
+            ).padStart(2, '0');
 
-            let day =
-                String(today.getDate())
-                .padStart(2, '0');
+            let day = String(
+                today.getDate()
+            ).padStart(2, '0');
 
             return year + '-' + month + '-' + day;
         }
@@ -218,107 +202,67 @@
         );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | CACHE ALL SUBJECTS
-        |
-        | We already loaded all subjects from Blade.
-        | Therefore, we don't need AJAX when semester changes.
-        |--------------------------------------------------------------------------
-        */
-
-        const allEditSubjectOptions =
-            $('#editReplacementSubject option[data-semester]')
-            .clone();
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | LOAD SUBJECTS BY SEMESTER
-        |--------------------------------------------------------------------------
-        */
+        function loadEditSubjects(semester, selectedSubjectId = '') {
 
-        function loadEditSubjects(
-            semester,
-            selectedSubjectId = ''
-        ) {
+            let subjectDropdown = $('#editReplacementSubject');
 
-            let subjectDropdown =
-                $('#editReplacementSubject');
-
-
-            /*
-            | Clear dropdown
-            */
-
-            subjectDropdown.empty();
-
-
-            /*
-            | No semester selected
-            */
+            subjectDropdown.html(
+                '<option value="">Loading subjects...</option>'
+            );
 
             if (!semester) {
-
-                subjectDropdown.append(
+                subjectDropdown.html(
                     '<option value="">Select Semester First</option>'
                 );
-
                 return;
             }
 
+            $.ajax({
+                url: "{{ url('/admin/assignclass/subjects') }}/" + semester,
+                type: "GET",
 
-            /*
-            | Default option
-            */
+                success: function(data) {
 
-            subjectDropdown.append(
-                '<option value="">Select Subject</option>'
-            );
-
-
-            /*
-            | Add subjects belonging to selected semester
-            */
-
-            allEditSubjectOptions
-                .filter(function() {
-
-                    return String(
-                        $(this).data('semester')
-                    ) === String(semester);
-
-                })
-                .each(function() {
+                    subjectDropdown.empty();
 
                     subjectDropdown.append(
-                        $(this).clone()
+                        '<option value="">Select Subject</option>'
                     );
 
-                });
+                    $.each(data, function(index, item) {
 
+                        subjectDropdown.append(
+                            '<option value="' +
+                            item.subject_id +
+                            '">' +
+                            item.subject_name +
+                            '</option>'
+                        );
 
-            /*
-            | Select existing subject while editing
-            */
+                    });
 
-            if (selectedSubjectId) {
+                    // Select existing subject AFTER AJAX has loaded
+                    if (selectedSubjectId) {
+                        subjectDropdown.val(String(selectedSubjectId));
+                    }
+                },
 
-                subjectDropdown.val(
-                    String(selectedSubjectId)
-                );
+                error: function() {
 
-            }
+                    subjectDropdown.html(
+                        '<option value="">Unable to load subjects</option>'
+                    );
 
+                }
+            });
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | EDIT BUTTON
-        |
-        | No AJAX request.
-        | Data comes directly from data-* attributes.
+        | OPEN EDIT
         |--------------------------------------------------------------------------
         */
 
@@ -349,121 +293,29 @@
                     $(this).data('end-time');
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | CLEAR OLD ERRORS
-                |--------------------------------------------------------------------------
-                */
-
-                $('#edit_replacement_teacher_id_error').text('');
-
-                $('#edit_semester_error').text('');
-
-                $('#edit_subject_id_error').text('');
-
-                $('#edit_date_error').text('');
-
-                $('#edit_start_time_error').text('');
-
-                $('#edit_end_time_error').text('');
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | SET ID
-                |--------------------------------------------------------------------------
-                */
 
                 $('#editReplacementId').val(id);
 
+                $('#editReplacementTeacher').val(String(teacher));
 
-                /*
-                |--------------------------------------------------------------------------
-                | SET TEACHER
-                |--------------------------------------------------------------------------
-                */
+                $('#editReplacementDate').val(date);
 
-                $('#editReplacementTeacher').val(
-                    String(teacher)
-                );
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | SET DATE
-                |--------------------------------------------------------------------------
-                */
-
-                $('#editReplacementDate').val(
-                    date
-                );
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | SET SEMESTER
-                |--------------------------------------------------------------------------
-                */
-
-                $('#editReplacementSemester').val(
-                    String(semester)
-                );
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | SET START TIME
-                |--------------------------------------------------------------------------
-                |
-                | Converts:
-                | 10:00:00
-                |
-                | to:
-                | 10:00
-                |--------------------------------------------------------------------------
-                */
+                $('#editReplacementSemester').val(String(semester));
 
                 $('#editReplacementStartTime').val(
-
-                    startTime ?
-                    String(startTime).substring(0, 5) :
-                    ''
-
+                    startTime ? String(startTime).substring(0, 5) : ''
                 );
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | SET END TIME
-                |--------------------------------------------------------------------------
-                */
 
                 $('#editReplacementEndTime').val(
-
-                    endTime ?
-                    String(endTime).substring(0, 5) :
-                    ''
-
+                    endTime ? String(endTime).substring(0, 5) : ''
                 );
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | LOAD EXISTING SUBJECT
-                |--------------------------------------------------------------------------
-                */
 
                 loadEditSubjects(
                     semester,
                     subjectId
                 );
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | SET UPDATE FORM ACTION
-                |--------------------------------------------------------------------------
-                */
 
                 $('#editClassReplacementForm').attr(
                     'action',
@@ -477,8 +329,6 @@
         /*
         |--------------------------------------------------------------------------
         | SEMESTER CHANGE
-        |
-        | No AJAX.
         |--------------------------------------------------------------------------
         */
 
@@ -489,18 +339,6 @@
 
                 let semester =
                     $(this).val();
-
-
-                /*
-                | Clear subject error
-                */
-
-                $('#edit_subject_id_error').text('');
-
-
-                /*
-                | Reload subjects instantly
-                */
 
                 loadEditSubjects(
                     semester
@@ -538,19 +376,18 @@
             '#editReplacementDate',
             function() {
 
-                let selectedDate =
+                let date =
                     $(this).val();
-
 
                 $('#edit_date_error').text('');
 
 
-                if (!selectedDate) {
+                if (!date) {
                     return;
                 }
 
 
-                if (selectedDate < getToday()) {
+                if (date < getToday()) {
 
                     $('#edit_date_error').text(
                         'Replacement date cannot be before today.'
@@ -566,7 +403,7 @@
 
         /*
         |--------------------------------------------------------------------------
-        | START TIME VALIDATION
+        | START TIME
         |--------------------------------------------------------------------------
         */
 
@@ -578,7 +415,6 @@
                 let startTime =
                     $(this).val();
 
-
                 $('#edit_start_time_error').text('');
 
 
@@ -586,10 +422,6 @@
                     return;
                 }
 
-
-                /*
-                | Start time must be between 10 AM and 5 PM
-                */
 
                 if (
                     startTime < '10:00' ||
@@ -605,54 +437,6 @@
                     return;
                 }
 
-
-                /*
-                | Today cannot use past time
-                */
-
-                let selectedDate =
-                    $('#editReplacementDate').val();
-
-
-                if (selectedDate === getToday()) {
-
-                    let now =
-                        new Date();
-
-
-                    let currentHour =
-                        String(
-                            now.getHours()
-                        ).padStart(2, '0');
-
-
-                    let currentMinute =
-                        String(
-                            now.getMinutes()
-                        ).padStart(2, '0');
-
-
-                    let currentTime =
-                        currentHour + ':' + currentMinute;
-
-
-                    if (startTime < currentTime) {
-
-                        $('#edit_start_time_error').text(
-                            'For today, start time cannot be earlier than the current time.'
-                        );
-
-                        $(this).val('');
-
-                        return;
-                    }
-
-                }
-
-
-                /*
-                | Check existing end time
-                */
 
                 let endTime =
                     $('#editReplacementEndTime').val();
@@ -677,7 +461,7 @@
 
         /*
         |--------------------------------------------------------------------------
-        | END TIME VALIDATION
+        | END TIME
         |--------------------------------------------------------------------------
         */
 
@@ -688,7 +472,6 @@
 
                 let endTime =
                     $(this).val();
-
 
                 let startTime =
                     $('#editReplacementStartTime').val();
@@ -701,10 +484,6 @@
                     return;
                 }
 
-
-                /*
-                | End time must be between 10 AM and 5 PM
-                */
 
                 if (
                     endTime < '10:00' ||
@@ -720,10 +499,6 @@
                     return;
                 }
 
-
-                /*
-                | End time must be after start time
-                */
 
                 if (
                     startTime &&
@@ -744,7 +519,7 @@
 
         /*
         |--------------------------------------------------------------------------
-        | SUBMIT EDIT FORM
+        | SUBMIT
         |--------------------------------------------------------------------------
         */
 
@@ -760,9 +535,7 @@
 
 
                 /*
-                |--------------------------------------------------------------------------
-                | CLEAR ERRORS
-                |--------------------------------------------------------------------------
+                | Clear errors
                 */
 
                 $('#edit_replacement_teacher_id_error').text('');
@@ -779,9 +552,7 @@
 
 
                 /*
-                |--------------------------------------------------------------------------
-                | GET FORM VALUES
-                |--------------------------------------------------------------------------
+                | Get values
                 */
 
                 let teacher =
@@ -804,9 +575,7 @@
 
 
                 /*
-                |--------------------------------------------------------------------------
-                | TEACHER VALIDATION
-                |--------------------------------------------------------------------------
+                | Teacher
                 */
 
                 if (!teacher) {
@@ -820,9 +589,7 @@
 
 
                 /*
-                |--------------------------------------------------------------------------
-                | SEMESTER VALIDATION
-                |--------------------------------------------------------------------------
+                | Semester
                 */
 
                 if (!semester) {
@@ -836,9 +603,7 @@
 
 
                 /*
-                |--------------------------------------------------------------------------
-                | SUBJECT VALIDATION
-                |--------------------------------------------------------------------------
+                | Subject
                 */
 
                 if (!subjectId) {
@@ -852,9 +617,7 @@
 
 
                 /*
-                |--------------------------------------------------------------------------
-                | DATE VALIDATION
-                |--------------------------------------------------------------------------
+                | Date
                 */
 
                 if (!date) {
@@ -878,9 +641,7 @@
 
 
                 /*
-                |--------------------------------------------------------------------------
-                | START TIME VALIDATION
-                |--------------------------------------------------------------------------
+                | Start time
                 */
 
                 if (!startTime) {
@@ -907,47 +668,7 @@
 
 
                 /*
-                | Today cannot use past start time
-                */
-
-                if (date === getToday()) {
-
-                    let now =
-                        new Date();
-
-
-                    let currentHour =
-                        String(
-                            now.getHours()
-                        ).padStart(2, '0');
-
-
-                    let currentMinute =
-                        String(
-                            now.getMinutes()
-                        ).padStart(2, '0');
-
-
-                    let currentTime =
-                        currentHour + ':' + currentMinute;
-
-
-                    if (startTime < currentTime) {
-
-                        $('#edit_start_time_error').text(
-                            'For today, start time cannot be earlier than the current time.'
-                        );
-
-                        return;
-                    }
-
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | END TIME VALIDATION
-                |--------------------------------------------------------------------------
+                | End time
                 */
 
                 if (!endTime) {
@@ -984,9 +705,7 @@
 
 
                 /*
-                |--------------------------------------------------------------------------
-                | FORM DATA
-                |--------------------------------------------------------------------------
+                | FormData
                 */
 
                 let formData =
@@ -994,9 +713,7 @@
 
 
                 /*
-                |--------------------------------------------------------------------------
-                | SUBMIT BUTTON
-                |--------------------------------------------------------------------------
+                | Disable button
                 */
 
                 let submitButton =
@@ -1012,9 +729,7 @@
 
 
                 /*
-                |--------------------------------------------------------------------------
-                | AJAX UPDATE
-                |--------------------------------------------------------------------------
+                | AJAX
                 */
 
                 $.ajax({
@@ -1031,9 +746,7 @@
 
 
                     /*
-                    |--------------------------------------------------------------------------
                     | SUCCESS
-                    |--------------------------------------------------------------------------
                     */
 
                     success: function(response) {
@@ -1065,10 +778,6 @@
                         }
 
 
-                        /*
-                        | Success message
-                        */
-
                         Swal.fire({
 
                             toast: true,
@@ -1091,10 +800,6 @@
                         });
 
 
-                        /*
-                        | Close modal
-                        */
-
                         let modalElement =
                             document.getElementById(
                                 'editClassReplacementModal'
@@ -1114,26 +819,17 @@
                         }
 
 
-                        /*
-                        | Reload table/page
-                        */
+                        setTimeout(function() {
 
-                        setTimeout(
-                            function() {
+                            location.reload();
 
-                                location.reload();
-
-                            },
-                            1500
-                        );
+                        }, 1500);
 
                     },
 
 
                     /*
-                    |--------------------------------------------------------------------------
                     | ERROR
-                    |--------------------------------------------------------------------------
                     */
 
                     error: function(xhr) {
@@ -1149,10 +845,6 @@
                         );
 
 
-                        /*
-                        | Laravel validation error
-                        */
-
                         if (xhr.status === 422) {
 
                             let errors =
@@ -1164,11 +856,6 @@
                                 $.each(
                                     errors,
                                     function(key, value) {
-
-
-                                        /*
-                                        | Teacher
-                                        */
 
                                         if (
                                             key ===
@@ -1184,13 +871,8 @@
                                         }
 
 
-                                        /*
-                                        | Semester
-                                        */
-
                                         if (
-                                            key ===
-                                            'semester'
+                                            key === 'semester'
                                         ) {
 
                                             $(
@@ -1202,13 +884,8 @@
                                         }
 
 
-                                        /*
-                                        | Subject
-                                        */
-
                                         if (
-                                            key ===
-                                            'subject_id'
+                                            key === 'subject_id'
                                         ) {
 
                                             $(
@@ -1220,13 +897,8 @@
                                         }
 
 
-                                        /*
-                                        | Date
-                                        */
-
                                         if (
-                                            key ===
-                                            'date'
+                                            key === 'date'
                                         ) {
 
                                             $(
@@ -1238,13 +910,8 @@
                                         }
 
 
-                                        /*
-                                        | Start Time
-                                        */
-
                                         if (
-                                            key ===
-                                            'start_time'
+                                            key === 'start_time'
                                         ) {
 
                                             $(
@@ -1256,13 +923,8 @@
                                         }
 
 
-                                        /*
-                                        | End Time
-                                        */
-
                                         if (
-                                            key ===
-                                            'end_time'
+                                            key === 'end_time'
                                         ) {
 
                                             $(
@@ -1278,10 +940,6 @@
 
                             }
 
-
-                            /*
-                            | General 422 message
-                            */
 
                             let message =
                                 xhr.responseJSON?.message;
@@ -1311,14 +969,9 @@
 
                             }
 
-
                             return;
                         }
 
-
-                        /*
-                        | Other errors
-                        */
 
                         Swal.fire({
 
@@ -1345,9 +998,7 @@
 
 
                     /*
-                    |--------------------------------------------------------------------------
                     | COMPLETE
-                    |--------------------------------------------------------------------------
                     */
 
                     complete: function() {
@@ -1365,35 +1016,23 @@
         );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | RESET MODAL AFTER CLOSE
-        |--------------------------------------------------------------------------
-        */
+
 
         $('#editClassReplacementModal').on(
             'hidden.bs.modal',
             function() {
 
-                /*
-                | Reset form
-                */
-
                 $('#editClassReplacementForm')[0].reset();
 
-
-                /*
-                | Reset subject dropdown
-                */
+                $('#editReplacementId').val('');
 
                 $('#editReplacementSubject').html(
                     '<option value="">Select Semester First</option>'
                 );
 
-
-                /*
-                | Clear errors
-                */
+                $('#editClassReplacementForm').removeAttr(
+                    'action'
+                );
 
                 $('#edit_replacement_teacher_id_error').text('');
 
@@ -1409,7 +1048,6 @@
 
             }
         );
-
 
     });
 </script>

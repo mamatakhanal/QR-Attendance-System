@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Admin\Assignclass;
+use App\Models\Admin\AttendanceSession;
 use App\Models\Admin\ClassReplacement;
 use App\Models\Admin\Subjects;
 use App\Models\Admin\Teachers;
@@ -29,6 +30,10 @@ class ClassReplacementController extends Controller
             ->get();
 
         $teachers = Teachers::orderBy('name')->get();
+
+        $subjects = Subjects::orderBy('semester')
+            ->orderBy('subject_name')
+            ->get();
 
         $replacements = ClassReplacement::with([
             'subject',
@@ -88,12 +93,100 @@ class ClassReplacementController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $today = Carbon::today();
+        $now = Carbon::now();
+
+        foreach ($replacements as $replacement) {
+
+            $replacementDate = Carbon::parse($replacement->date);
+
+            // Future class
+            if ($replacementDate->isAfter($today)) {
+
+                $replacement->attendance_status = 'Scheduled';
+                $replacement->attendance_status_class = 'secondary';
+                $replacement->can_edit = true;
+                $replacement->can_delete = true;
+
+                continue;
+            }
+
+            // Past date
+            if ($replacementDate->isBefore($today)) {
+
+                $replacement->attendance_status = 'Time Expired';
+                $replacement->attendance_status_class = 'danger';
+                $replacement->can_edit = false;
+                $replacement->can_delete = false;
+
+                continue;
+            }
+
+            // Today's attendance session
+            $session = AttendanceSession::where(
+                'replacement_id',
+                $replacement->id
+            )
+                ->whereDate('date', $replacement->date)
+                ->latest('id')
+                ->first();
+
+            // Attendance completed
+            if ($session && $session->status === 'Closed') {
+
+                $replacement->attendance_status = 'Attendance Done';
+                $replacement->attendance_status_class = 'success';
+                $replacement->can_edit = false;
+                $replacement->can_delete = false;
+
+                continue;
+            }
+
+            // Attendance currently running
+            if ($session && $session->status === 'Open') {
+
+                $replacement->attendance_status = 'Attendance In Progress';
+                $replacement->attendance_status_class = 'warning';
+                $replacement->can_edit = false;
+                $replacement->can_delete = false;
+
+                continue;
+            }
+
+            // No attendance session yet
+            $startTime = Carbon::parse(
+                $replacement->date.' '.$replacement->start_time
+            );
+
+            $endTime = Carbon::parse(
+                $replacement->date.' '.$replacement->end_time
+            );
+
+            // Before or during scheduled time
+            if ($now->lte($endTime)) {
+
+                $replacement->attendance_status = 'Not Taken';
+                $replacement->attendance_status_class = 'danger';
+                $replacement->can_edit = true;
+                $replacement->can_delete = true;
+
+            } else {
+
+                // Time finished and no attendance session
+                $replacement->attendance_status = 'Time Expired';
+                $replacement->attendance_status_class = 'danger';
+                $replacement->can_edit = false;
+                $replacement->can_delete = false;
+            }
+        }
+
         if ($request->ajax()) {
 
             return view('admin.classreplacement', [
                 'replacements' => $replacements,
                 'assignClasses' => $assignClasses,
                 'teachers' => $teachers,
+                'subjects' => $subjects,
                 'pageTitle' => 'Class Replacement',
             ])->render();
         }
@@ -103,6 +196,7 @@ class ClassReplacementController extends Controller
             'replacements' => $replacements,
             'assignClasses' => $assignClasses,
             'teachers' => $teachers,
+            'subjects' => $subjects,
             'pageTitle' => 'Class Replacement',
         ]);
     }
@@ -145,6 +239,7 @@ class ClassReplacementController extends Controller
             'end_time' => [
                 'required',
                 'date_format:H:i',
+                'after_or_equal:10:00',
                 'before_or_equal:17:00',
                 'after:start_time',
             ],
@@ -209,16 +304,6 @@ class ClassReplacementController extends Controller
             ->first();
 
         $assignClassId = $assignClass?->id;
-        $today = now()->toDateString();
-        if ($request->date === $today) {
-            $currentTime = now()->format('H:i');
-            if ($request->start_time < $currentTime) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Replacement class start time cannot be earlier than the current time.',
-                ], 422);
-            }
-        }
 
         $existingReplacement = ClassReplacement::where(
             'subject_id',
@@ -365,7 +450,7 @@ class ClassReplacementController extends Controller
 
             'replacement_teacher_id' => $replacement->replacement_teacher_id,
 
-            'date' => $replacement->date,
+            'date' => Carbon::parse($replacement->date)->format('Y-m-d'),
 
             'start_time' => Carbon::parse(
                 $replacement->start_time
@@ -452,49 +537,32 @@ class ClassReplacementController extends Controller
 
         ]);
 
-        $today = now()->toDateString();
-
-        if ($request->date === $today) {
-
-            $currentTime = now()->format('H:i');
-
-            if ($request->start_time < $currentTime) {
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Replacement class start time cannot be earlier than the current time.',
-                ], 422);
-
-            }
-
-        }
-
         $subject = Subjects::findOrFail(
             $request->subject_id
         );
 
         $teacherAssignedClass = Assignclass::where(
-    'teacher_id',
-    $request->replacement_teacher_id
-)
-    ->where(
-        'semester',
-        $subject->semester
-    )
-    ->whereHas('subjects', function ($query) use ($request) {
-        $query->where(
-            'subjects.id',
-            $request->subject_id
-        );
-    })
-    ->first();
+            'teacher_id',
+            $request->replacement_teacher_id
+        )
+            ->where(
+                'semester',
+                $subject->semester
+            )
+            ->whereHas('subjects', function ($query) use ($request) {
+                $query->where(
+                    'subjects.id',
+                    $request->subject_id
+                );
+            })
+            ->first();
 
-if (! $teacherAssignedClass) {
-    return response()->json([
-        'success' => false,
-        'message' => 'This teacher is not assigned to this class and subject.',
-    ], 422);
-}
+        if (! $teacherAssignedClass) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This teacher is not assigned to this class and subject.',
+            ], 422);
+        }
 
         $hasSemesterConflict = ClassReplacement::whereDate(
             'date',

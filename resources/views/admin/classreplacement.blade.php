@@ -131,6 +131,7 @@
                                 <th class="py-3">Subject</th>
                                 <th class="py-3">Teacher</th>
                                 <th class="py-3">Time</th>
+                                {{-- <th class="py-3">Status</th> --}}
                                 <th class="py-3">Actions</th>
                             </tr>
                         </thead>
@@ -160,29 +161,94 @@
                                         -
                                         {{ \Carbon\Carbon::parse($replacement->end_time)->format('h:i A') }}
                                     </td>
+                                    {{-- <td>
+                                        @if ($replacement->attendance_status === 'Attendance Done')
+                                            <button type="button"
+                                                class="btn btn-success fw-semibold btn-sm rounded-3 edit-btn"
+                                                style="font-size:10px;">
+                                                <i class="bi bi-check-circle"></i>
+                                                Attendance Done
+                                            </button>
+                                        @elseif ($replacement->attendance_status === 'Attendance In Progress')
+                                            <button type="button"
+                                                class="btn btn-warning text-dark fw-semibold btn-sm rounded-3 edit-btn"
+                                                style="font-size:10px;">
+                                                <i class="bi bi-clock"></i>
+                                                Attendance In Progress
+                                            </button>
+                                        @elseif ($replacement->attendance_status === 'Not Taken')
+                                            <button type="button"
+                                                class="btn btn-danger fw-semibold btn-sm rounded-3 edit-btn"
+                                                style="font-size:10px;">
+                                                <i class="bi bi-x-circle"></i>
+                                                Not Taken
+                                            </button>
+                                        @elseif ($replacement->attendance_status === 'Time Expired')
+                                            <button type="button"
+                                                class="btn btn-danger fw-semibold btn-sm rounded-3 edit-btn"
+                                                style="font-size:10px;">
+                                                <i class="bi bi-clock-history"></i>
+                                                Time Expired
+                                            </button>
+                                        @else
+                                            <button type="button"
+                                                class="btn btn-secondary fw-semibold btn-sm rounded-3 edit-btn"
+                                                style="font-size:10px;">
+                                                <i class="bi bi-calendar-check"></i>
+                                                Scheduled
+                                            </button>
+                                        @endif
+                                    </td> --}}
                                     <td>
-                                        <button type="button"
-                                            class="btn btn-outline-primary fw-semibold btn-sm rounded-3 edit-btn"
-                                            style="font-size:10px;" data-bs-toggle="modal"
-                                            data-bs-target="#editClassReplacementModal"
-                                            data-id="{{ $replacement->id }}"
-                                            data-teacher="{{ $replacement->replacement_teacher_id }}"
-                                            data-date="{{ $replacement->date }}"
-                                            data-semester="{{ $replacement->semester }}"
-                                            data-subject-id="{{ $replacement->subject_id }}"
-                                            data-start-time="{{ $replacement->start_time }}"
-                                            data-end-time="{{ $replacement->end_time }}">
-                                            <i class="bi bi-pencil-square"></i> Edit
-                                        </button>
-                                        &nbsp;
-                                        <button type="button"
-                                            class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn"
-                                            style="font-size:10px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                            data-id="{{ $replacement->id }}"
-                                            data-url="{{ route('admin.classreplacement.delete', $replacement->id) }}">
+                                        @if ($replacement->can_edit)
+                                            <button type="button"
+                                                class="btn btn-outline-primary fw-semibold btn-sm rounded-3 edit-btn"
+                                                style="font-size:12px;" data-bs-toggle="modal"
+                                                data-bs-target="#editClassReplacementModal"
+                                                data-id="{{ $replacement->id }}"
+                                                data-teacher="{{ $replacement->replacement_teacher_id }}"
+                                                data-date="{{ \Carbon\Carbon::parse($replacement->date)->format('Y-m-d') }}"
+                                                data-semester="{{ $replacement->subject ? $replacement->subject->semester : '' }}"
+                                                data-subject-id="{{ $replacement->subject_id }}"
+                                                data-start-time="{{ $replacement->start_time }}"
+                                                data-end-time="{{ $replacement->end_time }}">
+                                                <i class="bi bi-pencil-square"></i> Edit
+                                            </button>
+                                            &nbsp;
+                                        @endif
+                                        @if ($replacement->can_delete)
+                                            <button type="button"
+                                                class="btn btn-outline-danger fw-semibold btn-sm rounded-3 action-btn"
+                                                style="font-size:12px;" data-bs-toggle="modal"
+                                                data-bs-target="#deleteModal" data-id="{{ $replacement->id }}"
+                                                data-url="{{ route('admin.classreplacement.delete', $replacement->id) }}">
 
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        @endif
+
+
+                                        @if (!$replacement->can_edit && !$replacement->can_delete)
+                                            @if ($replacement->attendance_status === 'Attendance Done')
+                                                <button type="button" style="font-size:12px;"
+                                                class="btn btn-success fw-semibold btn-sm rounded-3 action-btn">
+                                                    <i class="bi bi-check-circle"></i>
+                                                    Taken
+                                                </button>
+                                            @elseif ($replacement->attendance_status === 'Attendance In Progress')
+                                                <button type="button" style="font-size:12px;"
+                                                class="btn btn-warning fw-semibold btn-sm rounded-3 action-btn text-dark">
+                                                    <i class="bi bi-clock"></i>
+                                                    In Progress
+                                                </button>
+                                            @elseif ($replacement->attendance_status === 'Time Expired')
+                                                <button type="button" style="font-size:12px;"
+                                                class="btn btn-danger fw-semibold btn-sm rounded-3 action-btn">
+                                                    <i class="bi bi-clock-history"></i>
+                                                    Not Taken
+                                                </button>
+                                            @endif
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
