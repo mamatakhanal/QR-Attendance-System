@@ -124,7 +124,7 @@
                                                 <td>
                                                     @if ($class['status'] === 'Taken')
                                                         <span class="badge bg-success rounded-3 px-3 py-2">
-                                                            <i class="bi bi-check-circle-fill me-1"></i>
+                                                            <i class="bi bi-check-circle me-1"></i>
                                                             Taken
                                                         </span>
                                                     @elseif ($class['status'] === 'Open')

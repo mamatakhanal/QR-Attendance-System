@@ -306,7 +306,8 @@
 
                 data: {
                     _token: "{{ csrf_token() }}",
-                    assign_class_id: classId
+                    assign_class_id: classId,
+                    replacement_id: $('#class_id option:selected').attr('data-replacement-id') || ''
                 },
 
                 success: function(res) {
@@ -382,6 +383,7 @@
             let scannerStarting = false;
             let scannerProcessing = false;
             let scannerRestarting = false;
+            let lastScannedQr = null;
 
 
             // Initialize Scanner
@@ -401,6 +403,7 @@
 
                 scannerStarting = false;
                 scannerProcessing = false;
+                lastScannedQr = null;
 
                 if (!html5QrCode) {
 
@@ -520,30 +523,42 @@
 
                         // QR Successfully Scanned
 
+                        // QR Successfully Scanned
                         async function(decodedText) {
 
-                                // Prevent duplicate QR callbacks
+                                // -----------------------------------------
+                                // PREVENT MULTIPLE QR CALLBACKS
+                                // -----------------------------------------
                                 if (scannerProcessing) {
+                                    console.log("Scan already processing. Ignored.");
                                     return;
                                 }
 
+                                // Same QR detected again
+                                if (lastScannedQr === decodedText) {
+                                    console.log("Same QR detected again. Ignored.");
+                                    return;
+                                }
+
+                                // Lock immediately
                                 scannerProcessing = true;
+                                lastScannedQr = decodedText;
 
                                 console.log("QR scanned:", decodedText);
 
-
-                                // Save scanner reference
+                                // -----------------------------------------
+                                // STOP CAMERA IMMEDIATELY
+                                // -----------------------------------------
                                 const scanner = html5QrCode;
 
-
-                                // Stop camera immediately
                                 try {
 
                                     if (scanner && scanner.isScanning) {
 
                                         await scanner.stop();
-                                    }
 
+                                        console.log("Scanner stopped after QR scan.");
+                                    }
                                 } catch (error) {
 
                                     console.log(
@@ -552,11 +567,7 @@
                                     );
                                 }
 
-
                                 scannerStarting = false;
-
-
-                                // Send attendance
                                 sendAttendance(decodedText);
                             },
 

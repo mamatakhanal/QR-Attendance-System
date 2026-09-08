@@ -906,19 +906,67 @@ class AttendanceController extends Controller
 
         foreach ($students as $student) {
 
-            $query = Attendance::where('student_id', $student->id)
-                ->where('teacher_id', $teacherId)
-                ->where('subject_id', $subject->id)
-                ->where('assign_class_id', $assignClass->id)
-                ->whereDate('date', $date);
+            $alreadyPresent = Attendance::where(
+                'student_id',
+                $student->id
+            )
+                ->where(
+                    'subject_id',
+                    $subject->id
+                )
+                ->where(
+                    'assign_class_id',
+                    $assignClass->id
+                )
+                ->whereDate(
+                    'date',
+                    $date
+                )
+                ->where(
+                    'status',
+                    'Present'
+                )
+                ->exists();
 
-            if ($replacementId !== null) {
-                $query->where('replacement_id', $replacementId);
-            } else {
-                $query->whereNull('replacement_id');
+            if ($alreadyPresent) {
+                continue;
             }
 
-            // Already has attendance for this exact class/session
+            $query = Attendance::where(
+                'student_id',
+                $student->id
+            )
+                ->where(
+                    'subject_id',
+                    $subject->id
+                )
+                ->where(
+                    'assign_class_id',
+                    $assignClass->id
+                )
+                ->whereDate(
+                    'date',
+                    $date
+                )
+                ->where(
+                    'status',
+                    'Absent'
+                );
+
+            if ($replacementId !== null) {
+
+                $query->where(
+                    'replacement_id',
+                    $replacementId
+                );
+
+            } else {
+
+                $query->whereNull(
+                    'replacement_id'
+                );
+            }
+
             if ($query->exists()) {
                 continue;
             }

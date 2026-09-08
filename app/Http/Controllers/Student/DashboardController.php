@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin\Assignclass;
 use App\Models\Admin\Attendance;
 use App\Models\Admin\AttendanceSession;
+use App\Models\Admin\ClassReplacement;
 use App\Models\Admin\Students;
 use App\Services\RealTimeService;
 use Carbon\Carbon;
@@ -66,6 +67,14 @@ class DashboardController extends Controller
                 continue;
             }
 
+            $replacement = ClassReplacement::where('subject_id', $subject->id)
+                ->whereDate('date', $realDate)
+                ->where(function ($query) use ($class) {
+                    $query->where('assign_class_id', $class->id)
+                        ->orWhereNull('assign_class_id');
+                })
+                ->first();
+
             //  Find today's attendance session
             $session = AttendanceSession::where(
                 'assign_class_id',
@@ -74,6 +83,7 @@ class DashboardController extends Controller
                 ->whereDate('date', $realDate)
                 ->latest('id')
                 ->first();
+  
 
             // Determine Attendance Status
             if (! $session) {
@@ -106,14 +116,29 @@ class DashboardController extends Controller
                 $statusIcon = 'bi-check-circle-fill';
             }
 
-            // Teacher
-            $teacherName = $class->teacher->name ?? '-';
+            // Teacher and Time
+            if ($replacement) {
 
-            //  Time
-            $time = $class->start_time && $class->end_time
-                ? Carbon::parse($class->start_time)->format('h:i A').' - '.
-                Carbon::parse($class->end_time)->format('h:i A')
-                : '-';
+                // Replacement teacher
+                $teacherName = $replacement->replacementTeacher->name ?? '-';
+
+                // Replacement time
+                $time = $replacement->start_time && $replacement->end_time
+                    ? Carbon::parse($replacement->start_time)->format('h:i A').' - '.
+                      Carbon::parse($replacement->end_time)->format('h:i A')
+                    : '-';
+
+            } else {
+
+                // Original teacher
+                $teacherName = $class->teacher->name ?? '-';
+
+                // Original class time
+                $time = $class->start_time && $class->end_time
+                    ? Carbon::parse($class->start_time)->format('h:i A').' - '.
+                      Carbon::parse($class->end_time)->format('h:i A')
+                    : '-';
+            }
 
             // Store Today Class
             $todayClasses[] = [
@@ -202,44 +227,44 @@ class DashboardController extends Controller
         ]);
     }
 
-//     private function getRealDateTime()
-//     {
-//         try {
+    //     private function getRealDateTime()
+    //     {
+    //         try {
 
-//             $response = Http::connectTimeout(3)
-//                 ->timeout(5)
-//                 ->get(
-//                     'https://timeapi.io/api/time/current/zone',
-//                     [
-//                         'timeZone' => 'Asia/Kathmandu',
-//                     ]
-//                 );
+    //             $response = Http::connectTimeout(3)
+    //                 ->timeout(5)
+    //                 ->get(
+    //                     'https://timeapi.io/api/time/current/zone',
+    //                     [
+    //                         'timeZone' => 'Asia/Kathmandu',
+    //                     ]
+    //                 );
 
-//             if ($response->successful()) {
+    //             if ($response->successful()) {
 
-//                 $data = $response->json();
+    //                 $data = $response->json();
 
-//                 if (
-//                     isset($data['date']) &&
-//                     isset($data['time'])
-//                 ) {
+    //                 if (
+    //                     isset($data['date']) &&
+    //                     isset($data['time'])
+    //                 ) {
 
-//                     return [
-//                         'date' => Carbon::parse(
-//                             $data['date']
-//                         )->format('Y-m-d'),
+    //                     return [
+    //                         'date' => Carbon::parse(
+    //                             $data['date']
+    //                         )->format('Y-m-d'),
 
-//                         'time' => Carbon::parse(
-//                             $data['time']
-//                         )->format('H:i:s'),
-//                     ];
-//                 }
-//             }
+    //                         'time' => Carbon::parse(
+    //                             $data['time']
+    //                         )->format('H:i:s'),
+    //                     ];
+    //                 }
+    //             }
 
-//         } catch (\Throwable $e) {
-//             return null;
-//         }
+    //         } catch (\Throwable $e) {
+    //             return null;
+    //         }
 
-//         return null;
-//     }
+    //         return null;
+    //     }
 }
