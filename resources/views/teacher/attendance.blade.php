@@ -28,58 +28,57 @@
                                 <label @class(['form-label', 'fw-semibold'])>
                                     Select Class
                                 </label>
+
                                 <select class="form-select" id="class_id">
 
                                     <option value="">
                                         Select Class
                                     </option>
 
-                                    {{-- Permanent Classes --}}
                                     @foreach ($assignclasses as $assignclass)
                                         @foreach ($assignclass->subjects as $subject)
-                                            <option value="{{ $assignclass->id }}" data-type="normal"
-                                                data-semester="{{ $assignclass->semester }}"
-                                                data-subject="{{ $subject->subject_name }}"
-                                                data-students="{{ $assignclass->student_count }}"
-                                                data-start-time="{{ \Carbon\Carbon::parse($assignclass->start_time)->format('H:i') }}"
-                                                data-end-time="{{ \Carbon\Carbon::parse($assignclass->end_time)->format('H:i') }}">
+                                            @php
+                                                $todayReplacement = $replacements->firstWhere(
+                                                    'assign_class_id',
+                                                    $assignclass->id,
+                                                );
+                                            @endphp
 
-                                                Semester {{ $assignclass->semester }}
-                                                -
-                                                {{ $subject->subject_name }}
-                                                -
-                                                {{ \Carbon\Carbon::parse($assignclass->start_time)->format('h:i A') }}
-                                                to
-                                                {{ \Carbon\Carbon::parse($assignclass->end_time)->format('h:i A') }}
+                                            @if ($todayReplacement)
+                                                {{-- One class entry, using replacement schedule --}}
+                                                <option value="{{ $assignclass->id }}" data-type="replacement"
+                                                    data-replacement-id="{{ $todayReplacement->id }}"
+                                                    data-semester="{{ $assignclass->semester }}"
+                                                    data-subject="{{ $subject->subject_name }}"
+                                                    data-students="{{ $assignclass->student_count }}"
+                                                    data-start-time="{{ \Carbon\Carbon::parse($todayReplacement->start_time)->format('H:i') }}"
+                                                    data-end-time="{{ \Carbon\Carbon::parse($todayReplacement->end_time)->format('H:i') }}">
 
-                                            </option>
+                                                    Semester {{ $assignclass->semester }}
+                                                    -
+                                                    {{ $subject->subject_name }}
+
+                                                </option>
+                                            @else
+                                                {{-- Normal class --}}
+                                                <option value="{{ $assignclass->id }}" data-type="normal"
+                                                    data-replacement-id="" data-semester="{{ $assignclass->semester }}"
+                                                    data-subject="{{ $subject->subject_name }}"
+                                                    data-students="{{ $assignclass->student_count }}"
+                                                    data-start-time="{{ \Carbon\Carbon::parse($assignclass->start_time)->format('H:i') }}"
+                                                    data-end-time="{{ \Carbon\Carbon::parse($assignclass->end_time)->format('H:i') }}">
+
+                                                    Semester {{ $assignclass->semester }}
+                                                    -
+                                                    {{ $subject->subject_name }}
+
+                                                </option>
+                                            @endif
                                         @endforeach
                                     @endforeach
 
-
-                                    {{-- Today's Replacement Classes --}}
-                                    @foreach ($replacements as $replacement)
-                                        <option value="{{ $replacement->assign_class_id }}" data-type="replacement"
-                                            data-replacement-id="{{ $replacement->id }}"
-                                            data-semester="{{ $replacement->subject->semester }}"
-                                            data-subject="{{ $replacement->subject->subject_name }}"
-                                            data-students="{{ $replacement->student_count }}"
-                                            data-start-time="{{ \Carbon\Carbon::parse($replacement->start_time)->format('H:i') }}"
-                                            data-end-time="{{ \Carbon\Carbon::parse($replacement->end_time)->format('H:i') }}">
-
-                                            Replacement -
-                                            Semester {{ $replacement->subject->semester }}
-                                            -
-                                            {{ $replacement->subject->subject_name }}
-                                            -
-                                            {{ \Carbon\Carbon::parse($replacement->start_time)->format('h:i A') }}
-                                            to
-                                            {{ \Carbon\Carbon::parse($replacement->end_time)->format('h:i A') }}
-
-                                        </option>
-                                    @endforeach
-
                                 </select>
+
 
                                 @if ($currentClass)
                                     <script>
@@ -288,21 +287,16 @@
     <script>
         function loadAttendanceCount() {
 
-            let classId =
-                $('#class_id').val();
-
+            let classId = $('#class_id').val();
 
             if (!classId) {
 
                 $('#totalStudents').text(0);
-
                 $('#presentCount').text(0);
-
                 $('#absentCount').text(0);
 
                 return;
             }
-
 
             $.ajax({
 
@@ -311,106 +305,68 @@
                 type: "POST",
 
                 data: {
-
                     _token: "{{ csrf_token() }}",
-
                     assign_class_id: classId
-
                 },
-
 
                 success: function(res) {
 
-                    if (
-                        res.success === false
-                    ) {
+                    console.log('Attendance Count:', res);
+
+                    if (!res.success) {
+                        console.log(res.message);
                         return;
                     }
 
-
-                    $('#totalStudents')
-                        .text(res.total);
-
-                    $('#presentCount')
-                        .text(res.present);
-
-                    $('#absentCount')
-                        .text(res.absent);
-
+                    $('#totalStudents').text(res.total);
+                    $('#presentCount').text(res.present);
+                    $('#absentCount').text(res.absent);
                 },
-
 
                 error: function(xhr) {
 
                     console.log(
-                        'Unable to load attendance count.'
-                    );
-
-                    console.log(
+                        'Attendance count error:',
                         xhr.responseText
                     );
-
                 }
-
             });
-
         }
-
 
         $('#class_id').on(
             'change',
             function() {
 
-                loadAttendanceCount();
-
-
-                let selected =
-                    $(this)
-                    .find(':selected');
-
+                let selected = $(this).find(':selected');
 
                 let semester =
-                    selected.data('semester') ||
-                    '-';
-
+                    selected.data('semester') || '-';
 
                 let subject =
-                    selected.data('subject') ||
-                    '-';
-
+                    selected.data('subject') || '-';
 
                 let students =
-                    selected.data('students') ||
-                    0;
-
+                    selected.data('students') || 0;
 
                 $('#infoSemester').text(
 
                     semester == '-' ?
-
                     '-' :
-
-                    'Semester ' +
-                    semester
-
+                    'Semester ' + semester
                 );
 
+                $('#infoSubject').text(subject);
 
-                $('#infoSubject')
-                    .text(subject);
+                $('#totalStudents').text(students);
 
-
-                $('#totalStudents')
-                    .text(students);
-
+                // Load Present / Absent count
+                loadAttendanceCount();
             }
         );
 
 
         // Load attendance when page loads
-        if (
-            $('#class_id').val() != ""
-        ) {
+        if ($('#class_id').val() != "") {
 
             loadAttendanceCount();
 
@@ -712,12 +668,10 @@
                     type: "POST",
 
                     data: {
-
                         _token: "{{ csrf_token() }}",
-
                         qr_data: decodedText,
-
-                        assign_class_id: $('#class_id').val()
+                        assign_class_id: $('#class_id').val(),
+                        replacement_id: $('#class_id option:selected').attr('data-replacement-id') || ''
                     },
 
 
@@ -1099,10 +1053,10 @@
                     type: "POST",
 
                     data: {
-
                         _token: "{{ csrf_token() }}",
-
-                        assign_class_id: classId
+                        assign_class_id: classId,
+                        replacement_id: $('#class_id option:selected').attr(
+                            'data-replacement-id') || ''
                     },
 
 
@@ -1305,10 +1259,12 @@
                                         type: "POST",
 
                                         data: {
-
                                             _token: "{{ csrf_token() }}",
-
-                                            assign_class_id: classId
+                                            assign_class_id: classId,
+                                            replacement_id: $(
+                                                    '#class_id option:selected')
+                                                .attr('data-replacement-id') ||
+                                                ''
                                         },
 
 

@@ -58,7 +58,8 @@ class AttendanceController extends Controller
                     $this->markAbsentStudents(
                         $assignClass,
                         $oldSession->teacher_id,
-                        $oldSession->date
+                        $oldSession->date,
+                        $oldSession->replacement_id
                     );
                 }
 
@@ -172,6 +173,7 @@ class AttendanceController extends Controller
         // Selected class
         $assignClass = Assignclass::with('subjects')
             ->where('id', $request->assign_class_id)
+            ->where('teacher_id', $teacher->id)
             ->first();
 
         if (! $assignClass) {
@@ -183,25 +185,41 @@ class AttendanceController extends Controller
 
         $subject = $assignClass->subjects->first();
 
-        $replacement = ClassReplacement::where(
-            'assign_class_id',
-            $assignClass->id
-        )
-            ->where(
-                'replacement_teacher_id',
-                $teacher->id
-            )
-            ->whereDate(
-                'date',
-                $realDate
-            )
-            ->first();
-
         if (! $subject) {
             return response()->json([
                 'success' => false,
                 'message' => 'No subject is assigned to this class.',
             ]);
+        }
+
+        $replacement = null;
+
+        if ($request->filled('replacement_id')) {
+
+            $replacement = ClassReplacement::where(
+                'id',
+                $request->replacement_id
+            )
+                ->where(
+                    'assign_class_id',
+                    $assignClass->id
+                )
+                ->where(
+                    'replacement_teacher_id',
+                    $teacher->id
+                )
+                ->whereDate(
+                    'date',
+                    $realDate
+                )
+                ->first();
+
+            if (! $replacement) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid replacement class.',
+                ]);
+            }
         }
 
         $sessionQuery = AttendanceSession::where(
@@ -242,9 +260,57 @@ class AttendanceController extends Controller
         $session = $sessionQuery->first();
 
         if (! $session) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Attendance session has not been started.',
+
+            // Determine class time
+            if ($replacement) {
+
+                $classStartTime = Carbon::parse($replacement->start_time);
+                $classEndTime = Carbon::parse($replacement->end_time);
+
+            } else {
+
+                $classStartTime = Carbon::parse($assignClass->start_time);
+                $classEndTime = Carbon::parse($assignClass->end_time);
+            }
+
+            $currentTimeOnly = Carbon::parse($realTime);
+
+            // Attendance has not started yet
+            if ($currentTimeOnly->lt($classStartTime)) {
+
+                return response()->json([
+                    'success' => false,
+                    'type' => 'not_started',
+                    'message' => 'Attendance will be started from <strong>'.
+                        $classStartTime->format('h:i A').
+                        '</strong>.',
+                ]);
+            }
+
+            // Attendance time has already ended
+            if ($currentTimeOnly->gte($classEndTime)) {
+
+                return response()->json([
+                    'success' => false,
+                    'type' => 'time_ended',
+                    'message' => 'Attendance was allowed only from <strong>'.
+                        $classStartTime->format('h:i A').
+                        '</strong> to <strong>'.
+                        $classEndTime->format('h:i A').
+                        '</strong>.',
+                ]);
+            }
+
+            // Create today's session automatically
+            $session = AttendanceSession::create([
+                'assign_class_id' => $assignClass->id,
+                'replacement_id' => $replacement?->id,
+                'teacher_id' => $teacher->id,
+                'subject_id' => $subject->id,
+                'date' => $realDate,
+                'start_time' => $classStartTime->format('H:i:s'),
+                'end_time' => $classEndTime->format('H:i:s'),
+                'status' => 'Open',
             ]);
         }
 
@@ -267,8 +333,10 @@ class AttendanceController extends Controller
             $this->markAbsentStudents(
                 $assignClass,
                 $teacher->id,
-                $session->date
+                $session->date,
+                $session->replacement_id
             );
+
             // Close the session
             $session->update([
                 'status' => 'Closed',
@@ -441,19 +509,35 @@ class AttendanceController extends Controller
         $subject = $assignClass->subjects->first();
 
         // Check whether this teacher has a replacement for this class today
-        $replacement = ClassReplacement::where(
-            'assign_class_id',
-            $assignClass->id
-        )
-            ->where(
-                'replacement_teacher_id',
-                $teacher->id
+        $replacement = null;
+
+        if ($request->filled('replacement_id')) {
+
+            $replacement = ClassReplacement::where(
+                'id',
+                $request->replacement_id
             )
-            ->whereDate(
-                'date',
-                $realDate
-            )
-            ->first();
+                ->where(
+                    'assign_class_id',
+                    $assignClass->id
+                )
+                ->where(
+                    'replacement_teacher_id',
+                    $teacher->id
+                )
+                ->whereDate(
+                    'date',
+                    $realDate
+                )
+                ->first();
+
+            if (! $replacement) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid replacement class.',
+                ]);
+            }
+        }
 
         if (! $subject) {
             return response()->json([
@@ -487,57 +571,6 @@ class AttendanceController extends Controller
         }
 
         $currentTimeOnly = Carbon::parse($realTime);
-
-        // Before class start time
-        if ($currentTimeOnly->lt($classStartTime)) {
-
-            return response()->json([
-                'success' => false,
-                'type' => 'not_started',
-                'message' => 'Attendance will be started from '.
-                    '<strong>'.
-                    $classStartTime->format('h:i A').
-                    '</strong>.',
-            ]);
-        }
-
-        // After class end time
-        if ($currentTimeOnly->gte($classEndTime)) {
-
-            return response()->json([
-                'success' => false,
-                'type' => 'time_ended',
-                'message' => 'Attendance was allowed only from<br>'.
-                    '<strong>'.
-                    $classStartTime->format('h:i A').
-                    '</strong> to '.
-                    '<strong>'.
-                    $classEndTime->format('h:i A').
-                    '</strong>.',
-            ]);
-        }
-
-        // Before class start time
-        if ($currentTimeOnly->lt($classStartTime)) {
-            return response()->json([
-                'success' => false,
-                'type' => 'not_started',
-                'message' => 'Attendance will be started from '.
-            '<strong>'.$classStartTime->format('h:i A').'</strong>.',
-            ]);
-        }
-
-        // After class end time
-        if ($currentTimeOnly->gte($classEndTime)) {
-            return response()->json([
-                'success' => false,
-                'type' => 'time_ended',
-                'message' => 'Attendance was allowed only from<br>'.
-                   '<strong>'.$classStartTime->format('h:i A').'</strong> to '.
-                    '<strong>'.$classEndTime->format('h:i A').'</strong>.',
-            ]);
-        }
-
         // Check if today's session already exists
         $sessionQuery = AttendanceSession::where(
             'assign_class_id',
@@ -570,37 +603,13 @@ class AttendanceController extends Controller
             );
         }
 
-        $session = $sessionQuery->first();
+        $existingSession = $sessionQuery->first();
 
-        // Check if today's session already open
-        if ($session) {
+        // If attendance session already exists
+        if ($existingSession) {
 
-            if ($session->status === 'Open') {
-
-                $sessionEnd = Carbon::parse($session->date)
-                    ->setTimeFromTimeString(
-                        Carbon::parse($session->end_time)->format('H:i:s')
-                    )
-                    ->setTimezone('Asia/Kathmandu');
-
-                if ($currentTime->greaterThanOrEqualTo($sessionEnd)) {
-
-                    $this->markAbsentStudents(
-                        $assignClass,
-                        $teacher->id,
-                        $realDate
-                    );
-
-                    $session->update([
-                        'status' => 'Closed',
-                    ]);
-
-                    return response()->json([
-                        'success' => true,
-                        'type' => 'closed',
-                        'message' => 'Attendance period has ended. Students who did not scan have been marked Absent.',
-                    ]);
-                }
+            // Session is still open
+            if ($existingSession->status === 'Open') {
 
                 return response()->json([
                     'success' => true,
@@ -608,18 +617,52 @@ class AttendanceController extends Controller
                 ]);
             }
 
-            // Session is already closed
-            if ($session->status === 'Closed') {
+            // Session was already completed
+            if ($existingSession->status === 'Closed') {
 
                 return response()->json([
-                    'success' => true,
+                    'success' => false,
                     'type' => 'closed',
-                    'message' => 'The attendance session for this class has already ended. Students who did not scan their QR code have been marked Absent.',
+                    'message' => 'The attendance session for this class has ended.<br><br>
+                          Students who did not scan their QR code within the attendance
+                          period have been marked <strong>Absent</strong>.',
                 ]);
             }
         }
 
-        // No session = allow a new attendance
+        // No session exists.
+        // Now check whether the class time has passed.
+
+        // Before class start time
+        if ($currentTimeOnly->lt($classStartTime)) {
+
+            return response()->json([
+                'success' => false,
+                'type' => 'not_started',
+                'message' => 'Attendance will be started from '.
+                    '<strong>'.
+                    $classStartTime->format('h:i A').
+                    '</strong>.',
+            ]);
+        }
+
+        // After class end time
+        if ($currentTimeOnly->gte($classEndTime)) {
+
+            return response()->json([
+                'success' => false,
+                'type' => 'time_ended',
+                'message' => 'Attendance was allowed only from<br>'.
+                    '<strong>'.
+                    $classStartTime->format('h:i A').
+                    '</strong> to '.
+                    '<strong>'.
+                    $classEndTime->format('h:i A').
+                    '</strong>.',
+            ]);
+        }
+
+        // No session and time is valid
         return response()->json([
             'success' => true,
             'type' => 'new',
@@ -652,6 +695,7 @@ class AttendanceController extends Controller
 
         $assignClass = Assignclass::with('subjects')
             ->where('id', $request->assign_class_id)
+            ->where('teacher_id', $teacher->id)
             ->first();
 
         if (! $assignClass) {
@@ -663,19 +707,35 @@ class AttendanceController extends Controller
 
         $subject = $assignClass->subjects->first();
 
-        $replacement = ClassReplacement::where(
-            'assign_class_id',
-            $assignClass->id
-        )
-            ->where(
-                'replacement_teacher_id',
-                $teacher->id
+        $replacement = null;
+
+        if ($request->filled('replacement_id')) {
+
+            $replacement = ClassReplacement::where(
+                'id',
+                $request->replacement_id
             )
-            ->whereDate(
-                'date',
-                $realDate
-            )
-            ->first();
+                ->where(
+                    'assign_class_id',
+                    $assignClass->id
+                )
+                ->where(
+                    'replacement_teacher_id',
+                    $teacher->id
+                )
+                ->whereDate(
+                    'date',
+                    $realDate
+                )
+                ->first();
+
+            if (! $replacement) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid replacement class.',
+                ]);
+            }
+        }
 
         if (! $subject) {
             return response()->json([
@@ -778,19 +838,40 @@ class AttendanceController extends Controller
             }
         }
 
-        $startTime = Carbon::parse($assignClass->start_time)
-            ->setDate(
-                Carbon::parse($realDate)->year,
-                Carbon::parse($realDate)->month,
-                Carbon::parse($realDate)->day
-            );
+        // Use replacement class time if this is a replacement,
+        // otherwise use the permanent assigned class time.
+        if ($replacement) {
 
-        $endTime = Carbon::parse($assignClass->end_time)
-            ->setDate(
-                Carbon::parse($realDate)->year,
-                Carbon::parse($realDate)->month,
-                Carbon::parse($realDate)->day
-            );
+            $startTime = Carbon::parse($replacement->start_time)
+                ->setDate(
+                    Carbon::parse($realDate)->year,
+                    Carbon::parse($realDate)->month,
+                    Carbon::parse($realDate)->day
+                );
+
+            $endTime = Carbon::parse($replacement->end_time)
+                ->setDate(
+                    Carbon::parse($realDate)->year,
+                    Carbon::parse($realDate)->month,
+                    Carbon::parse($realDate)->day
+                );
+
+        } else {
+
+            $startTime = Carbon::parse($assignClass->start_time)
+                ->setDate(
+                    Carbon::parse($realDate)->year,
+                    Carbon::parse($realDate)->month,
+                    Carbon::parse($realDate)->day
+                );
+
+            $endTime = Carbon::parse($assignClass->end_time)
+                ->setDate(
+                    Carbon::parse($realDate)->year,
+                    Carbon::parse($realDate)->month,
+                    Carbon::parse($realDate)->day
+                );
+        }
 
         AttendanceSession::create([
             'assign_class_id' => $assignClass->id,
@@ -810,7 +891,7 @@ class AttendanceController extends Controller
     }
 
     // Mark Absent Students
-    public function markAbsentStudents($assignClass, $teacherId, $date)
+    public function markAbsentStudents($assignClass, $teacherId, $date, $replacementId = null)
     {
         $subject = $assignClass->subjects->first();
 
@@ -825,26 +906,34 @@ class AttendanceController extends Controller
 
         foreach ($students as $student) {
 
-            $exists = Attendance::where('student_id', $student->id)
+            $query = Attendance::where('student_id', $student->id)
                 ->where('teacher_id', $teacherId)
                 ->where('subject_id', $subject->id)
                 ->where('assign_class_id', $assignClass->id)
-                ->whereDate('date', $date)
-                ->exists();
+                ->whereDate('date', $date);
 
-            if (! $exists) {
-
-                Attendance::create([
-                    'semester' => $student->current_semester,
-                    'student_id' => $student->id,
-                    'teacher_id' => $teacherId,
-                    'subject_id' => $subject->id,
-                    'assign_class_id' => $assignClass->id,
-                    'date' => $date,
-                    'time' => null,
-                    'status' => 'Absent',
-                ]);
+            if ($replacementId !== null) {
+                $query->where('replacement_id', $replacementId);
+            } else {
+                $query->whereNull('replacement_id');
             }
+
+            // Already has attendance for this exact class/session
+            if ($query->exists()) {
+                continue;
+            }
+
+            Attendance::create([
+                'semester' => $student->current_semester,
+                'student_id' => $student->id,
+                'teacher_id' => $teacherId,
+                'subject_id' => $subject->id,
+                'assign_class_id' => $assignClass->id,
+                'replacement_id' => $replacementId,
+                'date' => $date,
+                'time' => null,
+                'status' => 'Absent',
+            ]);
         }
     }
 
@@ -875,6 +964,7 @@ class AttendanceController extends Controller
         // Selected class
         $assignClass = Assignclass::with('subjects')
             ->where('id', $request->assign_class_id)
+            ->where('teacher_id', $teacher->id)
             ->first();
 
         if (! $assignClass) {
@@ -894,37 +984,7 @@ class AttendanceController extends Controller
             ]);
         }
 
-        $replacement = null;
-
-        if ($request->filled('replacement_id')) {
-
-            $replacement = ClassReplacement::where(
-                'id',
-                $request->replacement_id
-            )
-                ->where(
-                    'assign_class_id',
-                    $assignClass->id
-                )
-                ->where(
-                    'replacement_teacher_id',
-                    $teacher->id
-                )
-                ->whereDate(
-                    'date',
-                    $realDate
-                )
-                ->first();
-
-            if (! $replacement) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid replacement class.',
-                ]);
-            }
-        }
-
-        $presentQuery = Attendance::where(
+        $present = Attendance::where(
             'assign_class_id',
             $assignClass->id
         )
@@ -943,25 +1003,10 @@ class AttendanceController extends Controller
             ->where(
                 'status',
                 'Present'
-            );
+            )
+            ->count();
 
-        if ($replacement) {
-
-            $presentQuery->where(
-                'replacement_id',
-                $replacement->id
-            );
-
-        } else {
-
-            $presentQuery->whereNull(
-                'replacement_id'
-            );
-        }
-
-        $present = $presentQuery->count();
-
-        $absentQuery = Attendance::where(
+        $absent = Attendance::where(
             'assign_class_id',
             $assignClass->id
         )
@@ -980,24 +1025,14 @@ class AttendanceController extends Controller
             ->where(
                 'status',
                 'Absent'
-            );
+            )
+            ->count();
 
-        if ($replacement) {
-
-            $absentQuery->where(
-                'replacement_id',
-                $replacement->id
-            );
-
-        } else {
-
-            $absentQuery->whereNull(
-                'replacement_id'
-            );
-        }
-
-        $absent = $absentQuery->count();
-
+        /*
+        |--------------------------------------------------------------------------
+        | Total Students
+        |--------------------------------------------------------------------------
+        */
         $total = Students::where(
             'current_semester',
             $assignClass->semester
