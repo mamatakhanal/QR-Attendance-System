@@ -84,12 +84,8 @@ class ClassReplacementController extends Controller
                 }
             )
             ->orderBy('date', 'desc')
-            ->orderBy(
-                Subjects::select('semester')
-                    ->whereColumn('subjects.id', 'class_replacements.subject_id'),
-                'asc'
-            )
-            ->orderBy('start_time', 'asc')
+            ->orderBy('start_time', 'desc')
+            ->orderBy('end_time', 'desc')
             ->paginate(10)
             ->withQueryString();
 
@@ -259,6 +255,46 @@ class ClassReplacementController extends Controller
             $request->subject_id
         );
 
+        // Find the original assigned class for this subject and semester
+        $originalClass = Assignclass::where(
+            'semester',
+            $subject->semester
+        )
+            ->whereHas('subjects', function ($query) use ($subject) {
+                $query->where('subjects.id', $subject->id);
+            })
+            ->first();
+
+        if ($originalClass) {
+
+            // Check whether attendance has already been taken
+            // for this original class today.
+            $existingAttendance = AttendanceSession::where(
+                'assign_class_id',
+                $originalClass->id
+            )
+                ->whereDate('date', $request->date)
+                ->latest('id')
+                ->first();
+
+            if ($existingAttendance) {
+
+                if ($existingAttendance->status === 'Closed') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Class has already been completed.',
+                    ], 422);
+                }
+
+                if ($existingAttendance->status === 'Open') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Class is currently in progress.',
+                    ], 422);
+                }
+            }
+        }
+
         $hasSemesterConflict = ClassReplacement::whereDate(
             'date',
             $request->date
@@ -378,44 +414,34 @@ class ClassReplacementController extends Controller
             ], 422);
         }
 
-        // if (
-        //     $assignClass->teacher_id ==
-        //     $request->replacement_teacher_id
-        // ) {
+        // Check whether replacement teacher already has a permanent class
+        // during the selected time.
+        $hasPermanentClass = Assignclass::where(
+            'teacher_id',
+            $request->replacement_teacher_id
+        )
+            ->where(function ($query) use ($request) {
 
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'The original teacher cannot be selected as the replacement teacher.',
-        //     ], 422);
-        // }
+                $query->where(
+                    'start_time',
+                    '<',
+                    $request->end_time
+                )
+                    ->where(
+                        'end_time',
+                        '>',
+                        $request->start_time
+                    );
 
-        // $hasPermanentClass = Assignclass::where(
-        //     'teacher_id',
-        //     $request->replacement_teacher_id
-        // )
-        //     ->where(function ($query) use ($request) {
+            })
+            ->exists();
 
-        //         $query->where(
-        //             'start_time',
-        //             '<',
-        //             $request->end_time
-        //         )
-        //             ->where(
-        //                 'end_time',
-        //                 '>',
-        //                 $request->start_time
-        //             );
-
-        //     })
-        //     ->exists();
-
-        // if ($hasPermanentClass) {
-
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'The replacement teacher already has another class during this time.',
-        //     ], 422);
-        // }
+        if ($hasPermanentClass) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Teacher is already assigned to another class at this time.',
+            ], 422);
+        }
 
         ClassReplacement::create([
             'assign_class_id' => $teacherAssignedClass->id,
@@ -541,6 +567,46 @@ class ClassReplacementController extends Controller
             $request->subject_id
         );
 
+        // Find the original assigned class for this subject and semester
+        $originalClass = Assignclass::where(
+            'semester',
+            $subject->semester
+        )
+            ->whereHas('subjects', function ($query) use ($subject) {
+                $query->where('subjects.id', $subject->id);
+            })
+            ->first();
+
+        if ($originalClass) {
+
+            // Check whether attendance has already been taken
+            // for this original class on the selected date.
+            $existingAttendance = AttendanceSession::where(
+                'assign_class_id',
+                $originalClass->id
+            )
+                ->whereDate('date', $request->date)
+                ->latest('id')
+                ->first();
+
+            if ($existingAttendance) {
+
+                if ($existingAttendance->status === 'Closed') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Class has already been completed.',
+                    ], 422);
+                }
+
+                if ($existingAttendance->status === 'Open') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Class is currently in progress.',
+                    ], 422);
+                }
+            }
+        }
+
         $teacherAssignedClass = Assignclass::where(
             'teacher_id',
             $request->replacement_teacher_id
@@ -561,6 +627,34 @@ class ClassReplacementController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'This teacher is not assigned to this class and subject.',
+            ], 422);
+        }
+        // Check whether replacement teacher already has a permanent class
+        // during the selected time.
+        $hasPermanentClass = Assignclass::where(
+            'teacher_id',
+            $request->replacement_teacher_id
+        )
+            ->where(function ($query) use ($request) {
+
+                $query->where(
+                    'start_time',
+                    '<',
+                    $request->end_time
+                )
+                    ->where(
+                        'end_time',
+                        '>',
+                        $request->start_time
+                    );
+
+            })
+            ->exists();
+
+        if ($hasPermanentClass) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Teacher is already assigned to another class at this time.',
             ], 422);
         }
 
