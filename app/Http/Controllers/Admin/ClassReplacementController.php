@@ -416,32 +416,23 @@ class ClassReplacementController extends Controller
 
         // Check whether replacement teacher already has a permanent class
         // during the selected time.
-        $hasPermanentClass = Assignclass::where(
-            'teacher_id',
-            $request->replacement_teacher_id
-        )
-            ->where(function ($query) use ($request) {
+        // $hasPermanentClass = Assignclass::where(
+        //     'teacher_id',
+        //     $request->replacement_teacher_id
+        // )
+        //     ->where(function ($query) use ($request) {
 
-                $query->where(
-                    'start_time',
-                    '<',
-                    $request->end_time
-                )
-                    ->where(
-                        'end_time',
-                        '>',
-                        $request->start_time
-                    );
+        //         $query->where('start_time', '<', $request->end_time )
+        //             ->where( 'end_time', '>', $request->start_time );
+        //     })
+        //     ->exists();
 
-            })
-            ->exists();
-
-        if ($hasPermanentClass) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Teacher is already assigned to another class at this time.',
-            ], 422);
-        }
+        // if ($hasPermanentClass) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Teacher is already assigned to another class at this time.',
+        //     ], 422);
+        // }
 
         ClassReplacement::create([
             'assign_class_id' => $teacherAssignedClass->id,
@@ -631,32 +622,32 @@ class ClassReplacementController extends Controller
         }
         // Check whether replacement teacher already has a permanent class
         // during the selected time.
-        $hasPermanentClass = Assignclass::where(
-            'teacher_id',
-            $request->replacement_teacher_id
-        )
-            ->where(function ($query) use ($request) {
+        // $hasPermanentClass = Assignclass::where(
+        //     'teacher_id',
+        //     $request->replacement_teacher_id
+        // )
+        //     ->where(function ($query) use ($request) {
 
-                $query->where(
-                    'start_time',
-                    '<',
-                    $request->end_time
-                )
-                    ->where(
-                        'end_time',
-                        '>',
-                        $request->start_time
-                    );
+        //         $query->where(
+        //             'start_time',
+        //             '<',
+        //             $request->end_time
+        //         )
+        //             ->where(
+        //                 'end_time',
+        //                 '>',
+        //                 $request->start_time
+        //             );
 
-            })
-            ->exists();
+        //     })
+        //     ->exists();
 
-        if ($hasPermanentClass) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Teacher is already assigned to another class at this time.',
-            ], 422);
-        }
+        // if ($hasPermanentClass) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Teacher is already assigned to another class at this time.',
+        //     ], 422);
+        // }
 
         $hasSemesterConflict = ClassReplacement::whereDate(
             'date',

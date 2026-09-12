@@ -26,16 +26,15 @@ class AttendanceController extends Controller
         $realNow = $realTimeService->now();
 
         if (! $realNow) {
-            return redirect()->back()->with(
-                'error',
-                'Unable to verify the current date and time. Please check your internet connection.'
-            );
+            abort(500, 'Unable to get current time.');
         }
+
+        $realNow = $realNow->copy()->setTimezone('Asia/Kathmandu');
 
         $realDate = $realNow->format('Y-m-d');
         $realTime = $realNow->format('H:i:s');
 
-        $currentDateTime = $realNow->copy()->setTimezone('Asia/Kathmandu');
+        $currentDateTime = $realNow;
 
         $oldSessions = AttendanceSession::where('teacher_id', $teacher->id)
             ->where('status', 'Open')
@@ -43,11 +42,10 @@ class AttendanceController extends Controller
 
         foreach ($oldSessions as $oldSession) {
 
-            $sessionEnd = Carbon::parse($oldSession->date)
-                ->setTimeFromTimeString(
-                    Carbon::parse($oldSession->end_time)->format('H:i:s')
-                )
-                ->setTimezone('Asia/Kathmandu');
+            $sessionEnd = Carbon::parse(
+                $oldSession->end_time,
+                'Asia/Kathmandu'
+            );
 
             if ($currentDateTime->greaterThanOrEqualTo($sessionEnd)) {
 
@@ -158,6 +156,9 @@ class AttendanceController extends Controller
             ]);
         }
 
+        // ALWAYS Kathmandu
+        $realNow = $realNow->copy()->setTimezone('Asia/Kathmandu');
+
         $realDate = $realNow->format('Y-m-d');
         $realTime = $realNow->format('H:i:s');
 
@@ -260,91 +261,9 @@ class AttendanceController extends Controller
         $session = $sessionQuery->first();
 
         if (! $session) {
-
-            // Determine class time
-            if ($replacement) {
-
-                $classStartTime = Carbon::parse($replacement->start_time);
-                $classEndTime = Carbon::parse($replacement->end_time);
-
-            } else {
-
-                $classStartTime = Carbon::parse($assignClass->start_time);
-                $classEndTime = Carbon::parse($assignClass->end_time);
-            }
-
-            $currentTimeOnly = Carbon::parse($realTime);
-
-            // Attendance has not started yet
-            if ($currentTimeOnly->lt($classStartTime)) {
-
-                return response()->json([
-                    'success' => false,
-                    'type' => 'not_started',
-                    'message' => 'Attendance will be started from <strong>'.
-                        $classStartTime->format('h:i A').
-                        '</strong>.',
-                ]);
-            }
-
-            // Attendance time has already ended
-            if ($currentTimeOnly->gte($classEndTime)) {
-
-                return response()->json([
-                    'success' => false,
-                    'type' => 'time_ended',
-                    'message' => 'Attendance was allowed only from <strong>'.
-                        $classStartTime->format('h:i A').
-                        '</strong> to <strong>'.
-                        $classEndTime->format('h:i A').
-                        '</strong>.',
-                ]);
-            }
-
-            // Create today's session automatically
-            $session = AttendanceSession::create([
-                'assign_class_id' => $assignClass->id,
-                'replacement_id' => $replacement?->id,
-                'teacher_id' => $teacher->id,
-                'subject_id' => $subject->id,
-                'date' => $realDate,
-                'start_time' => $classStartTime->format('H:i:s'),
-                'end_time' => $classEndTime->format('H:i:s'),
-                'status' => 'Open',
-            ]);
-        }
-
-        // Session time expired
-        $currentTime = Carbon::createFromFormat(
-            'Y-m-d H:i:s',
-            $realDate.' '.$realTime,
-            'Asia/Kathmandu'
-        );
-
-        $sessionEnd = Carbon::parse($session->date)
-            ->setTimeFromTimeString(
-                Carbon::parse($session->end_time)->format('H:i:s')
-            )
-            ->setTimezone('Asia/Kathmandu');
-
-        if ($currentTime->greaterThanOrEqualTo($sessionEnd)) {
-
-            // Mark remaining students absent
-            $this->markAbsentStudents(
-                $assignClass,
-                $teacher->id,
-                $session->date,
-                $session->replacement_id
-            );
-
-            // Close the session
-            $session->update([
-                'status' => 'Closed',
-            ]);
-
             return response()->json([
                 'success' => false,
-                'message' => 'The Attendance period has ended. <br><br>Students who did not scan their QR code within the session have been marked <strong>Absent</strong>.',
+                'message' => 'Attendance session has not been started. Please start the attendance session first.',
             ]);
         }
 
@@ -413,24 +332,28 @@ class AttendanceController extends Controller
             );
         }
 
-        $attendance = $attendanceQuery->first();
-
-        if ($attendance) {
-
-            if ($attendance->status == 'Present') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This student\'s attendance has already been marked for today.',
-                ]);
-            }
-
-            if ($attendance->status == 'Absent') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The Attendance period has ended. <br> <br> Students who did not scan their QR code within the session have been marked <strong> Absent</strong>.',
-                ]);
-            }
+        if ($attendanceQuery->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This student\'s attendance has already been marked for today.',
+            ]);
         }
+
+        // $attendance = $attendanceQuery->first();
+        // if ($attendance) {
+        //     if ($attendance->status == 'Present') {
+        //         return response()->json([
+        //             'success' => false,
+        //             'message' => 'This student\'s attendance has already been marked for today.',
+        //         ]);
+        //     }
+        //     if ($attendance->status == 'Absent') {
+        //         return response()->json([
+        //             'success' => false,
+        //             'message' => 'The Attendance period has ended. <br> <br> Students who did not scan their QR code within the session have been marked <strong> Absent</strong>.',
+        //         ]);
+        //     }
+        // }
 
         $realDateTimeValue = Carbon::createFromFormat(
             'Y-m-d H:i:s',
@@ -481,10 +404,10 @@ class AttendanceController extends Controller
             ]);
         }
 
+        $realNow = $realNow->copy()->setTimezone('Asia/Kathmandu');
+
         $realDate = $realNow->format('Y-m-d');
         $realTime = $realNow->format('H:i:s');
-
-        $currentTime = $realNow->copy()->setTimezone('Asia/Kathmandu');
 
         $teacher = Teachers::find(session('teacher_id'));
 
@@ -497,6 +420,7 @@ class AttendanceController extends Controller
 
         $assignClass = Assignclass::with('subjects')
             ->where('id', $request->assign_class_id)
+            ->where('teacher_id', $teacher->id)
             ->first();
 
         if (! $assignClass) {
@@ -508,27 +432,22 @@ class AttendanceController extends Controller
 
         $subject = $assignClass->subjects->first();
 
+        if (! $subject) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No subject is assigned to this class.',
+            ]);
+        }
+
         // Check whether this teacher has a replacement for this class today
         $replacement = null;
 
         if ($request->filled('replacement_id')) {
 
-            $replacement = ClassReplacement::where(
-                'id',
-                $request->replacement_id
-            )
-                ->where(
-                    'assign_class_id',
-                    $assignClass->id
-                )
-                ->where(
-                    'replacement_teacher_id',
-                    $teacher->id
-                )
-                ->whereDate(
-                    'date',
-                    $realDate
-                )
+            $replacement = ClassReplacement::where('id', $request->replacement_id)
+                ->where('assign_class_id', $assignClass->id)
+                ->where('replacement_teacher_id', $teacher->id)
+                ->whereDate('date', $realDate)
                 ->first();
 
             if (! $replacement) {
@@ -539,38 +458,36 @@ class AttendanceController extends Controller
             }
         }
 
-        if (! $subject) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No subject is assigned to this class.',
-            ]);
-        }
-
         // Determine whether this is a replacement class
         if ($replacement) {
 
-            // Replacement class time
-            $classStartTime = Carbon::parse(
-                $replacement->start_time
+            $classStartTime = Carbon::createFromFormat(
+                'H:i:s',
+                Carbon::parse($replacement->start_time)->format('H:i:s'),
+                'Asia/Kathmandu'
             );
 
-            $classEndTime = Carbon::parse(
-                $replacement->end_time
+            $classEndTime = Carbon::createFromFormat(
+                'H:i:s',
+                Carbon::parse($replacement->end_time)->format('H:i:s'),
+                'Asia/Kathmandu'
             );
 
         } else {
 
-            // Permanent class time
-            $classStartTime = Carbon::parse(
-                $assignClass->start_time
+            $classStartTime = Carbon::createFromFormat(
+                'H:i:s',
+                Carbon::parse($assignClass->start_time)->format('H:i:s'),
+                'Asia/Kathmandu'
             );
 
-            $classEndTime = Carbon::parse(
-                $assignClass->end_time
+            $classEndTime = Carbon::createFromFormat(
+                'H:i:s',
+                Carbon::parse($assignClass->end_time)->format('H:i:s'),
+                'Asia/Kathmandu'
             );
         }
 
-        $currentTimeOnly = Carbon::parse($realTime);
         // Check if today's session already exists
         $sessionQuery = AttendanceSession::where(
             'assign_class_id',
@@ -606,63 +523,66 @@ class AttendanceController extends Controller
         $existingSession = $sessionQuery->first();
 
         // If attendance session already exists
-        if ($existingSession) {
-
-            // Session is still open
-            if ($existingSession->status === 'Open') {
-
-                return response()->json([
-                    'success' => true,
-                    'type' => 'open',
-                ]);
-            }
-
-            // Session was already completed
-            if ($existingSession->status === 'Closed') {
-
-                return response()->json([
-                    'success' => false,
-                    'type' => 'closed',
-                    'message' => 'The attendance session for this class has ended.<br><br>
-                          Students who did not scan their QR code within the attendance
-                          period have been marked <strong>Absent</strong>.',
-                ]);
-            }
+        if ($existingSession && $existingSession->status === 'Open') {
+            return response()->json([
+                'success' => true,
+                'type' => 'open',
+            ]);
         }
 
-        // No session exists.
-        // Now check whether the class time has passed.
+        // Session was already completed
+        if ($existingSession && $existingSession->status === 'Closed') {
+            return response()->json([
+                'success' => false,
+                'type' => 'closed',
+                'message' => 'The attendance session for this class has ended.<br><br>
+                          Students who did not scan their QR code within the attendance
+                          period have been marked <strong>Absent</strong>.',
+            ]);
+        }
 
-        // Before class start time
-        if ($currentTimeOnly->lt($classStartTime)) {
+        $currentTime = $realNow;
+
+        $classStart = Carbon::createFromFormat(
+            'Y-m-d H:i:s',
+            $realDate.' '.$classStartTime->format('H:i:s'),
+            'Asia/Kathmandu'
+        );
+
+        $classEnd = Carbon::createFromFormat(
+            'Y-m-d H:i:s',
+            $realDate.' '.$classEndTime->format('H:i:s'),
+            'Asia/Kathmandu'
+        );
+
+        if ($currentTime->lt($classStart)) {
 
             return response()->json([
                 'success' => false,
                 'type' => 'not_started',
-                'message' => 'Attendance will be started from '.
-                    '<strong>'.
-                    $classStartTime->format('h:i A').
-                    '</strong>.',
+                'message' => 'Attendance will be available from <strong>'.
+                    $classStart->format('h:i A').
+                    '</strong> to '. '<strong>'.
+                        $classEndTime->format('h:i A').
+                        '</strong>.',
             ]);
         }
 
-        // After class end time
-        if ($currentTimeOnly->gte($classEndTime)) {
+        if ($currentTime->gte($classEnd)) {
 
             return response()->json([
                 'success' => false,
                 'type' => 'time_ended',
-                'message' => 'Attendance was allowed only from<br>'.
-                    '<strong>'.
-                    $classStartTime->format('h:i A').
-                    '</strong> to '.
-                    '<strong>'.
-                    $classEndTime->format('h:i A').
-                    '</strong>.',
+                'message' => 'Attendance was available from<br>'.
+                        '<strong>'.
+                        $classStartTime->format('h:i A').
+                        '</strong> to '.
+                        '<strong>'.
+                        $classEndTime->format('h:i A').
+                        '</strong>.',
             ]);
         }
 
-        // No session and time is valid
         return response()->json([
             'success' => true,
             'type' => 'new',
@@ -681,8 +601,9 @@ class AttendanceController extends Controller
             ]);
         }
 
+        $realNow = $realNow->copy()->setTimezone('Asia/Kathmandu');
+
         $realDate = $realNow->format('Y-m-d');
-        $realTime = $realNow->format('H:i:s');
 
         $teacher = Teachers::find(session('teacher_id'));
 
@@ -706,6 +627,12 @@ class AttendanceController extends Controller
         }
 
         $subject = $assignClass->subjects->first();
+        if (! $subject) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No subject is assigned to this class.',
+            ]);
+        }
 
         $replacement = null;
 
@@ -737,53 +664,21 @@ class AttendanceController extends Controller
             }
         }
 
-        if (! $subject) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No subject is assigned to this class.',
-            ]);
-        }
-
-        $currentTimeOnly = Carbon::parse($realTime);
-
         if ($replacement) {
 
-            $classStartTime = Carbon::parse(
-                $replacement->start_time
-            );
+            $startTime = Carbon::parse($replacement->start_time)
+                ->format('H:i:s');
 
-            $classEndTime = Carbon::parse(
-                $replacement->end_time
-            );
+            $endTime = Carbon::parse($replacement->end_time)
+                ->format('H:i:s');
 
         } else {
 
-            $classStartTime = Carbon::parse(
-                $assignClass->start_time
-            );
+            $startTime = Carbon::parse($assignClass->start_time)
+                ->format('H:i:s');
 
-            $classEndTime = Carbon::parse(
-                $assignClass->end_time
-            );
-        }
-
-        if ($currentTimeOnly->lt($classStartTime)) {
-            return response()->json([
-                'success' => false,
-                'type' => 'not_started',
-                'message' => 'Attendance will be started from'.
-            '<strong>'.$classStartTime->format('h:i A').'</strong>.',
-            ]);
-        }
-
-        if ($currentTimeOnly->gte($classEndTime)) {
-            return response()->json([
-                'success' => false,
-                'type' => 'time_ended',
-                'message' => 'Attendance time has ended. Attendance was allowed only from '.
-                    $classStartTime->format('h:i A').' to '.
-                    $classEndTime->format('h:i A').'.',
-            ]);
+            $endTime = Carbon::parse($assignClass->end_time)
+                ->format('H:i:s');
         }
 
         $sessionQuery = AttendanceSession::where(
@@ -819,10 +714,10 @@ class AttendanceController extends Controller
 
         $existingSession = $sessionQuery->first();
 
-        // Do not create another session if one already exists
         if ($existingSession) {
 
             if ($existingSession->status === 'Open') {
+
                 return response()->json([
                     'success' => true,
                     'type' => 'open',
@@ -830,10 +725,11 @@ class AttendanceController extends Controller
             }
 
             if ($existingSession->status === 'Closed') {
+
                 return response()->json([
                     'success' => false,
                     'type' => 'closed',
-                    'message' => 'The attendance session for this class has already ended.',
+                    'message' => 'Attendance has already been completed for this class today.',
                 ]);
             }
         }
@@ -873,20 +769,24 @@ class AttendanceController extends Controller
                 );
         }
 
-        AttendanceSession::create([
-            'assign_class_id' => $assignClass->id,
-            'replacement_id' => $replacement?->id,
-            'teacher_id' => $teacher->id,
-            'subject_id' => $subject->id,
-            'date' => $realDate,
-            'start_time' => $startTime->format('H:i:s'),
-            'end_time' => $endTime->format('H:i:s'),
-            'status' => 'Open',
-        ]);
+        $session = AttendanceSession::firstOrCreate(
+            [
+                'assign_class_id' => $assignClass->id,
+                'replacement_id' => $replacement?->id,
+                'teacher_id' => $teacher->id,
+                'subject_id' => $subject->id,
+                'date' => $realDate,
+            ],
+            [
+                'start_time' => $startTime->format('H:i:s'),
+                'end_time' => $endTime->format('H:i:s'),
+                'status' => 'Open',
+            ]
+        );
 
         return response()->json([
             'success' => true,
-            'type' => 'new',
+            'type' => 'open',
         ]);
     }
 
@@ -906,10 +806,14 @@ class AttendanceController extends Controller
 
         foreach ($students as $student) {
 
-            $alreadyPresent = Attendance::where(
+            $attendanceQuery = Attendance::where(
                 'student_id',
                 $student->id
             )
+                ->where(
+                    'teacher_id',
+                    $teacherId
+                )
                 ->where(
                     'subject_id',
                     $subject->id
@@ -921,53 +825,21 @@ class AttendanceController extends Controller
                 ->whereDate(
                     'date',
                     $date
-                )
-                ->where(
-                    'status',
-                    'Present'
-                )
-                ->exists();
-
-            if ($alreadyPresent) {
-                continue;
-            }
-
-            $query = Attendance::where(
-                'student_id',
-                $student->id
-            )
-                ->where(
-                    'subject_id',
-                    $subject->id
-                )
-                ->where(
-                    'assign_class_id',
-                    $assignClass->id
-                )
-                ->whereDate(
-                    'date',
-                    $date
-                )
-                ->where(
-                    'status',
-                    'Absent'
                 );
 
             if ($replacementId !== null) {
-
-                $query->where(
+                $attendanceQuery->where(
                     'replacement_id',
                     $replacementId
                 );
-
             } else {
-
-                $query->whereNull(
+                $attendanceQuery->whereNull(
                     'replacement_id'
                 );
             }
 
-            if ($query->exists()) {
+            // Student already has attendance record
+            if ($attendanceQuery->exists()) {
                 continue;
             }
 
@@ -997,6 +869,7 @@ class AttendanceController extends Controller
             ]);
         }
 
+        $realNow = $realNow->copy()->setTimezone('Asia/Kathmandu');
         $realDate = $realNow->format('Y-m-d');
 
         // Logged in teacher
@@ -1051,8 +924,15 @@ class AttendanceController extends Controller
             ->where(
                 'status',
                 'Present'
-            )
-            ->count();
+            );
+
+        if ($request->filled('replacement_id')) {
+            $present->where('replacement_id', $request->replacement_id);
+        } else {
+            $present->whereNull('replacement_id');
+        }
+
+        $present = $present->distinct('student_id')->count('student_id');
 
         $absent = Attendance::where(
             'assign_class_id',
@@ -1073,14 +953,15 @@ class AttendanceController extends Controller
             ->where(
                 'status',
                 'Absent'
-            )
-            ->count();
+            );
+        if ($request->filled('replacement_id')) {
+            $absent->where('replacement_id', $request->replacement_id);
+        } else {
+            $absent->whereNull('replacement_id');
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Total Students
-        |--------------------------------------------------------------------------
-        */
+        $absent = $absent->distinct('student_id')->count('student_id');
+
         $total = Students::where(
             'current_semester',
             $assignClass->semester

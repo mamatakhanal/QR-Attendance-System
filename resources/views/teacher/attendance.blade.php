@@ -1080,21 +1080,13 @@
                         ) {
 
                             Swal.fire({
-
                                 icon: 'warning',
-
                                 title: 'Attendance Not Started',
-
                                 html: response.message,
-
                                 confirmButtonText: 'Close',
-
                                 confirmButtonColor: '#6c757d',
-
                                 width: 500
-
                             });
-
                             return;
                         }
 
