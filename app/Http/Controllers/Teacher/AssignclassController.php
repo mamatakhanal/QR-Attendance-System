@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Assignclass;
+use App\Models\Admin\AttendanceSession;
 use App\Models\Admin\ClassReplacement;
 use App\Models\Admin\Students;
 use App\Models\Admin\Teachers;
@@ -59,34 +60,50 @@ class AssignclassController extends Controller
             ->keyBy('assign_class_id');
 
         foreach ($assignclasses as $assignclass) {
-            Students::where(
+
+            // Student count
+            $assignclass->student_count = Students::where(
                 'current_semester',
                 $assignclass->semester
             )->count();
 
-            // Original Time
-            $assignclass->display_start_time =
-                $assignclass->start_time;
+            // Default status
+            $assignclass->attendance_status = 'Not Taken';
 
-            $assignclass->display_end_time =
-                $assignclass->end_time;
+            // Check today's attendance session
+            $session = AttendanceSession::where(
+                'assign_class_id',
+                $assignclass->id
+            )
+                ->where('teacher_id', $teacher->id)
+                ->whereDate('date', $today)
+                ->latest('id')
+                ->first();
+
+            if ($session) {
+                if ($session->status === 'Open') {
+                    $assignclass->attendance_status = 'In Progress';
+                } elseif ($session->status === 'Closed') {
+                    $assignclass->attendance_status = 'Taken';
+                }
+            }
+
+            // Original Time
+            $assignclass->display_start_time = $assignclass->start_time;
+            $assignclass->display_end_time = $assignclass->end_time;
 
             $assignclass->is_replacement_today = false;
 
-            // Replace TIme
+            // Replace Time
             if ($replacements->has($assignclass->id)) {
 
                 $replacement = $replacements->get($assignclass->id);
 
-                $assignclass->display_start_time =
-                    $replacement->start_time;
-
-                $assignclass->display_end_time =
-                    $replacement->end_time;
+                $assignclass->display_start_time = $replacement->start_time;
+                $assignclass->display_end_time = $replacement->end_time;
 
                 $assignclass->is_replacement_today = true;
             }
-
         }
 
         return view('teacher.assignclass', [

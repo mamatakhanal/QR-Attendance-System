@@ -123,17 +123,17 @@
 
                                                 <td>
                                                     @if ($class['status'] === 'Taken')
-                                                        <span class="badge bg-success rounded-3 px-3 py-2">
+                                                        <span class="badge bg-success rounded-3 px-3 py-2" style="font-size:12px;">
                                                             <i class="bi bi-check-circle me-1"></i>
                                                             Taken
                                                         </span>
                                                     @elseif ($class['status'] === 'Open')
-                                                        <span class="badge bg-warning text-dark rounded-3 px-3 py-2">
+                                                        <span class="badge bg-warning text-dark rounded-3 px-3 py-2" style="font-size:12px;">
                                                             <i class="bi bi-hourglass-split me-1"></i>
                                                             Attendance Open
                                                         </span>
                                                     @else
-                                                        <span class="badge bg-secondary rounded-3 px-3 py-2">
+                                                        <span class="badge bg-secondary rounded-3 px-3 py-2" style="font-size:12px; ">
                                                             <i class="bi bi-dash-circle me-1"></i>
                                                             Not Taken
                                                         </span>

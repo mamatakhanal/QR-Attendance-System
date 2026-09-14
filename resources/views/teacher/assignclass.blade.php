@@ -67,11 +67,24 @@
                                             {{ $assignclass->student_count }} Students
                                         </a>
                                     </td>
+
                                     <td>
-                                        <a href="{{ route('teacher.attendance', ['assign_class_id' => $assignclass->id]) }}"
-                                            class="btn btn-sm btn-primary rounded-3">
-                                            <i class="bi bi-qr-code-scan"></i> Attendance
-                                        </a>
+                                        @if ($assignclass->attendance_status === 'Taken')
+                                            <span class="badge bg-success rounded-3 px-3 py-2" style="font-size:12px;">
+                                                <i class="bi bi-check-circle me-1"></i> 
+                                                Taken
+                                            </span>
+                                        @elseif ($assignclass->attendance_status === 'In Progress')
+                                            <span class="badge bg-warning text-dark rounded-3 px-3 py-2" style="font-size:12px;">
+                                                <i class="bi bi-hourglass-split me-1"></i> 
+                                                In Progress
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary rounded-3 px-3 py-2" style="font-size:12px;">
+                                                <i class="bi bi-dash-circle me-1"></i>
+                                                Not Taken
+                                            </span>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

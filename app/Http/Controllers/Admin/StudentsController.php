@@ -257,191 +257,191 @@ class StudentsController extends Controller
         }
     }
 
-   public function getAttendanceCount(Request $request, RealTimeService $realTimeService)
-{
-    $realNow = $realTimeService->now();
+    public function getAttendanceCount(Request $request, RealTimeService $realTimeService)
+    {
+        $realNow = $realTimeService->now();
 
-    if (! $realNow) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Unable to verify the current date and time. Please check your internet connection.',
-        ]);
-    }
+        if (! $realNow) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to verify the current date and time. Please check your internet connection.',
+            ]);
+        }
 
-    $realDate = $realNow->format('Y-m-d');
+        $realDate = $realNow->format('Y-m-d');
 
-    // Logged in teacher
-    $teacher = Teachers::find(session('teacher_id'));
+        // Logged in teacher
+        $teacher = Teachers::find(session('teacher_id'));
 
-    if (! $teacher) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Teacher not found.',
-        ]);
-    }
+        if (! $teacher) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Teacher not found.',
+            ]);
+        }
 
-    // Selected class
-    $assignClass = Assignclass::with('subjects')
-        ->where('id', $request->assign_class_id)
-        ->first();
+        // Selected class
+        $assignClass = Assignclass::with('subjects')
+            ->where('id', $request->assign_class_id)
+            ->first();
 
-    if (! $assignClass) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Class not found.',
-        ]);
-    }
+        if (! $assignClass) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Class not found.',
+            ]);
+        }
 
-    // Get subject
-    $subject = $assignClass->subjects->first();
+        // Get subject
+        $subject = $assignClass->subjects->first();
 
-    if (! $subject) {
-        return response()->json([
-            'success' => false,
-            'message' => 'No subject assigned to this class.',
-        ]);
-    }
+        if (! $subject) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No subject assigned to this class.',
+            ]);
+        }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Check Replacement
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | Check Replacement
+        |--------------------------------------------------------------------------
+        */
 
-    $replacement = null;
+        $replacement = null;
 
-    if ($request->filled('replacement_id')) {
+        if ($request->filled('replacement_id')) {
 
-        $replacement = ClassReplacement::where(
-            'id',
-            $request->replacement_id
+            $replacement = ClassReplacement::where(
+                'id',
+                $request->replacement_id
+            )
+                ->where(
+                    'assign_class_id',
+                    $assignClass->id
+                )
+                ->where(
+                    'replacement_teacher_id',
+                    $teacher->id
+                )
+                ->whereDate(
+                    'date',
+                    $realDate
+                )
+                ->first();
+
+            if (! $replacement) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid replacement class.',
+                ]);
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Present Students
+        |--------------------------------------------------------------------------
+        */
+
+        $presentQuery = Attendance::where(
+            'assign_class_id',
+            $assignClass->id
         )
             ->where(
-                'assign_class_id',
-                $assignClass->id
+                'teacher_id',
+                $teacher->id
             )
             ->where(
-                'replacement_teacher_id',
-                $teacher->id
+                'subject_id',
+                $subject->id
             )
             ->whereDate(
                 'date',
                 $realDate
             )
-            ->first();
+            ->where(
+                'status',
+                'Present'
+            );
 
-        if (! $replacement) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid replacement class.',
-            ]);
+        if ($replacement) {
+
+            $presentQuery->where(
+                'replacement_id',
+                $replacement->id
+            );
+
+        } else {
+
+            $presentQuery->whereNull(
+                'replacement_id'
+            );
         }
+
+        $present = $presentQuery->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Absent Students
+        |--------------------------------------------------------------------------
+        */
+
+        $absentQuery = Attendance::where(
+            'assign_class_id',
+            $assignClass->id
+        )
+            ->where(
+                'teacher_id',
+                $teacher->id
+            )
+            ->where(
+                'subject_id',
+                $subject->id
+            )
+            ->whereDate(
+                'date',
+                $realDate
+            )
+            ->where(
+                'status',
+                'Absent'
+            );
+
+        if ($replacement) {
+
+            $absentQuery->where(
+                'replacement_id',
+                $replacement->id
+            );
+
+        } else {
+
+            $absentQuery->whereNull(
+                'replacement_id'
+            );
+        }
+
+        $absent = $absentQuery->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Total Students
+        |--------------------------------------------------------------------------
+        */
+
+        $total = Students::where(
+            'current_semester',
+            $assignClass->semester
+        )->count();
+
+        return response()->json([
+            'success' => true,
+            'present' => $present,
+            'absent' => $absent,
+            'total' => $total,
+        ]);
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Present Students
-    |--------------------------------------------------------------------------
-    */
-
-    $presentQuery = Attendance::where(
-        'assign_class_id',
-        $assignClass->id
-    )
-        ->where(
-            'teacher_id',
-            $teacher->id
-        )
-        ->where(
-            'subject_id',
-            $subject->id
-        )
-        ->whereDate(
-            'date',
-            $realDate
-        )
-        ->where(
-            'status',
-            'Present'
-        );
-
-    if ($replacement) {
-
-        $presentQuery->where(
-            'replacement_id',
-            $replacement->id
-        );
-
-    } else {
-
-        $presentQuery->whereNull(
-            'replacement_id'
-        );
-    }
-
-    $present = $presentQuery->count();
-
-    /*
-    |--------------------------------------------------------------------------
-    | Absent Students
-    |--------------------------------------------------------------------------
-    */
-
-    $absentQuery = Attendance::where(
-        'assign_class_id',
-        $assignClass->id
-    )
-        ->where(
-            'teacher_id',
-            $teacher->id
-        )
-        ->where(
-            'subject_id',
-            $subject->id
-        )
-        ->whereDate(
-            'date',
-            $realDate
-        )
-        ->where(
-            'status',
-            'Absent'
-        );
-
-    if ($replacement) {
-
-        $absentQuery->where(
-            'replacement_id',
-            $replacement->id
-        );
-
-    } else {
-
-        $absentQuery->whereNull(
-            'replacement_id'
-        );
-    }
-
-    $absent = $absentQuery->count();
-
-    /*
-    |--------------------------------------------------------------------------
-    | Total Students
-    |--------------------------------------------------------------------------
-    */
-
-    $total = Students::where(
-        'current_semester',
-        $assignClass->semester
-    )->count();
-
-    return response()->json([
-        'success' => true,
-        'present' => $present,
-        'absent' => $absent,
-        'total' => $total,
-    ]);
-}
 
     public function sendEmail($id)
     {
@@ -466,6 +466,35 @@ class StudentsController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
             ]);
+        }
+    }
+
+    // Delete Student
+    public function delete($id)
+    {
+        try {
+            $student = Students::findOrFail($id);
+
+            // Delete student's QR code
+            if ($student->student_code) {
+                Storage::disk('public')->delete(
+                    "qr/{$student->student_code}.png"
+                );
+            }
+
+            // Delete student record
+            $student->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student deleted successfully',
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
 }

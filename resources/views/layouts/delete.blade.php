@@ -27,29 +27,127 @@
 </body>
 
 <script>
-    $(document).on('click', '[data-bs-target="#deleteModal"]', function () {
+    document.addEventListener('DOMContentLoaded', function() {
 
-        let url = $(this).data('url');
+        // Set delete URL when Delete button is clicked
+        document.addEventListener('click', function(e) {
 
-        $('#deleteForm').attr('action', url);
+            const deleteButton = e.target.closest(
+                '[data-bs-target="#deleteModal"]'
+            );
+
+            if (!deleteButton) {
+                return;
+            }
+
+            const url = deleteButton.getAttribute('data-url');
+
+            document.getElementById('deleteForm').setAttribute(
+                'action',
+                url
+            );
+        });
+
+
+        // Handle delete form without leaving the page
+        const deleteForm = document.getElementById('deleteForm');
+
+        if (deleteForm) {
+
+            deleteForm.addEventListener('submit', function(e) {
+
+                e.preventDefault();
+
+                const form = this;
+                const url = form.getAttribute('action');
+
+                fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector(
+                                'input[name="_token"]'
+                            ).value,
+                            'Accept': 'application/json'
+                        },
+                        body: new FormData(form)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+
+                        if (data.success) {
+
+                            // Close delete modal
+                            const modalElement =
+                                document.getElementById('deleteModal');
+
+                            const modal =
+                                bootstrap.Modal.getInstance(modalElement);
+
+                            if (modal) {
+                                modal.hide();
+                            }
+
+                            // Show success toast
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: data.message,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true,
+
+                                customClass: {
+                                    popup: 'small-toast'
+                                },
+
+                                showClass: {
+                                    popup: 'animate__animated animate__fadeInRight'
+                                },
+
+                                hideClass: {
+                                    popup: 'animate__animated animate__fadeOutRight'
+                                }
+                            });
+
+                            // Reload after popup
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
+
+                        } else {
+
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: data.message || 'Delete failed',
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true
+                            });
+
+                        }
+
+                    })
+                    .catch(error => {
+
+                        console.error(error);
+
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: 'Something went wrong',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+
+                    });
+
+            });
+        }
 
     });
 </script>
-
-{{-- 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-
-        const deleteButtons = document.querySelectorAll('[data-bs-target="#deleteModal"]');
-
-        deleteButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-
-                let url = this.getAttribute('data-url');
-
-                document.getElementById('deleteForm').action = url;
-            });
-        });
-
-    });
-</script> --}}

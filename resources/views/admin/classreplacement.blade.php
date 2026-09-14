@@ -203,20 +203,20 @@
                                         @if ($replacement->attendance_status === 'Attendance Done')
                                             <button type="button" class="btn btn-success fw-semibold btn-sm rounded-3"
                                                 style="font-size:12px;">
-                                                <i class="bi bi-check-circle"></i>
+                                                <i class="bi bi-check-circle me-1"></i>
                                                 Taken
                                             </button>
                                         @elseif ($replacement->attendance_status === 'Attendance In Progress')
                                             <button type="button"
                                                 class="btn btn-warning fw-semibold btn-sm rounded-3 text-dark"
                                                 style="font-size:12px;">
-                                                <i class="bi bi-clock"></i>
+                                                <i class="bi bi-hourglass-split me-1"></i>
                                                 In Progress
                                             </button>
                                         @elseif ($replacement->attendance_status === 'Time Expired')
-                                            <button type="button" class="btn btn-danger fw-semibold btn-sm rounded-3"
+                                            <button type="button" class="btn btn-secondary fw-semibold btn-sm rounded-3"
                                                 style="font-size:12px;">
-                                                <i class="bi bi-clock-history"></i>
+                                                <i class="bi bi-dash-circle me-1"></i>
                                                 Not Taken
                                             </button>
                                         @else
