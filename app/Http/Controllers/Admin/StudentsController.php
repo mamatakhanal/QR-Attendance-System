@@ -475,14 +475,11 @@ class StudentsController extends Controller
         try {
             $student = Students::findOrFail($id);
 
-            // Delete student's QR code
             if ($student->student_code) {
                 Storage::disk('public')->delete(
                     "qr/{$student->student_code}.png"
                 );
             }
-
-            // Delete student record
             $student->delete();
 
             return response()->json([
