@@ -301,13 +301,7 @@ class StudentsController extends Controller
                 'message' => 'No subject assigned to this class.',
             ]);
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Check Replacement
-        |--------------------------------------------------------------------------
-        */
-
+        
         $replacement = null;
 
         if ($request->filled('replacement_id')) {
@@ -337,12 +331,6 @@ class StudentsController extends Controller
                 ]);
             }
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Present Students
-        |--------------------------------------------------------------------------
-        */
 
         $presentQuery = Attendance::where(
             'assign_class_id',
@@ -381,11 +369,6 @@ class StudentsController extends Controller
 
         $present = $presentQuery->count();
 
-        /*
-        |--------------------------------------------------------------------------
-        | Absent Students
-        |--------------------------------------------------------------------------
-        */
 
         $absentQuery = Attendance::where(
             'assign_class_id',
@@ -423,12 +406,6 @@ class StudentsController extends Controller
         }
 
         $absent = $absentQuery->count();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Total Students
-        |--------------------------------------------------------------------------
-        */
 
         $total = Students::where(
             'current_semester',
