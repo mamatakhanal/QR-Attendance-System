@@ -27,7 +27,11 @@
                                 <th class="py-3">Subjects</th>
                                 <th class="py-3">Code</th>
                                 <th class="py-3">Class Time</th>
-                                <th class="py-3">Students</th>
+                                {{-- Show Replacement column only if replacement exists --}}
+                                @if ($replacements->isNotEmpty())
+                                    <th class="py-3">Replacement Time</th>
+                                @endif
+                                {{-- <th class="py-3">Students</th> --}}
                                 <th class="py-3">Action</th>
                             </tr>
                         </thead>
@@ -50,37 +54,61 @@
                                         </div>
                                     </td>
                                     <td>
-                                        {{ $subject->subject_code }}
+                                        {{ $assignclass->subjects->first()->subject_code ?? '-' }}
                                     </td>
+                                    {{-- Normal Time --}}
                                     <td>
                                         @if ($assignclass->start_time && $assignclass->end_time)
-                                            {{ \Carbon\Carbon::parse($assignclass->display_start_time)->format('h:i A') }}
+                                            {{ \Carbon\Carbon::parse($assignclass->start_time)->format('h:i A') }}
                                             -
-                                            {{ \Carbon\Carbon::parse($assignclass->display_end_time)->format('h:i A') }}
+                                            {{ \Carbon\Carbon::parse($assignclass->end_time)->format('h:i A') }}
                                         @else
                                             <span class="text-muted">Not Assigned</span>
                                         @endif
                                     </td>
-                                    <td>
+
+                                    {{-- Replacement Time --}}
+                                    @if ($replacements->isNotEmpty())
+                                        <td>
+
+                                            @if ($assignclass->is_replacement_today)
+                                                {{ \Carbon\Carbon::parse($assignclass->replacement_start_time)->format('h:i A') }}
+                                                -
+                                                {{ \Carbon\Carbon::parse($assignclass->replacement_end_time)->format('h:i A') }}
+                                            @else
+                                                <span class="text-muted">
+                                                    —
+                                                </span>
+                                            @endif
+                                        </td>
+                                    @endif
+                                    {{-- <td>
                                         <a href="{{ route('teacher.students', ['semester' => $assignclass->semester]) }}"
                                             class="text-decoration-none text-dark fw-semibold">
                                             {{ $assignclass->student_count }} Students
                                         </a>
-                                    </td>
+                                    </td> --}}
 
                                     <td>
-                                        @if ($assignclass->attendance_status === 'Taken')
+                                        @if ($assignclass->attendance_status === 'Blocked')
+                                            <span class="badge bg-danger rounded-3 px-3 py-2" style="font-size:12px;">
+                                                <i class="bi bi-slash-circle me-1"></i>
+                                                Blocked
+                                            </span>
+                                        @elseif ($assignclass->attendance_status === 'Taken')
                                             <span class="badge bg-success rounded-3 px-3 py-2" style="font-size:12px;">
-                                                <i class="bi bi-check-circle me-1"></i> 
+                                                <i class="bi bi-check-circle me-1"></i>
                                                 Taken
                                             </span>
                                         @elseif ($assignclass->attendance_status === 'In Progress')
-                                            <span class="badge bg-warning text-dark rounded-3 px-3 py-2" style="font-size:12px;">
-                                                <i class="bi bi-hourglass-split me-1"></i> 
+                                            <span class="badge bg-warning text-dark rounded-3 px-3 py-2"
+                                                style="font-size:12px;">
+                                                <i class="bi bi-hourglass-split me-1"></i>
                                                 In Progress
                                             </span>
                                         @else
-                                            <span class="badge bg-secondary rounded-3 px-3 py-2" style="font-size:12px;">
+                                            <span class="badge bg-secondary rounded-3 px-3 py-2"
+                                                style="font-size:12px;">
                                                 <i class="bi bi-dash-circle me-1"></i>
                                                 Not Taken
                                             </span>

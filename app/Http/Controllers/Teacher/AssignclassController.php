@@ -26,6 +26,7 @@ class AssignclassController extends Controller
 
         $assignclasses = Assignclass::with('subjects')
             ->where('teacher_id', $teacher->id)
+
             ->when($semester, function ($query) use ($semester) {
                 $query->where('semester', $semester);
             })
@@ -33,31 +34,48 @@ class AssignclassController extends Controller
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
 
-                    // semester search
+                    // Semester search
                     if (is_numeric($search)) {
                         $q->orWhere('semester', $search);
                     }
 
-                    // subject name search
+                    // Subject name search
                     $q->orWhereHas('subjects', function ($subject) use ($search) {
-                        $subject->where('subject_name', 'like', '%'.$search.'%');
+                        $subject->where(
+                            'subject_name',
+                            'like',
+                            '%'.$search.'%'
+                        );
                     });
                 });
             })
+
             ->orderBy('semester', 'asc')
             ->orderBy('start_time', 'asc')
             ->paginate(10)
             ->withQueryString();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Today's replacements
+        |--------------------------------------------------------------------------
+        */
+
         $today = Carbon::today()->toDateString();
 
-        $replacements = ClassReplacement::where(
-            'replacement_teacher_id',
-            $teacher->id
-        )
-            ->whereDate('date', $today)
+        $replacements = ClassReplacement::whereDate('date', $today)
+            ->whereIn(
+                'assign_class_id',
+                $assignclasses->pluck('id')
+            )
             ->get()
             ->keyBy('assign_class_id');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Prepare class information
+        |--------------------------------------------------------------------------
+        */
 
         foreach ($assignclasses as $assignclass) {
 
@@ -67,42 +85,112 @@ class AssignclassController extends Controller
                 $assignclass->semester
             )->count();
 
-            // Default status
+            // Default attendance status
             $assignclass->attendance_status = 'Not Taken';
 
-            // Check today's attendance session
+            /*
+            |--------------------------------------------------------------------------
+            | Check today's attendance session
+            |--------------------------------------------------------------------------
+            */
+
             $session = AttendanceSession::where(
                 'assign_class_id',
                 $assignclass->id
             )
-                ->where('teacher_id', $teacher->id)
-                ->whereDate('date', $today)
+                ->where(
+                    'teacher_id',
+                    $teacher->id
+                )
+                ->whereDate(
+                    'date',
+                    $today
+                )
                 ->latest('id')
                 ->first();
 
             if ($session) {
+
                 if ($session->status === 'Open') {
+
                     $assignclass->attendance_status = 'In Progress';
+
                 } elseif ($session->status === 'Closed') {
+
                     $assignclass->attendance_status = 'Taken';
                 }
             }
 
-            // Original Time
+            /*
+            |--------------------------------------------------------------------------
+            | Normal Class Time
+            |--------------------------------------------------------------------------
+            */
+
             $assignclass->display_start_time = $assignclass->start_time;
             $assignclass->display_end_time = $assignclass->end_time;
 
             $assignclass->is_replacement_today = false;
 
-            // Replace Time
+            /*
+            |--------------------------------------------------------------------------
+            | Replacement Class Time
+            |--------------------------------------------------------------------------
+            */
+
             if ($replacements->has($assignclass->id)) {
 
                 $replacement = $replacements->get($assignclass->id);
 
-                $assignclass->display_start_time = $replacement->start_time;
-                $assignclass->display_end_time = $replacement->end_time;
+                $assignclass->replacement_start_time =
+                    $replacement->start_time;
+
+                $assignclass->replacement_end_time =
+                    $replacement->end_time;
 
                 $assignclass->is_replacement_today = true;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Block Permanent Class
+            |
+            | If another replacement overlaps this permanent class,
+            | the permanent class becomes Blocked.
+            |--------------------------------------------------------------------------
+            */
+
+            if (! $assignclass->is_replacement_today) {
+
+                $blocked = $replacements->contains(
+                    function ($replacement) use ($assignclass) {
+
+                        $replacementStart = Carbon::parse(
+                            $replacement->start_time
+                        );
+
+                        $replacementEnd = Carbon::parse(
+                            $replacement->end_time
+                        );
+
+                        $classStart = Carbon::parse(
+                            $assignclass->start_time
+                        );
+
+                        $classEnd = Carbon::parse(
+                            $assignclass->end_time
+                        );
+
+                        return $replacement->assign_class_id != $assignclass->id
+                            && $replacementStart->lt($classEnd)
+                            && $replacementEnd->gt($classStart);
+                    }
+                );
+
+                if ($blocked) {
+
+                    $assignclass->attendance_status = 'Blocked';
+                }
             }
         }
 
@@ -110,6 +198,9 @@ class AssignclassController extends Controller
             'pageTitle' => 'Assigned Classes',
             'teacher' => $teacher,
             'assignclasses' => $assignclasses,
+
+            // IMPORTANT
+            'replacements' => $replacements,
         ]);
     }
 }

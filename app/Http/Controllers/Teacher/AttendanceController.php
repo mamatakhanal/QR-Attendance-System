@@ -110,6 +110,23 @@ class AttendanceController extends Controller
             $replacement->is_replacement = true;
         }
 
+        foreach ($assignclasses as $assignclass) {
+
+            $assignStart = Carbon::parse($assignclass->start_time);
+            $assignEnd = Carbon::parse($assignclass->end_time);
+
+            $assignclass->blocked_by_replacement = $replacements->contains(
+                function ($replacement) use ($assignStart, $assignEnd) {
+
+                    $replacementStart = Carbon::parse($replacement->start_time);
+                    $replacementEnd = Carbon::parse($replacement->end_time);
+
+                    return $replacementStart->lt($assignEnd)
+                        && $replacementEnd->gt($assignStart);
+                }
+            );
+        }
+
         // Selected class
         $selectedClass = $request->assign_class_id;
 
@@ -458,6 +475,33 @@ class AttendanceController extends Controller
             }
         }
 
+        // BLOCK PERMANENT CLASS IF A REPLACEMENT CLASS IS RUNNING AT THE SAME TIME
+
+        if (! $replacement) {
+            $activeReplacement = ClassReplacement::where(
+                'replacement_teacher_id',
+                $teacher->id
+            )
+                ->whereDate('date', $realDate)
+                ->where('assign_class_id', '!=', $assignClass->id)
+                ->whereTime('start_time', '<=', $realTime)
+                ->whereTime('end_time', '>', $realTime)
+                ->first();
+
+            if ($activeReplacement) {
+
+                return response()->json([
+                    'success' => false,
+                    'type' => 'blocked',
+                    'message' => 'This class is currently blocked because you have a replacement class from <strong>'.
+                        Carbon::parse($activeReplacement->start_time)->format('h:i A').
+                        '</strong> to <strong>'.
+                        Carbon::parse($activeReplacement->end_time)->format('h:i A').
+                        '</strong>.',
+                ]);
+            }
+        }
+
         // Determine whether this is a replacement class
         if ($replacement) {
 
@@ -562,7 +606,7 @@ class AttendanceController extends Controller
                 'type' => 'not_started',
                 'message' => 'Attendance will be available from <strong>'.
                     $classStart->format('h:i A').
-                    '</strong> to '. '<strong>'.
+                    '</strong> to '.'<strong>'.
                         $classEndTime->format('h:i A').
                         '</strong>.',
             ]);
@@ -660,6 +704,33 @@ class AttendanceController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid replacement class.',
+                ]);
+            }
+        }
+
+        // BLOCK PERMANENT CLASS DURING ACTIVE REPLACEMENT
+        if (! $replacement) {
+
+            $activeReplacement = ClassReplacement::where(
+                'replacement_teacher_id',
+                $teacher->id
+            )
+                ->whereDate('date', $realDate)
+                ->where('assign_class_id', '!=', $assignClass->id)
+                ->whereTime('start_time', '<=', $realNow->format('H:i:s'))
+                ->whereTime('end_time', '>', $realNow->format('H:i:s'))
+                ->first();
+
+            if ($activeReplacement) {
+
+                return response()->json([
+                    'success' => false,
+                    'type' => 'blocked',
+                    'message' => 'This class is currently blocked because you have a replacement class from <strong>'.
+                        Carbon::parse($activeReplacement->start_time)->format('h:i A').
+                        '</strong> to <strong>'.
+                        Carbon::parse($activeReplacement->end_time)->format('h:i A').
+                        '</strong>.',
                 ]);
             }
         }

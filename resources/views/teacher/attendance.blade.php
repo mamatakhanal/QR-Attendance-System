@@ -1090,6 +1090,20 @@
                             return;
                         }
 
+                        // PERMANENT CLASS BLOCKED BY REPLACEMENT
+                        if (response.type === 'blocked') {
+
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Class Attendance Blocked',
+                                html: response.message,
+                                confirmButtonText: 'Close',
+                                confirmButtonColor: '#6c757d',
+                                width: 500
+                            });
+
+                            return;
+                        }
 
                         // ATTENDANCE TIME ENDED
                         if (
