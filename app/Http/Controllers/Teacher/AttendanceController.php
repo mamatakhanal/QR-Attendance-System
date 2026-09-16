@@ -475,17 +475,22 @@ class AttendanceController extends Controller
             }
         }
 
-        // BLOCK PERMANENT CLASS IF A REPLACEMENT CLASS IS RUNNING AT THE SAME TIME
+        // BLOCK ONLY THE PERMANENT CLASS WHOSE TIME OVERLAPS WITH THE TEACHER'S REPLACEMENT CLASS
 
         if (! $replacement) {
+
             $activeReplacement = ClassReplacement::where(
                 'replacement_teacher_id',
                 $teacher->id
             )
                 ->whereDate('date', $realDate)
                 ->where('assign_class_id', '!=', $assignClass->id)
-                ->whereTime('start_time', '<=', $realTime)
-                ->whereTime('end_time', '>', $realTime)
+                ->where(function ($query) use ($assignClass) {
+
+                    $query->where('start_time', '<', $assignClass->end_time)
+                        ->where('end_time', '>', $assignClass->start_time);
+
+                })
                 ->first();
 
             if ($activeReplacement) {
@@ -708,7 +713,9 @@ class AttendanceController extends Controller
             }
         }
 
-        // BLOCK PERMANENT CLASS DURING ACTIVE REPLACEMENT
+        // / BLOCK ONLY THE PERMANENT CLASS WHOSE TIME OVERLAPS
+        // WITH THE TEACHER'S REPLACEMENT CLASS
+
         if (! $replacement) {
 
             $activeReplacement = ClassReplacement::where(
@@ -717,8 +724,12 @@ class AttendanceController extends Controller
             )
                 ->whereDate('date', $realDate)
                 ->where('assign_class_id', '!=', $assignClass->id)
-                ->whereTime('start_time', '<=', $realNow->format('H:i:s'))
-                ->whereTime('end_time', '>', $realNow->format('H:i:s'))
+                ->where(function ($query) use ($assignClass) {
+
+                    $query->where('start_time', '<', $assignClass->end_time)
+                        ->where('end_time', '>', $assignClass->start_time);
+
+                })
                 ->first();
 
             if ($activeReplacement) {
