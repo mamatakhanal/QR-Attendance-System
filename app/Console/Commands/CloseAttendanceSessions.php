@@ -36,10 +36,10 @@ class CloseAttendanceSessions extends Command
         $realDate = $currentDateTime->format('Y-m-d');
         $realTime = $currentDateTime->format('H:i:s');
 
-        $this->info(
-            'Nepal current time: '.
-            $currentDateTime->format('Y-m-d h:i:s A')
-        );
+        // $this->info(
+        //     'Nepal current time: '.
+        //     $currentDateTime->format('Y-m-d h:i:s A')
+        // );
 
         $this->info(
             'Nepal current time: '.$currentDateTime->format('Y-m-d h:i:s A')
@@ -74,29 +74,21 @@ class CloseAttendanceSessions extends Command
                 continue;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | USE ADMIN ASSIGNED CLASS END TIME
-            |--------------------------------------------------------------------------
-            */
-
+            // Use actual attendance session end time
             $sessionDate = Carbon::parse($session->date)
                 ->setTimezone('Asia/Kathmandu');
 
-            $classEndTime = Carbon::parse(
-                $assignClass->end_time
-            )->format('H:i:s');
-
             $sessionEnd = Carbon::createFromFormat(
                 'Y-m-d H:i:s',
-                $sessionDate->format('Y-m-d').' '.$classEndTime,
+                $sessionDate->format('Y-m-d').' '.
+                    Carbon::parse($session->end_time)->format('H:i:s'),
                 'Asia/Kathmandu'
             );
 
             $this->info(
                 'Session '.$session->id.
                 ' | Class '.$assignClass->id.
-                ' | Admin End Time: '.$sessionEnd->format('h:i A').
+                ' | Session End Time: '.$sessionEnd->format('h:i A').
                 ' | Current: '.$currentDateTime->format('h:i A')
             );
 
@@ -158,13 +150,15 @@ class CloseAttendanceSessions extends Command
                 'Session '.$session->id.' closed automatically.',
                 [
                     'assign_class_id' => $assignClass->id,
-                    'admin_start_time' => Carbon::parse(
-                        $assignClass->start_time
+                    'session_start_time' => Carbon::parse(
+                        $session->start_time
                     )->format('H:i:s'),
-                    'admin_end_time' => $classEndTime,
-                    'session_end' => $sessionEnd->format('Y-m-d H:i:s'),
+                    'session_end_time' => Carbon::parse(
+                        $session->end_time
+                    )->format('H:i:s'),
                     'current_time' => $currentDateTime->format('Y-m-d H:i:s'),
                     'absent_count' => $absentCount,
+                    'replacement_id' => $session->replacement_id,
                 ]
             );
         }
@@ -204,12 +198,22 @@ class CloseAttendanceSessions extends Command
 
         foreach ($students as $student) {
 
-            $attendanceExists = Attendance::where('student_id', $student->id)
+            $attendanceQuery = Attendance::where('student_id', $student->id)
                 ->where('teacher_id', $session->teacher_id)
                 ->where('subject_id', $subject->id)
                 ->where('assign_class_id', $assignClass->id)
-                ->whereDate('date', $session->date)
-                ->exists();
+                ->whereDate('date', $session->date);
+
+            if ($session->replacement_id !== null) {
+                $attendanceQuery->where(
+                    'replacement_id',
+                    $session->replacement_id
+                );
+            } else {
+                $attendanceQuery->whereNull('replacement_id');
+            }
+
+            $attendanceExists = $attendanceQuery->exists();
 
             if ($attendanceExists) {
                 continue;
@@ -221,6 +225,7 @@ class CloseAttendanceSessions extends Command
                 'teacher_id' => $session->teacher_id,
                 'assign_class_id' => $assignClass->id,
                 'subject_id' => $subject->id,
+                'replacement_id' => $session->replacement_id,
                 'date' => $session->date,
                 'time' => null,
                 'status' => 'Absent',
@@ -238,47 +243,47 @@ class CloseAttendanceSessions extends Command
 
         return $absentCount;
     }
-
-    private function getRealDateTime()
-    {
-        try {
-            $response = Http::connectTimeout(5)
-                ->timeout(5)
-                ->get(
-                    'https://timeapi.io/api/time/current/zone',
-                    [
-                        'timeZone' => 'Asia/Kathmandu',
-                    ]
-                );
-
-            if (! $response->successful()) {
-                Log::error(
-                    'Time API request failed. HTTP status: '.
-                    $response->status()
-                );
-
-                return null;
-            }
-
-            $data = $response->json();
-
-            if (! isset($data['date'], $data['time'])) {
-                Log::error('Time API response does not contain date/time.');
-
-                return null;
-            }
-
-            return [
-                'date' => Carbon::parse($data['date'])->format('Y-m-d'),
-                'time' => Carbon::parse($data['time'])->format('H:i:s'),
-            ];
-
-        } catch (\Throwable $e) {
-            Log::error(
-                'Real date/time API error: '.$e->getMessage()
-            );
-
-            return null;
-        }
-    }
 }
+
+// private function getRealDateTime()
+// {
+//     try {
+//         $response = Http::connectTimeout(5)
+//             ->timeout(5)
+//             ->get(
+//                 'https://timeapi.io/api/time/current/zone',
+//                 [
+//                     'timeZone' => 'Asia/Kathmandu',
+//                 ]
+//             );
+
+//         if (! $response->successful()) {
+//             Log::error(
+//                 'Time API request failed. HTTP status: '.
+//                 $response->status()
+//             );
+
+//             return null;
+//         }
+
+//         $data = $response->json();
+
+//         if (! isset($data['date'], $data['time'])) {
+//             Log::error('Time API response does not contain date/time.');
+
+//             return null;
+//         }
+
+//         return [
+//             'date' => Carbon::parse($data['date'])->format('Y-m-d'),
+//             'time' => Carbon::parse($data['time'])->format('H:i:s'),
+//         ];
+
+//     } catch (\Throwable $e) {
+//         Log::error(
+//             'Real date/time API error: '.$e->getMessage()
+//         );
+
+//         return null;
+//     }
+// }

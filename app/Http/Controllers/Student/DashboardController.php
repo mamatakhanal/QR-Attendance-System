@@ -76,14 +76,25 @@ class DashboardController extends Controller
                 ->first();
 
             //  Find today's attendance session
-            $session = AttendanceSession::where(
+            // Find today's attendance session
+            $sessionQuery = AttendanceSession::where(
                 'assign_class_id',
                 $class->id
             )
-                ->whereDate('date', $realDate)
+                ->whereDate('date', $realDate);
+
+            if ($replacement) {
+                $sessionQuery->where(
+                    'replacement_id',
+                    $replacement->id
+                );
+            } else {
+                $sessionQuery->whereNull('replacement_id');
+            }
+
+            $session = $sessionQuery
                 ->latest('id')
                 ->first();
-  
 
             // Determine Attendance Status
             if (! $session) {
@@ -92,20 +103,9 @@ class DashboardController extends Controller
                 $statusClass = 'secondary';
                 $statusIcon = 'bi-dash-circle';
 
-            } elseif (
-                $session->status === 'Open' &&
-                $class->end_time &&
-                Carbon::parse($class->end_time)->lte(Carbon::parse($realTime))
-            ) {
-
-                // Class time has ended, so attendance is considered closed
-                $status = 'Taken';
-                $statusClass = 'success';
-                $statusIcon = 'bi-check-circle-fill';
-
             } elseif ($session->status === 'Open') {
 
-                $status = 'Open';
+                $status = 'In Progress';
                 $statusClass = 'warning';
                 $statusIcon = 'bi-hourglass-split';
 

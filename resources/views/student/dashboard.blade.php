@@ -127,10 +127,10 @@
                                                             <i class="bi bi-check-circle me-1"></i>
                                                             Taken
                                                         </span>
-                                                    @elseif ($class['status'] === 'Open')
+                                                    @elseif ($class['status'] === 'In Progress')
                                                         <span class="badge bg-warning text-dark rounded-3 px-3 py-2" style="font-size:12px;">
                                                             <i class="bi bi-hourglass-split me-1"></i>
-                                                            Attendance Open
+                                                            In Progress
                                                         </span>
                                                     @else
                                                         <span class="badge bg-secondary rounded-3 px-3 py-2" style="font-size:12px; ">

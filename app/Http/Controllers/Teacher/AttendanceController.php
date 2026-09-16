@@ -260,12 +260,12 @@ class AttendanceController extends Controller
 
         $session = $sessionQuery->first();
 
-        if (! $session) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Attendance session has not been started. Please start the attendance session first.',
-            ]);
-        }
+        // if (! $session) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Attendance session has not been started. Please start the attendance session first.',
+        //     ]);
+        // }
 
         // Decode QR
         $qr = json_decode($request->qr_data, true);
