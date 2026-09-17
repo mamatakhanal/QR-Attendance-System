@@ -96,7 +96,15 @@ class ClassReplacementController extends Controller
 
             $replacementDate = Carbon::parse($replacement->date);
 
-            // Future class
+            // Check attendance session ONLY for this replacement
+            $session = AttendanceSession::where(
+                'replacement_id',
+                $replacement->id
+            )
+                ->whereDate('date', $replacement->date)
+                ->latest('id')
+                ->first();
+
             if ($replacementDate->isAfter($today)) {
 
                 $replacement->attendance_status = 'Scheduled';
@@ -107,25 +115,25 @@ class ClassReplacementController extends Controller
                 continue;
             }
 
-            // Past date
             if ($replacementDate->isBefore($today)) {
 
-                $replacement->attendance_status = 'Time Expired';
-                $replacement->attendance_status_class = 'danger';
-                $replacement->can_edit = false;
-                $replacement->can_delete = false;
+                if ($session && $session->status === 'Closed') {
+
+                    $replacement->attendance_status = 'Attendance Done';
+                    $replacement->attendance_status_class = 'success';
+                    $replacement->can_edit = false;
+                    $replacement->can_delete = false;
+
+                } else {
+
+                    $replacement->attendance_status = 'Time Expired';
+                    $replacement->attendance_status_class = 'danger';
+                    $replacement->can_edit = false;
+                    $replacement->can_delete = false;
+                }
 
                 continue;
             }
-
-            // Today's attendance session
-            $session = AttendanceSession::where(
-                'replacement_id',
-                $replacement->id
-            )
-                ->whereDate('date', $replacement->date)
-                ->latest('id')
-                ->first();
 
             // Attendance completed
             if ($session && $session->status === 'Closed') {
@@ -149,16 +157,11 @@ class ClassReplacementController extends Controller
                 continue;
             }
 
-            // No attendance session yet
-            $startTime = Carbon::parse(
-                $replacement->date.' '.$replacement->start_time
-            );
-
+            // No session yet
             $endTime = Carbon::parse(
                 $replacement->date.' '.$replacement->end_time
             );
 
-            // Before or during scheduled time
             if ($now->lte($endTime)) {
 
                 $replacement->attendance_status = 'Not Taken';
@@ -168,7 +171,6 @@ class ClassReplacementController extends Controller
 
             } else {
 
-                // Time finished and no attendance session
                 $replacement->attendance_status = 'Time Expired';
                 $replacement->attendance_status_class = 'danger';
                 $replacement->can_edit = false;
