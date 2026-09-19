@@ -339,49 +339,6 @@
         });
     </script>
 
-    <script>
-        $(document).on('submit', '#deleteForm', function(e) {
-            e.preventDefault();
-
-            let form = $(this);
-            let url = form.attr('action');
-
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: form.serialize(),
-
-                success: function(response) {
-
-                    $('#deleteModal').modal('hide');
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Deleted!',
-                        text: response.message || 'Class replacement deleted successfully.',
-                        timer: 1500,
-                        showConfirmButton: false
-                    }).then(function() {
-
-                        // Stay on Class Replacement page
-                        window.location.href = "{{ route('admin.classreplacement') }}";
-
-                    });
-                },
-
-                error: function(xhr) {
-
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: xhr.responseJSON?.message || 'Unable to delete class replacement.'
-                    });
-
-                }
-            });
-        });
-    </script>
-
     {{-- Replacement validation error popup --}}
     @if (session('error'))
         <script>
