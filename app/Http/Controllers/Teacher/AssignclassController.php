@@ -55,27 +55,18 @@ class AssignclassController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        /*
-        |--------------------------------------------------------------------------
-        | Today's replacements
-        |--------------------------------------------------------------------------
-        */
-
         $today = Carbon::today()->toDateString();
 
-        $replacements = ClassReplacement::whereDate('date', $today)
-            ->whereIn(
-                'assign_class_id',
-                $assignclasses->pluck('id')
-            )
+        $replacements = ClassReplacement::with('assignClass')
+            ->whereDate('date', $today)
+            ->whereHas('assignClass', function ($query) use ($assignclasses) {
+                $query->whereIn(
+                    'semester',
+                    $assignclasses->pluck('semester')->unique()
+                );
+            })
             ->get()
             ->keyBy('assign_class_id');
-
-        /*
-        |--------------------------------------------------------------------------
-        | Prepare class information
-        |--------------------------------------------------------------------------
-        */
 
         foreach ($assignclasses as $assignclass) {
 
@@ -87,12 +78,6 @@ class AssignclassController extends Controller
 
             // Default attendance status
             $assignclass->attendance_status = 'Not Taken';
-
-            /*
-            |--------------------------------------------------------------------------
-            | Check today's attendance session
-            |--------------------------------------------------------------------------
-            */
 
             $session = AttendanceSession::where(
                 'assign_class_id',
@@ -121,22 +106,12 @@ class AssignclassController extends Controller
                 }
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Normal Class Time
-            |--------------------------------------------------------------------------
-            */
-
             $assignclass->display_start_time = $assignclass->start_time;
             $assignclass->display_end_time = $assignclass->end_time;
 
             $assignclass->is_replacement_today = false;
 
-            /*
-            |--------------------------------------------------------------------------
-            | Replacement Class Time
-            |--------------------------------------------------------------------------
-            */
+            // Replacement Class Time
 
             if ($replacements->has($assignclass->id)) {
 
@@ -152,12 +127,9 @@ class AssignclassController extends Controller
             }
 
             /*
-            |--------------------------------------------------------------------------
-            | Block Permanent Class
-            |
-            | If another replacement overlaps this permanent class,
-            | the permanent class becomes Blocked.
-            |--------------------------------------------------------------------------
+              Block Permanent Class
+             If another replacement overlaps this permanent class,
+             the permanent class becomes Blocked.
             */
 
             if (! $assignclass->is_replacement_today) {
@@ -182,6 +154,8 @@ class AssignclassController extends Controller
                         );
 
                         return $replacement->assign_class_id != $assignclass->id
+                            && $replacement->assign_class
+                            && $replacement->assign_class->semester == $assignclass->semester
                             && $replacementStart->lt($classEnd)
                             && $replacementEnd->gt($classStart);
                     }
@@ -198,8 +172,6 @@ class AssignclassController extends Controller
             'pageTitle' => 'Assigned Classes',
             'teacher' => $teacher,
             'assignclasses' => $assignclasses,
-
-            // IMPORTANT
             'replacements' => $replacements,
         ]);
     }

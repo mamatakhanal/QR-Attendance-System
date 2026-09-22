@@ -91,6 +91,11 @@ class ClassReplacementController extends Controller
             ->withQueryString();
 
         $realNow = $realTimeService->now();
+
+        if (! $realNow) {
+            $realNow = Carbon::now('Asia/Kathmandu');
+        }
+
         $today = $realNow->copy()->startOfDay();
         $now = $realNow;
 
