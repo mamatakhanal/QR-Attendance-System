@@ -251,11 +251,6 @@
         });
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Date validation
-        |--------------------------------------------------------------------------
-        */
 
         $('#replacementDate').on('change', function() {
 
@@ -267,6 +262,21 @@
                 return;
             }
 
+            // Saturday is not allowed
+            let date = new Date(selectedDate + 'T00:00:00');
+
+            if (date.getDay() === 6) {
+
+                $('#date_error').text(
+                    'Class replacement cannot be assigned on Saturday.'
+                );
+
+                $(this).val('');
+
+                return;
+            }
+
+            // Date cannot be before today
             if (selectedDate < getToday()) {
 
                 $('#date_error').text(
@@ -275,16 +285,11 @@
 
                 $(this).val('');
 
+                return;
             }
 
         });
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Start time validation
-        |--------------------------------------------------------------------------
-        */
 
         $('#replacementStartTime').on('change', function() {
 
@@ -444,11 +449,6 @@
                 $('#replacementEndTime').val();
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Teacher
-            |--------------------------------------------------------------------------
-            */
 
             if (!teacher) {
 
@@ -492,11 +492,6 @@
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Date
-            |--------------------------------------------------------------------------
-            */
 
             if (!date) {
 
@@ -507,6 +502,16 @@
                 return;
             }
 
+            let selectedDate = new Date(date + 'T00:00:00');
+
+            if (selectedDate.getDay() === 6) {
+
+                $('#date_error').text(
+                    'Class replacement cannot be assigned on Saturday.'
+                );
+
+                return;
+            }
 
             if (date < getToday()) {
 

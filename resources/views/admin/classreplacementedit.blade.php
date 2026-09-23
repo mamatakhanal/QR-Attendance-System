@@ -365,12 +365,6 @@
         );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | DATE VALIDATION
-        |--------------------------------------------------------------------------
-        */
-
         $(document).on(
             'change',
             '#editReplacementDate',
@@ -381,12 +375,25 @@
 
                 $('#edit_date_error').text('');
 
-
                 if (!date) {
                     return;
                 }
 
+                // Saturday is not allowed
+                let selectedDate = new Date(date + 'T00:00:00');
 
+                if (selectedDate.getDay() === 6) {
+
+                    $('#edit_date_error').text(
+                        'Class replacement cannot be assigned on Saturday.'
+                    );
+
+                    $(this).val('');
+
+                    return;
+                }
+
+                // Date cannot be before today
                 if (date < getToday()) {
 
                     $('#edit_date_error').text(
@@ -395,17 +402,12 @@
 
                     $(this).val('');
 
+                    return;
                 }
 
             }
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | START TIME
-        |--------------------------------------------------------------------------
-        */
 
         $(document).on(
             'change',
@@ -640,9 +642,17 @@
                 }
 
 
-                /*
-                | Start time
-                */
+                let selectedDate = new Date(date + 'T00:00:00');
+
+                if (selectedDate.getDay() === 6) {
+
+                    $('#edit_date_error').text(
+                        'Class replacement cannot be assigned on Saturday.'
+                    );
+
+                    return;
+                }
+
 
                 if (!startTime) {
 

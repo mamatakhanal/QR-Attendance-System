@@ -232,6 +232,11 @@ class ClassReplacementController extends Controller
                 'required',
                 'date',
                 'after_or_equal:today',
+                function ($attribute, $value, $fail) {
+                    if (Carbon::parse($value)->isSaturday()) {
+                        $fail('Class replacement cannot be assigned on Saturday.');
+                    }
+                },
             ],
 
             'start_time' => [
@@ -531,6 +536,11 @@ class ClassReplacementController extends Controller
                 'required',
                 'date',
                 'after_or_equal:today',
+                function ($attribute, $value, $fail) {
+                    if (Carbon::parse($value)->isSaturday()) {
+                        $fail('Class replacement cannot be assigned on Saturday.');
+                    }
+                },
             ],
 
             'start_time' => [
