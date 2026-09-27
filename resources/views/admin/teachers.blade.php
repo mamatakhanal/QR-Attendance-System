@@ -188,6 +188,21 @@
 </div>
 
 <script>
+    function formatTime(time) {
+        if (!time) return 'Not Assigned';
+
+        let parts = time.split(':');
+        let hour = parseInt(parts[0]);
+        let minute = parts[1];
+
+        let ampm = hour >= 12 ? 'PM' : 'AM';
+
+        hour = hour % 12;
+        hour = hour ? hour : 12;
+
+        return `${hour}:${minute} ${ampm}`;
+    }
+
     $(document).on('click', '.view-assignment', function() {
         let id = $(this).data('id');
         console.log("Teacher ID:", id);
@@ -217,13 +232,33 @@
                             subjectList += `
                            <li>${subject.subject_name}</li>`;
                         });
+                        let classTime = 'Not Assigned';
+
+                        if (item.start_time && item.end_time) {
+                            classTime =
+                                `${formatTime(item.start_time)} - ${formatTime(item.end_time)}`;
+                        }
+
                         html += `
                     <div class="card mb-2 shadow-sm bg-light border-0">
                         <div class="card-body">
-                            <h6 class="fw-bold"> Semester ${item.semester} </h6>
-                             <ol class="mb-0"> ${subjectList} </ol>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0">
+                                    Semester ${item.semester}
+                                </h6>
+
+                                <span class="badge bg-secondary" style="font-size: 13px;">
+                                    ${classTime}
+                                </span>
+                            </div>
+
+                            <ol class="mb-0">
+                                ${subjectList}
+                            </ol>
+
                         </div>
-                    </div> `;
+                    </div>`;
                     });
                 }
                 $('#assignmentList').html(html);

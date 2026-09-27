@@ -8,6 +8,7 @@ use App\Models\Admin\AttendanceSession;
 use App\Models\Admin\ClassReplacement;
 use App\Models\Admin\Students;
 use App\Models\Admin\Teachers;
+use App\Services\RealTimeService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -55,7 +56,8 @@ class AssignclassController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $today = Carbon::today()->toDateString();
+        $realTimeService = app(RealTimeService::class);
+        $today = $realTimeService->now()->toDateString();
 
         $replacements = ClassReplacement::with('assignClass')
             ->whereDate('date', $today)
@@ -113,9 +115,11 @@ class AssignclassController extends Controller
 
             // Replacement Class Time
 
-            if ($replacements->has($assignclass->id)) {
+            $replacement = $replacements->first(function ($replacement) use ($assignclass) {
+                return $replacement->assign_class_id == $assignclass->id;
+            });
 
-                $replacement = $replacements->get($assignclass->id);
+            if ($replacement) {
 
                 $assignclass->replacement_start_time =
                     $replacement->start_time;
@@ -127,47 +131,43 @@ class AssignclassController extends Controller
             }
 
             /*
-              Block Permanent Class
-             If another replacement overlaps this permanent class,
-             the permanent class becomes Blocked.
-            */
+    Block Permanent Class
+    If another replacement overlaps this permanent class,
+    the permanent class becomes Blocked.
+*/
 
             if (! $assignclass->is_replacement_today) {
 
-    $blocked = $replacements->contains(
-        function ($replacement) use ($assignclass) {
+                $blocked = $replacements->contains(
+                    function ($replacement) use ($assignclass) {
 
-            // Do not block the same class
-            if ($replacement->assign_class_id == $assignclass->id) {
-                return false;
+                        // Do not block the same class
+                        if ($replacement->assign_class_id == $assignclass->id) {
+                            return false;
+                        }
+
+                        // Make sure replacement belongs to another class
+                        if (! $replacement->assignClass) {
+                            return false;
+                        }
+
+                        $replacementStart = Carbon::parse($replacement->start_time);
+                        $replacementEnd = Carbon::parse($replacement->end_time);
+
+                        $classStart = Carbon::parse($assignclass->start_time);
+                        $classEnd = Carbon::parse($assignclass->end_time);
+
+                        // Check time overlap
+                        return $replacementStart->lt($classEnd)
+                            && $replacementEnd->gt($classStart);
+                    }
+                );
+
+                if ($blocked) {
+                    $assignclass->attendance_status = 'Blocked';
+                }
             }
 
-            // Make sure replacement belongs to another class
-            if (! $replacement->assign_class) {
-                return false;
-            }
-
-            // Must be the same semester
-            if ($replacement->assign_class->semester != $assignclass->semester) {
-                return false;
-            }
-
-            $replacementStart = Carbon::parse($replacement->start_time);
-            $replacementEnd   = Carbon::parse($replacement->end_time);
-
-            $classStart = Carbon::parse($assignclass->start_time);
-            $classEnd   = Carbon::parse($assignclass->end_time);
-
-            // Check time overlap
-            return $replacementStart->lt($classEnd)
-                && $replacementEnd->gt($classStart);
-        }
-    );
-
-    if ($blocked) {
-        $assignclass->attendance_status = 'Blocked';
-    }
-}
         }
 
         return view('teacher.assignclass', [
