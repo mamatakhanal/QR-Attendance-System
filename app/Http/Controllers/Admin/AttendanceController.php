@@ -31,7 +31,7 @@ class AttendanceController extends Controller
         // }
         // $realDate = $realDateTime['date'];
 
-         $realDate = Carbon::now('Asia/Kathmandu')->format('Y-m-d');
+        $realDate = Carbon::now('Asia/Kathmandu')->format('Y-m-d');
 
         // Validate Date Range
         $request->validate([
@@ -80,7 +80,12 @@ class AttendanceController extends Controller
 
             ->orderBy('date', 'desc')
             ->orderBy('semester', 'asc')
-            ->orderBy('status', 'desc')
+            // ->orderBy('status', 'desc')
+            ->orderBy(
+                Teachers::select('name')
+                    ->whereColumn('teachers.id', 'attendance.teacher_id'),
+                'asc'
+            )
             ->paginate(10)
             ->withQueryString();
 
