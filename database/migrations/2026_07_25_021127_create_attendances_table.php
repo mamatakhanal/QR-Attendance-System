@@ -8,31 +8,22 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('attendance', function (Blueprint $table) {
+        if (! Schema::hasTable('attendance')) {
+            Schema::create('attendance', function (Blueprint $table) {
+                $table->id();
 
-            $table->id();
+                $table->unsignedTinyInteger('semester');
+                $table->unsignedBigInteger('student_id');
+                $table->unsignedBigInteger('teacher_id');
+                $table->unsignedBigInteger('subject_id');
+                $table->unsignedBigInteger('assign_class_id');
+                $table->date('date');
+                $table->time('time')->nullable();
+                $table->enum('status', ['Present']);
 
-            $table->unsignedTinyInteger('semester');
-
-            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
-
-            $table->foreignId('teacher_id')
-                ->constrained('teachers')
-                ->cascadeOnDelete();
-
-            $table->foreignId('subject_id')
-                ->constrained('subjects')
-                ->cascadeOnDelete();
-
-            $table->foreignId('assign_class_id')
-                ->constrained('assign_class')
-                ->cascadeOnDelete();
-
-            $table->date('date');
-            $table->time('time')->nullable();
-            $table->enum('status', ['Present']);
-            $table->timestamps();
-        });
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void

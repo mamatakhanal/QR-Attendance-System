@@ -134,38 +134,40 @@ class AssignclassController extends Controller
 
             if (! $assignclass->is_replacement_today) {
 
-                $blocked = $replacements->contains(
-                    function ($replacement) use ($assignclass) {
+    $blocked = $replacements->contains(
+        function ($replacement) use ($assignclass) {
 
-                        $replacementStart = Carbon::parse(
-                            $replacement->start_time
-                        );
-
-                        $replacementEnd = Carbon::parse(
-                            $replacement->end_time
-                        );
-
-                        $classStart = Carbon::parse(
-                            $assignclass->start_time
-                        );
-
-                        $classEnd = Carbon::parse(
-                            $assignclass->end_time
-                        );
-
-                        return $replacement->assign_class_id != $assignclass->id
-                            && $replacement->assign_class
-                            && $replacement->assign_class->semester == $assignclass->semester
-                            && $replacementStart->lt($classEnd)
-                            && $replacementEnd->gt($classStart);
-                    }
-                );
-
-                if ($blocked) {
-
-                    $assignclass->attendance_status = 'Blocked';
-                }
+            // Do not block the same class
+            if ($replacement->assign_class_id == $assignclass->id) {
+                return false;
             }
+
+            // Make sure replacement belongs to another class
+            if (! $replacement->assign_class) {
+                return false;
+            }
+
+            // Must be the same semester
+            if ($replacement->assign_class->semester != $assignclass->semester) {
+                return false;
+            }
+
+            $replacementStart = Carbon::parse($replacement->start_time);
+            $replacementEnd   = Carbon::parse($replacement->end_time);
+
+            $classStart = Carbon::parse($assignclass->start_time);
+            $classEnd   = Carbon::parse($assignclass->end_time);
+
+            // Check time overlap
+            return $replacementStart->lt($classEnd)
+                && $replacementEnd->gt($classStart);
+        }
+    );
+
+    if ($blocked) {
+        $assignclass->attendance_status = 'Blocked';
+    }
+}
         }
 
         return view('teacher.assignclass', [

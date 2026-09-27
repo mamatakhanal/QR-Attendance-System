@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-    {
+{
+    if (!Schema::hasTable('assign_class_subject')) {
         Schema::create('assign_class_subject', function (Blueprint $table) {
             $table->id();
 
@@ -26,6 +27,7 @@ return new class extends Migration
             $table->timestamps();
         });
     }
+}
 
     public function down(): void
     {

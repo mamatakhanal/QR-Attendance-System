@@ -25,7 +25,7 @@ class DashboardController extends Controller
         if (! $realNow) {
             return back()->with(
                 'error',
-                'Unable to verify the real date and time. Please check your internet connection.'
+                ''
             );
         }
 
@@ -60,7 +60,7 @@ class DashboardController extends Controller
 
         return view('teacher.dashboard', [
             'pageTitle' => 'Dashboard',
-            'teacher' => $teacher,
+            // 'teacher' => $teacher,
             'totalClasses' => $totalClasses,
             'totalSubjects' => $totalSubjects,
             'totalStudents' => $totalStudents,

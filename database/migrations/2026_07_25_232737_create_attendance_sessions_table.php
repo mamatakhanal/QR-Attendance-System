@@ -6,46 +6,91 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('attendance_sessions', function (Blueprint $table) {
+        if (! Schema::hasTable('attendance_sessions')) {
+            Schema::create('attendance_sessions', function (Blueprint $table) {
+                $table->id();
 
-            $table->id();
+                $table->unsignedBigInteger('assign_class_id');
+                $table->unsignedBigInteger('teacher_id');
+                $table->unsignedBigInteger('subject_id');
 
-            $table->foreignId('assign_class_id')
-                ->constrained('assign_class')
-                ->cascadeOnDelete();
+                $table->date('date');
+                $table->dateTime('start_time');
+                $table->dateTime('end_time');
 
-            $table->foreignId('teacher_id')
-                ->constrained('teachers')
-                ->cascadeOnDelete();
+                $table->enum('status', ['Open', 'Closed'])
+                    ->default('Open');
 
-            $table->foreignId('subject_id')
-                ->constrained('subjects')
-                ->cascadeOnDelete();
+                $table->timestamps();
 
-            $table->date('date');
+                $table->foreign('assign_class_id')
+                    ->references('id')
+                    ->on('assign_class')
+                    ->onDelete('cascade');
 
-            $table->dateTime('start_time');
+                $table->foreign('teacher_id')
+                    ->references('id')
+                    ->on('teachers')
+                    ->onDelete('cascade');
 
-            $table->dateTime('end_time');
+                $table->foreign('subject_id')
+                    ->references('id')
+                    ->on('subjects')
+                    ->onDelete('cascade');
+            });
 
-            $table->enum('status', ['Open', 'Closed'])
-                ->default('Open');
+            return;
+        }
 
-            $table->timestamps();
-        });
+        // The table already exists, so add only missing columns.
+        if (! Schema::hasColumn('attendance_sessions', 'assign_class_id')) {
+            Schema::table('attendance_sessions', function (Blueprint $table) {
+                $table->unsignedBigInteger('assign_class_id')->nullable();
+            });
+        }
+
+        if (! Schema::hasColumn('attendance_sessions', 'teacher_id')) {
+            Schema::table('attendance_sessions', function (Blueprint $table) {
+                $table->unsignedBigInteger('teacher_id')->nullable();
+            });
+        }
+
+        if (! Schema::hasColumn('attendance_sessions', 'subject_id')) {
+            Schema::table('attendance_sessions', function (Blueprint $table) {
+                $table->unsignedBigInteger('subject_id')->nullable();
+            });
+        }
+
+        if (! Schema::hasColumn('attendance_sessions', 'date')) {
+            Schema::table('attendance_sessions', function (Blueprint $table) {
+                $table->date('date')->nullable();
+            });
+        }
+
+        if (! Schema::hasColumn('attendance_sessions', 'start_time')) {
+            Schema::table('attendance_sessions', function (Blueprint $table) {
+                $table->dateTime('start_time')->nullable();
+            });
+        }
+
+        if (! Schema::hasColumn('attendance_sessions', 'end_time')) {
+            Schema::table('attendance_sessions', function (Blueprint $table) {
+                $table->dateTime('end_time')->nullable();
+            });
+        }
+
+        if (! Schema::hasColumn('attendance_sessions', 'status')) {
+            Schema::table('attendance_sessions', function (Blueprint $table) {
+                $table->enum('status', ['Open', 'Closed'])
+                    ->default('Open');
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('attendance_sessions');
     }
-    
 };

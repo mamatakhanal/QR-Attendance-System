@@ -1,3 +1,5 @@
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
     body {
         font-family: "Inter", "Roboto", "Poppins", sans-serif;
