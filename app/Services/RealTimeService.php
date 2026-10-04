@@ -9,7 +9,6 @@ class RealTimeService
     public function now(): Carbon
     {
         // Uses the computer's local clock.
-        // No internet connection is required.
         return Carbon::now('Asia/Kathmandu');
     }
 }

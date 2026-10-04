@@ -239,18 +239,29 @@ class ClassReplacementController extends Controller
                 },
             ],
 
+            // 'start_time' => [
+            //     'required',
+            //     'date_format:H:i',
+            //     'after_or_equal:10:00',
+            //     'before_or_equal:17:00',
+            // ],
+
+            // 'end_time' => [
+            //     'required',
+            //     'date_format:H:i',
+            //     'after_or_equal:10:00',
+            //     'before_or_equal:17:00',
+            //     'after:start_time',
+            // ],
+
             'start_time' => [
                 'required',
                 'date_format:H:i',
-                'after_or_equal:10:00',
-                'before_or_equal:17:00',
             ],
 
             'end_time' => [
                 'required',
                 'date_format:H:i',
-                'after_or_equal:10:00',
-                'before_or_equal:17:00',
                 'after:start_time',
             ],
         ], [
@@ -543,17 +554,28 @@ class ClassReplacementController extends Controller
                 },
             ],
 
+            // 'start_time' => [
+            //     'required',
+            //     'date_format:H:i',
+            //     'after_or_equal:10:00',
+            //     'before_or_equal:17:00',
+            // ],
+
+            // 'end_time' => [
+            //     'required',
+            //     'date_format:H:i',
+            //     'before_or_equal:17:00',
+            //     'after:start_time',
+            // ],
+
             'start_time' => [
                 'required',
                 'date_format:H:i',
-                'after_or_equal:10:00',
-                'before_or_equal:17:00',
             ],
 
             'end_time' => [
                 'required',
                 'date_format:H:i',
-                'before_or_equal:17:00',
                 'after:start_time',
             ],
 

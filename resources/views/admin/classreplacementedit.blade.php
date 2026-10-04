@@ -123,8 +123,7 @@
                             Start Time
                         </label>
 
-                        <input type="time" name="start_time" id="editReplacementStartTime" class="form-control"
-                            min="10:00" max="17:00" required>
+                        <input type="time" name="start_time" id="editReplacementStartTime" class="form-control" required>
 
                         <small id="edit_start_time_error" class="text-danger">
                         </small>
@@ -139,8 +138,8 @@
                             End Time
                         </label>
 
-                        <input type="time" name="end_time" id="editReplacementEndTime" class="form-control"
-                            min="10:00" max="17:00" required>
+                        <input type="time" name="end_time" id="editReplacementEndTime" class="form-control" required>
+                        {{-- min="10:00" max="17:00" --}}
 
                         <small id="edit_end_time_error" class="text-danger">
                         </small>
@@ -409,56 +408,56 @@
         );
 
 
-        $(document).on(
-            'change',
-            '#editReplacementStartTime',
-            function() {
+        // $(document).on(
+        //     'change',
+        //     '#editReplacementStartTime',
+        //     function() {
 
-                let startTime =
-                    $(this).val();
+        //         let startTime =
+        //             $(this).val();
 
-                $('#edit_start_time_error').text('');
-
-
-                if (!startTime) {
-                    return;
-                }
+        //         $('#edit_start_time_error').text('');
 
 
-                if (
-                    startTime < '10:00' ||
-                    startTime > '17:00'
-                ) {
-
-                    $('#edit_start_time_error').text(
-                        'Start time must be between 10:00 AM and 5:00 PM.'
-                    );
-
-                    $(this).val('');
-
-                    return;
-                }
+        //         if (!startTime) {
+        //             return;
+        //         }
 
 
-                let endTime =
-                    $('#editReplacementEndTime').val();
+        //         if (
+        //             startTime < '10:00' ||
+        //             startTime > '17:00'
+        //         ) {
+
+        //             $('#edit_start_time_error').text(
+        //                 'Start time must be between 10:00 AM and 5:00 PM.'
+        //             );
+
+        //             $(this).val('');
+
+        //             return;
+        //         }
 
 
-                if (
-                    endTime &&
-                    endTime <= startTime
-                ) {
+        //         let endTime =
+        //             $('#editReplacementEndTime').val();
 
-                    $('#edit_end_time_error').text(
-                        'End time must be after start time.'
-                    );
 
-                    $('#editReplacementEndTime').val('');
+        //         if (
+        //             endTime &&
+        //             endTime <= startTime
+        //         ) {
 
-                }
+        //             $('#edit_end_time_error').text(
+        //                 'End time must be after start time.'
+        //             );
 
-            }
-        );
+        //             $('#editReplacementEndTime').val('');
+
+        //         }
+
+        //     }
+        // );
 
 
         /*
@@ -467,56 +466,56 @@
         |--------------------------------------------------------------------------
         */
 
-        $(document).on(
-            'change',
-            '#editReplacementEndTime',
-            function() {
+        // $(document).on(
+        //     'change',
+        //     '#editReplacementEndTime',
+        //     function() {
 
-                let endTime =
-                    $(this).val();
+        //         let endTime =
+        //             $(this).val();
 
-                let startTime =
-                    $('#editReplacementStartTime').val();
-
-
-                $('#edit_end_time_error').text('');
+        //         let startTime =
+        //             $('#editReplacementStartTime').val();
 
 
-                if (!endTime) {
-                    return;
-                }
+        //         $('#edit_end_time_error').text('');
 
 
-                if (
-                    endTime < '10:00' ||
-                    endTime > '17:00'
-                ) {
-
-                    $('#edit_end_time_error').text(
-                        'End time must be between 10:00 AM and 5:00 PM.'
-                    );
-
-                    $(this).val('');
-
-                    return;
-                }
+        //         if (!endTime) {
+        //             return;
+        //         }
 
 
-                if (
-                    startTime &&
-                    endTime <= startTime
-                ) {
+        //         if (
+        //             endTime < '10:00' ||
+        //             endTime > '17:00'
+        //         ) {
 
-                    $('#edit_end_time_error').text(
-                        'End time must be after start time.'
-                    );
+        //             $('#edit_end_time_error').text(
+        //                 'End time must be between 10:00 AM and 5:00 PM.'
+        //             );
 
-                    $(this).val('');
+        //             $(this).val('');
 
-                }
+        //             return;
+        //         }
 
-            }
-        );
+
+        //         if (
+        //             startTime &&
+        //             endTime <= startTime
+        //         ) {
+
+        //             $('#edit_end_time_error').text(
+        //                 'End time must be after start time.'
+        //             );
+
+        //             $(this).val('');
+
+        //         }
+
+        //     }
+        // );
 
 
         /*
@@ -664,54 +663,54 @@
                 }
 
 
-                if (
-                    startTime < '10:00' ||
-                    startTime > '17:00'
-                ) {
+                // if (
+                //     startTime < '10:00' ||
+                //     startTime > '17:00'
+                // ) {
 
-                    $('#edit_start_time_error').text(
-                        'Start time must be between 10:00 AM and 5:00 PM.'
-                    );
+                //     $('#edit_start_time_error').text(
+                //         'Start time must be between 10:00 AM and 5:00 PM.'
+                //     );
 
-                    return;
-                }
+                //     return;
+                // }
 
 
                 /*
                 | End time
                 */
 
-                if (!endTime) {
+                // if (!endTime) {
 
-                    $('#edit_end_time_error').text(
-                        'Please select end time.'
-                    );
+                //     $('#edit_end_time_error').text(
+                //         'Please select end time.'
+                //     );
 
-                    return;
-                }
-
-
-                if (
-                    endTime < '10:00' ||
-                    endTime > '17:00'
-                ) {
-
-                    $('#edit_end_time_error').text(
-                        'End time must be between 10:00 AM and 5:00 PM.'
-                    );
-
-                    return;
-                }
+                //     return;
+                // }
 
 
-                if (endTime <= startTime) {
+                // if (
+                //     endTime < '10:00' ||
+                //     endTime > '17:00'
+                // ) {
 
-                    $('#edit_end_time_error').text(
-                        'End time must be after start time.'
-                    );
+                //     $('#edit_end_time_error').text(
+                //         'End time must be between 10:00 AM and 5:00 PM.'
+                //     );
 
-                    return;
-                }
+                //     return;
+                // }
+
+
+                // if (endTime <= startTime) {
+
+                //     $('#edit_end_time_error').text(
+                //         'End time must be after start time.'
+                //     );
+
+                //     return;
+                // }
 
 
                 /*
